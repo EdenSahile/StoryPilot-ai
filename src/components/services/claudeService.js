@@ -1,56 +1,102 @@
-const API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY
+const TIMEOUT_MS = 30000; // 30 secondes timeout
+const MAX_OUTPUT_LENGTH = 4000; // Limiter output pour éviter freeze
 
-export async function generateStories(brief, onChunk) {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': API_KEY,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      stream: true,
-      messages: [
-        {
-          role: 'user',
-          content: `Tu es un Product Owner expert.
-À partir de ce brief métier, génère 3 user stories avec :
-- Format : "En tant que... Je veux... Afin de..."
-- 2 critères d'acceptation par story
-- Complexité : S, M ou L
-- 2 scénarios Gherkin par story (Étant donné / Quand / Alors)
+export async function generateStories(brief, onChunk, onError) {
+  // Validation du brief
+  if (!brief || brief.trim().length === 0) {
+    onError('Veuillez entrer un brief métier.');
+    return;
+  }
 
-Sépare chaque user story par ---
+  if (brief.trim().length < 10) {
+    onError('Le brief doit contenir au moins 10 caractères.');
+    return;
+  }
 
-Brief : ${brief}`
-        }
-      ]
-    })
-  })
+  let charCount = 0;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-  const reader = response.body.getReader()
-  const decoder = new TextDecoder()
+  try {
+    // Appelle le backend qui va streamer la réponse
+    const response = await fetch('/api/generate-stories', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ brief }),
+      signal: controller.signal
+    });
 
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-
-    const chunk = decoder.decode(value)
-    const lines = chunk.split('\n').filter(line => line.startsWith('data: '))
-
-    for (const line of lines) {
-      const data = line.replace('data: ', '')
-      if (data === '[DONE]') break
+    // Vérifier les erreurs HTTP
+    if (!response.ok) {
+      clearTimeout(timeoutId);
       try {
-        const parsed = JSON.parse(data)
-        const text = parsed.delta?.text
-        if (text) onChunk(text)
+        const errorData = await response.json();
+        const errorMessage = errorData?.error || `Erreur (${response.status})`;
+        onError(errorMessage);
       } catch {
-        // ligne incomplète, on ignore
+        onError(`Erreur: ${response.status}`);
       }
+      return;
+    }
+
+    // Lire le streaming SSE
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+
+      // Garder la dernière ligne incomplète
+      buffer = lines[lines.length - 1];
+
+      for (let i = 0; i < lines.length - 1; i++) {
+        const line = lines[i].trim();
+
+        if (!line.startsWith('data: ')) continue;
+
+        const data = line.slice(6); // Retirer "data: "
+
+        if (data === '[DONE]') break;
+
+        try {
+          const parsed = JSON.parse(data);
+          const text = parsed.text;
+
+          if (text) {
+            charCount += text.length;
+
+            // Limiter la sortie pour éviter les freezes
+            if (charCount > MAX_OUTPUT_LENGTH) {
+              onError('La réponse est trop longue. Essayez un brief plus court.');
+              return;
+            }
+
+            onChunk(text);
+          }
+        } catch (e) {
+          // Ignorer les lignes JSON malformées
+        }
+      }
+    }
+
+    clearTimeout(timeoutId);
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (error.name === 'AbortError') {
+      onError('Requête timeout (30s). Le serveur met trop de temps.');
+    } else if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+      onError('Erreur réseau. Vérifiez votre connexion.');
+    } else {
+      onError(`Erreur : ${error.message}`);
     }
   }
 }

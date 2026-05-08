@@ -1,3 +1,4 @@
+import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
 
@@ -6,6 +7,36 @@ const Container = styled.div`
   flex-direction: column;
   gap: 24px;
   margin-top: 32px;
+`;
+
+const StoryCardWrapper = styled.div`
+  position: relative;
+`;
+
+const CopyButton = styled.button`
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #6366f1;
+  font-weight: 500;
+
+  &:hover {
+    background: #f8fafc;
+    border-color: #6366f1;
+  }
+
+  &.copied {
+    background: #dbeafe;
+    border-color: #0284c7;
+    color: #0284c7;
+  }
 `;
 
 const StoryCard = styled.div`
@@ -28,6 +59,7 @@ const StoryCard = styled.div`
     color: #1e293b;
     margin-top: 20px;
     margin-bottom: 8px;
+    font-weight: 600;
   }
 
   p {
@@ -46,7 +78,13 @@ const StoryCard = styled.div`
   }
 
   strong {
+    color: #1e293b;
+    font-weight: 600;
+  }
+
+  em {
     color: #6366f1;
+    font-style: italic;
   }
 
   hr {
@@ -65,17 +103,38 @@ const StoryCard = styled.div`
     color: #334155;
     margin: 8px 0;
     white-space: pre-wrap;
+    word-break: break-word;
+    font-family: "Monaco", "Courier New", monospace;
   }
 `;
 
 function StoriesOutput({ stories }) {
+  const [copied, setCopied] = useState(false);
+
   if (!stories) return null;
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(stories);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Erreur lors de la copie:", err);
+    }
+  };
+
   return (
     <Container>
-      <StoryCard>
-        <ReactMarkdown>{stories}</ReactMarkdown>
-      </StoryCard>
+      <StoryCardWrapper>
+        <CopyButton onClick={handleCopy} className={copied ? "copied" : ""}>
+          {copied ? "✓ Copié!" : "📋 Copier"}
+        </CopyButton>
+        <StoryCard>
+          <ReactMarkdown>{stories}</ReactMarkdown>
+        </StoryCard>
+      </StoryCardWrapper>
     </Container>
   );
 }
+
 export default StoriesOutput;

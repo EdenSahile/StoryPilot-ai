@@ -8,6 +8,28 @@ const Container = styled.div`
   margin-bottom: 32px;
 `;
 
+const InfoBanner = styled.div`
+  background: linear-gradient(135deg, #e0e7ff, #f0e7ff);
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  color: #4c1d95;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  @media (prefers-color-scheme: dark) {
+    background: linear-gradient(135deg, #3730a3, #4c1d95);
+    border-color: #6366f1;
+    color: #e9d5ff;
+  }
+
+  strong {
+    font-weight: 600;
+  }
+`;
+
 const TextArea = styled.textarea`
   width: 100%;
   min-height: 120px;
@@ -24,6 +46,12 @@ const TextArea = styled.textarea`
   &:focus {
     border-color: #6366f1;
   }
+
+  &:disabled {
+    background-color: #f1f5f9;
+    color: #94a3b8;
+    cursor: not-allowed;
+  }
 `;
 
 const Button = styled.button`
@@ -38,27 +66,51 @@ const Button = styled.button`
   cursor: pointer;
   transition: opacity 0.2s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     opacity: 0.85;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 `;
 
-function BriefInput({ onSubmit }) {
-  const [brief, setbrief] = useState("");
+function BriefInput({ onSubmit, isLoading }) {
+  const [brief, setBrief] = useState("");
 
   const handleSubmit = () => {
     if (brief.trim() === "") return;
     onSubmit(brief);
   };
 
+  const handleKeyPress = (e) => {
+    // Ctrl+Enter ou Cmd+Enter pour soumettre
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      handleSubmit();
+    }
+  };
+
   return (
     <Container>
+      <InfoBanner>
+        ℹ️{" "}
+        <span>
+          <strong>Budget limité:</strong> Cette démo utilise un budget de
+          $5/mois maximum (~660 générations). Si la limite est atteinte, vous
+          verrez une erreur.
+        </span>
+      </InfoBanner>
       <TextArea
-        placeholder="Décris ton besoin métier ici ..."
+        placeholder="Décris ton besoin métier ici... (Ctrl+Entrée pour soumettre)"
         value={brief}
-        onChange={(e) => setbrief(e.target.value)}
+        onChange={(e) => setBrief(e.target.value)}
+        onKeyPress={handleKeyPress}
+        disabled={isLoading}
       />
-      <Button onClick={handleSubmit}>Générer les user stories</Button>
+      <Button onClick={handleSubmit} disabled={isLoading}>
+        {isLoading ? "Génération en cours..." : "Générer les user stories"}
+      </Button>
     </Container>
   );
 }
