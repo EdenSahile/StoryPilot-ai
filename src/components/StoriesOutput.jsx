@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
+import DOMPurify from "dompurify";
 
 const Container = styled.div`
   display: flex;
@@ -123,6 +124,8 @@ function StoriesOutput({ stories }) {
     }
   };
 
+  const cleanStories = DOMPurify.sanitize(stories);
+
   return (
     <Container>
       <StoryCardWrapper>
@@ -130,7 +133,7 @@ function StoriesOutput({ stories }) {
           {copied ? "✓ Copié!" : "📋 Copier"}
         </CopyButton>
         <StoryCard>
-          <ReactMarkdown>{stories}</ReactMarkdown>
+          <ReactMarkdown>{cleanStories}</ReactMarkdown>
         </StoryCard>
       </StoryCardWrapper>
     </Container>

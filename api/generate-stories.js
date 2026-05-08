@@ -1,8 +1,38 @@
+
+const requestCounts = new Map();
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const windowStart = now - 15 * 60 * 1000;
+  if (!requestCounts.has(ip)) requestCounts.set(ip, []);
+  const recentRequests = requestCounts.get(ip).filter(t => t > windowStart);
+  if (recentRequests.length >= 10) return false;
+  recentRequests.push(now);
+  requestCounts.set(ip, recentRequests);
+  return true;
+}
+
 export default async function handler(req, res) {
   // Seulement POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // ✅ CORS
+const allowedOrigins = ['http://localhost:5173', 'https://storyforge-ai.vercel.app'];
+const origin = req.headers.origin;
+if (allowedOrigins.includes(origin)) {
+  res.setHeader('Access-Control-Allow-Origin', origin);
+}
+res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+if (req.method === 'OPTIONS') return res.status(200).end();
+
+// ✅ Rate limiting
+const clientIp = req.headers['x-forwarded-for']?.split(',')[0] || req.socket.remoteAddress;
+if (!checkRateLimit(clientIp)) {
+  return res.status(429).json({ error: 'Trop de requêtes. Maximum 10 par 15 minutes.' });
+}
 
   const { brief } = req.body;
 
@@ -16,7 +46,8 @@ export default async function handler(req, res) {
   }
 
   // Vérifie la clé API côté serveur
-  const apiKey = process.env.VITE_ANTHROPIC_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY; 
+
   if (!apiKey) {
     return res.status(500).json({ error: 'Clé API manquante sur le serveur.' });
   }
@@ -34,10 +65,14 @@ export default async function handler(req, res) {
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
         stream: true, // On utilise le streaming!
+        system: `Tu es un Product Owner expert en gestion de produit digital.
+        Tu génères des user stories au format Scrum avec rigueur.
+Réponds UNIQUEMENT au format demandé.`,
+        
         messages: [
           {
             role: 'user',
-            content: `Tu es un Product Owner expert.
+            content: `
 À partir de ce brief métier, génère 3 user stories avec :
 - Format : "En tant que... Je veux... Afin de..."
 - 2 critères d'acceptation par story
