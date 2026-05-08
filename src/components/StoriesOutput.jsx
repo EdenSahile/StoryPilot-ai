@@ -1,7 +1,6 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
-import DOMPurify from "dompurify";
 
 const Container = styled.div`
   display: flex;
@@ -12,6 +11,15 @@ const Container = styled.div`
 
 const StoryCardWrapper = styled.div`
   position: relative;
+`;
+
+const CopyError = styled.p`
+  position: absolute;
+  top: 52px;
+  right: 16px;
+  font-size: 0.78rem;
+  color: #dc2626;
+  margin: 0;
 `;
 
 const CopyButton = styled.button`
@@ -111,20 +119,21 @@ const StoryCard = styled.div`
 
 function StoriesOutput({ stories }) {
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
 
   if (!stories) return null;
 
   const handleCopy = async () => {
+    setCopyError(false);
     try {
       await navigator.clipboard.writeText(stories);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Erreur lors de la copie:", err);
+      setCopyError(true);
+      setTimeout(() => setCopyError(false), 3000);
     }
   };
-
-  const cleanStories = DOMPurify.sanitize(stories);
 
   return (
     <Container>
@@ -132,8 +141,9 @@ function StoriesOutput({ stories }) {
         <CopyButton onClick={handleCopy} className={copied ? "copied" : ""}>
           {copied ? "✓ Copié!" : "📋 Copier"}
         </CopyButton>
+        {copyError && <CopyError>Copie impossible — essayez manuellement</CopyError>}
         <StoryCard>
-          <ReactMarkdown>{cleanStories}</ReactMarkdown>
+          <ReactMarkdown>{stories}</ReactMarkdown>
         </StoryCard>
       </StoryCardWrapper>
     </Container>

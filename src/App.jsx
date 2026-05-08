@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { generateStories } from "./components/services/claudeService";
 import BriefInput from "./components/BriefInput";
 import StoriesOutput from "./components/StoriesOutput";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const Wrapper = styled.div`
   max-width: 800px;
@@ -97,20 +98,22 @@ function App() {
   };
 
   return (
-    <Wrapper>
-      <Title>StoryForge AI</Title>
-      <BriefInput onSubmit={handleSubmit} isLoading={isLoading} />
+    <ErrorBoundary>
+      <Wrapper>
+        <Title>StoryForge AI</Title>
+        <BriefInput onSubmit={handleSubmit} isLoading={isLoading} />
 
-      {error && (
-        <ErrorMessage>
-          <span>{error}</span>
-          <button onClick={() => setError(null)}>✕</button>
-        </ErrorMessage>
-      )}
+        {error && (
+          <ErrorMessage>
+            <span>{error}</span>
+            <button onClick={() => setError(null)}>✕</button>
+          </ErrorMessage>
+        )}
 
-      {isLoading && <LoadingText>Génération en cours ...</LoadingText>}
-      <StoriesOutput stories={stories} />
-    </Wrapper>
+        {isLoading && <LoadingText>Génération en cours ...</LoadingText>}
+        <StoriesOutput stories={stories} />
+      </Wrapper>
+    </ErrorBoundary>
   );
 }
 export default App;

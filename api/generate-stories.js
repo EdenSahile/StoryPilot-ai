@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   }
 
   // ✅ CORS
-const allowedOrigins = ['http://localhost:5173', 'https://storyforge-ai.vercel.app'];
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173', 'https://storyforge-ai.vercel.app'];
 const origin = req.headers.origin;
 if (allowedOrigins.includes(origin)) {
   res.setHeader('Access-Control-Allow-Origin', origin);
@@ -43,6 +43,10 @@ if (!checkRateLimit(clientIp)) {
 
   if (brief.trim().length < 10) {
     return res.status(400).json({ error: 'Le brief doit contenir au moins 10 caractères.' });
+  }
+
+  if (brief.trim().length > 2000) {
+    return res.status(400).json({ error: 'Le brief ne peut pas dépasser 2000 caractères.' });
   }
 
   // Vérifie la clé API côté serveur
@@ -81,7 +85,10 @@ Réponds UNIQUEMENT au format demandé.`,
 
 Sépare chaque user story par ---
 
-Brief : ${brief}`
+Brief :
+"""
+${brief.trim()}
+"""`
           }
         ]
       })
@@ -153,6 +160,6 @@ Brief : ${brief}`
     res.end();
   } catch (error) {
     console.error('Erreur serveur:', error);
-    res.status(500).json({ error: `Erreur serveur: ${error.message}` });
+    res.status(500).json({ error: 'Une erreur est survenue. Veuillez réessayer.' });
   }
 }
