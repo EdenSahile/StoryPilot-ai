@@ -1,6 +1,13 @@
 const TIMEOUT_MS = 30000; // 30 secondes timeout
 const MAX_OUTPUT_LENGTH = 4000; // Limiter output pour éviter freeze
 
+/**
+ * Génère des user stories via l'API Claude avec streaming SSE.
+ * @param {string} brief - Le brief métier (10–2000 caractères)
+ * @param {(chunk: string) => void} onChunk - Appelé à chaque fragment de texte reçu
+ * @param {(message: string) => void} onError - Appelé en cas d'erreur (validation, réseau, timeout)
+ * @returns {Promise<void>} Se résout quand le stream est terminé ou interrompu
+ */
 export async function generateStories(brief, onChunk, onError) {
   // Validation du brief
   if (!brief || brief.trim().length === 0) {
@@ -10,6 +17,11 @@ export async function generateStories(brief, onChunk, onError) {
 
   if (brief.trim().length < 10) {
     onError('Le brief doit contenir au moins 10 caractères.');
+    return;
+  }
+
+  if (brief.trim().length > 2000) {
+    onError('Le brief ne peut pas dépasser 2000 caractères.');
     return;
   }
 
