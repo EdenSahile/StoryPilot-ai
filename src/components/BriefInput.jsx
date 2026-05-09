@@ -119,9 +119,9 @@ const Button = styled.button`
 `;
 
 function detectLang(text) {
-  if (!text || text.trim().length < 15) return "fr";
+  if (!text || text.trim().length < 50) return "fr";
   const frPattern =
-    /[àâéèêëîïôùûüç]|(?:^|\s)(je|le|la|les|de|du|un|une|et|est|ce|qui|que|dans|pour|avec|sur|pas|plus|nous|vous|ils|elles)(?:\s|$)/i;
+    /[àâéèêëîïôùûüç]|(?:^|\s)(je|il|elle|le|la|les|de|du|un|une|et|est|ce|qui|que|dans|pour|avec|sur|pas|plus|nous|vous|ils|elles|son|sa|ses|si|ou|car|donc|tout|même|très|bien|cette|cet|ces|lorsqu|afin|doit|peut|faire|être|avoir)(?:\s|$|')/i;
   const enPattern =
     /(?:^|\s)(the|is|are|was|were|it|in|of|to|and|a|an|that|this|with|for|on|have|be|at|by|from|we|they|you|can|will|should|would|could|need|want|as|but|not|or|so|if|all|has|had)(?:\s|$)/i;
   const dePattern =
@@ -167,7 +167,7 @@ function BriefInput({ onSubmit, isLoading }) {
   const [fieldError, setFieldError] = useState("");
 
   const lang = detectLang(brief);
-  const isUnsupportedLang = !SUPPORTED_LANGS.has(lang);
+  const isUnsupportedLang = brief.trim().length >= 50 && !SUPPORTED_LANGS.has(lang);
   const t = i18n[isUnsupportedLang ? "fr" : lang];
 
   const handleSubmit = () => {
