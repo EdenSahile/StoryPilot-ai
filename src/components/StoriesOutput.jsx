@@ -106,14 +106,22 @@ const StoryCard = styled.div`
     color: #334155;
   }
 
-  ul {
-    padding-left: 20px;
+  ul,
+  ol {
+    padding-left: 24px;
     color: #475569;
     margin-bottom: 12px;
   }
 
   li {
     margin-bottom: 4px;
+  }
+
+  li > ul,
+  li > ol {
+    margin-top: 4px;
+    margin-bottom: 4px;
+    padding-left: 20px;
   }
 
   strong {
