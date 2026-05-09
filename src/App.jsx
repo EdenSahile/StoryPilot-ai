@@ -9,8 +9,16 @@ import Footer from "./components/Footer";
 const Wrapper = styled.div`
   max-width: 800px;
   margin: 0 auto;
-  padding: 40px 20px;
-  font-family: "Inter", sans-serif;
+  padding: 40px 24px;
+  font-family: "Plus Jakarta Sans", sans-serif;
+
+  @media (max-width: 768px) {
+    padding: 28px 16px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 20px 12px;
+  }
 `;
 
 const Title = styled.h1`
@@ -20,6 +28,16 @@ const Title = styled.h1`
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+
+  @media (max-width: 768px) {
+    font-size: 1.9rem;
+    margin-bottom: 28px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
 `;
 
 const LoadingText = styled.p`
