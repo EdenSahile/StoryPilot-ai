@@ -1,5 +1,10 @@
 # Audit StoryForge AI — Plan de corrections
-*Généré le 2026-05-08*
+*Généré le 2026-05-08 — Dernière mise à jour : 2026-05-09*
+
+## Statut sessions
+**Session 1 (2026-05-08) — TERMINÉE ✅** — 9/13 issues corrigées, commitées et pushées (`9123bdc`)
+**Session 2 (2026-05-09) — TERMINÉE ✅** — TECH-001 : Vitest configuré, 20 tests écrits et passants ; `onKeyPress` → `onKeyDown` dans BriefInput
+**Session 3 (2026-05-09) — TERMINÉE ✅** — SEC-003 : limitation rate limiting documentée (code + README) ; TECH-005 TypeScript différé
 
 > **Note préalable :** Le fichier `.env` est correctement ignoré par git (`.gitignore`). La clé API n'est PAS exposée dans le repo. Bonne nouvelle !
 
@@ -21,10 +26,11 @@
 
 ### Moyen
 
-- [ ] **[SEC-003] Rate limiting volatile (Map en mémoire)**
+- [x] **[SEC-003] Rate limiting volatile (Map en mémoire)**
   - Fichier : `api/generate-stories.js` lignes 1-11
   - Problème : la Map est réinitialisée à chaque redéploiement Vercel (serverless = instances éphémères) → protection inefficace en production
   - Correction : migrer vers un rate limiting persistant (Vercel KV, Upstash Redis) ou documenter la limitation clairement
+  - *Résolution : limitation documentée dans le code et le README — infrastructure upgrade différée*
 
 - [x] **[SEC-004] CORS origins hardcodées dans le code**
   - Fichier : `api/generate-stories.js` ligne 22
@@ -49,7 +55,7 @@
 
 ### Haut
 
-- [ ] **[TECH-001] Zéro tests dans le projet**
+- [x] **[TECH-001] Zéro tests dans le projet**
   - Fichiers : tout le projet
   - Problème : aucun fichier `*.test.js` / `*.spec.js`, aucun Vitest/Jest configuré — refactorisation et maintenance risquées
   - Correction : configurer Vitest + @testing-library/react, ajouter au minimum des tests unitaires pour `claudeService.js` et un test de rendu pour les composants principaux
@@ -90,20 +96,8 @@
 
 ---
 
-## Ordre d'exécution recommandé
+## Tâches différées
 
-| Priorité | ID | Effort | Impact |
-|----------|----|--------|--------|
-| 1 | SEC-001 | 5 min | Haut — sécurité |
-| 2 | SEC-002 | 10 min | Haut — sécurité |
-| 3 | SEC-004 | 5 min | Moyen — maintenabilité |
-| 4 | SEC-005 | 2 min | Bas — qualité |
-| 5 | SEC-006 | 5 min | Bas — clarté |
-| 6 | TECH-002 | 15 min | Moyen — UX |
-| 7 | TECH-003 | 10 min | Moyen — sécurité |
-| 8 | TECH-004 | 20 min | Moyen — robustesse |
-| 9 | TECH-007 | 5 min | Bas — DX |
-| 10 | TECH-006 | 10 min | Bas — documentation |
-| 11 | SEC-003 | 2h+ | Moyen — nécessite infra |
-| 12 | TECH-001 | 3h+ | Haut — long terme |
-| 13 | TECH-005 | 1j+ | Moyen — migration TypeScript |
+| ID | Notes |
+|----|-------|
+| TECH-005 | Migration TypeScript (~1j) — commencer par claudeService.js quand opportun |
