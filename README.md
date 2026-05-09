@@ -253,6 +253,14 @@ Des questions ou bugs?
 
 ---
 
+## ⚠️ Known Limitations
+
+### Rate limiting is not persistent
+
+The rate limiter (10 req / 15 min per IP) uses an in-memory `Map` that resets on every Vercel cold start and redeployment. In practice, the window is enforced **per function instance**, not globally across all instances. For true persistent rate limiting in production, replace the in-memory Map with [Vercel KV](https://vercel.com/docs/storage/vercel-kv) or [Upstash Redis](https://upstash.com/).
+
+---
+
 ## 🎓 What I Learned
 
 Ce projet m'a permis de :

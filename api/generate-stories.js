@@ -1,4 +1,9 @@
-
+// NOTE: In-memory rate limiting — process-scoped, not persistent.
+// Vercel serverless functions are stateless: this Map resets on every cold start
+// and redeployment. The 10 req / 15 min window is enforced per function instance,
+// not globally across all instances.
+// For persistent rate limiting in production, use Vercel KV (@vercel/kv)
+// or Upstash Redis (@upstash/redis).
 const requestCounts = new Map();
 
 function checkRateLimit(ip) {
