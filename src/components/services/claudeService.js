@@ -105,10 +105,14 @@ export async function generateStories(brief, onChunk, onError) {
 
     if (error.name === 'AbortError') {
       onError('Requête timeout (30s). Le serveur met trop de temps.');
-    } else if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+    } else if (
+      error instanceof TypeError ||
+      error.message?.toLowerCase().includes('fetch') ||
+      error.message?.toLowerCase().includes('network')
+    ) {
       onError('Erreur réseau. Vérifiez votre connexion.');
     } else {
-      onError(`Erreur : ${error.message}`);
+      onError('Une erreur est survenue. Veuillez réessayer.');
     }
   }
 }

@@ -117,7 +117,7 @@
 ### Comportement réseau
 | Test | Statut | Résultat | Action |
 |---|---|---|---|
-| Couper WiFi pendant génération | ⬜ À tester | — | — |
+| Couper WiFi pendant génération | ✅ OK (fixé) | Message brut "network error" → corrigé en message lisible | Fix claudeService catch |
 | Recharger page pendant génération | ⬜ À tester | — | — |
 | Clic rapide multiple sur "Générer" | ⬜ À tester | — | — |
 | Génération successive (2x) | ⬜ À tester | — | — |
