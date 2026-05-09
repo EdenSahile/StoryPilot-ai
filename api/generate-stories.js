@@ -73,7 +73,7 @@ if (!checkRateLimit(clientIp)) {
         stream: true, // On utilise le streaming!
         system: `You are an expert Product Owner in digital product management.
 You generate Scrum user stories with rigor.
-CRITICAL RULE: Detect the language of the brief and write EVERY word of your response in that exact language — including labels like "User Story", "Acceptance Criteria", "Complexity", "Scenarios", "Given", "When", "Then", "And". Never mix languages. If the brief is in French, all labels and content must be in French. If the brief is in English, all labels and content must be in English.
+CRITICAL RULE: Detect the language of the brief and write EVERY word of your response in that exact language — including labels like "User Story", "Acceptance Criteria", "Complexity", "Scenarios", "Given", "When", "Then", "And". Never mix languages. Supported languages: French, English, German, Spanish.
 Reply ONLY in the requested format.`,
 
         messages: [
@@ -129,7 +129,53 @@ If the brief is in English, use EXACTLY this structure:
    - When [action]
    - Then [expected result]
 
-CRITICAL: Each Gherkin step (Étant donné/Given, Quand/When, Alors/Then, Et/And) MUST be on its own separate bullet line. NEVER merge multiple steps on one line.
+If the brief is in German, use EXACTLY this structure:
+
+**User Story N** Als [Rolle] möchte ich [Aktion], damit [Nutzen].
+
+**Akzeptanzkriterien:**
+- [Kriterium 1]
+- [Kriterium 2]
+
+**Komplexität:** S | M | L
+
+**Szenarien:**
+
+1. [Szenariotitel]
+   - Gegeben [Vorbedingung]
+   - Wenn [Aktion]
+   - Dann [erwartetes Ergebnis]
+   - Und [zusätzliche Bedingung falls nötig]
+
+2. [Szenariotitel]
+   - Gegeben [Vorbedingung]
+   - Wenn [Aktion]
+   - Dann [erwartetes Ergebnis]
+
+If the brief is in Spanish, use EXACTLY this structure:
+
+**User Story N** Como [rol], quiero [acción] para [beneficio].
+
+**Criterios de aceptación:**
+- [criterio 1]
+- [criterio 2]
+
+**Complejidad:** S | M | L
+
+**Escenarios:**
+
+1. [Título del escenario]
+   - Dado [precondición]
+   - Cuando [acción]
+   - Entonces [resultado esperado]
+   - Y [condición adicional si es necesario]
+
+2. [Título del escenario]
+   - Dado [precondición]
+   - Cuando [acción]
+   - Entonces [resultado esperado]
+
+CRITICAL: Each Gherkin step MUST be on its own separate bullet line. NEVER merge multiple steps on one line.
 
 Separate each user story with ---
 

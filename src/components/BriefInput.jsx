@@ -124,7 +124,13 @@ function detectLang(text) {
     /[àâéèêëîïôùûüç]|(?:^|\s)(je|le|la|les|de|du|un|une|et|est|ce|qui|que|dans|pour|avec|sur|pas|plus|nous|vous|ils|elles)(?:\s|$)/i;
   const enPattern =
     /(?:^|\s)(the|is|are|was|were|it|in|of|to|and|a|an|that|this|with|for|on|have|be|at|by|from|we|they|you|can|will|should|would|could|need|want|as|but|not|or|so|if|all|has|had)(?:\s|$)/i;
+  const dePattern =
+    /[äöüß]|(?:^|\s)(der|die|das|und|nicht|für|mit|von|auf|nach|wenn|kann|des|dem|wird|haben|einen|einer|auch|sich|sind|wurde)(?:\s|$)/i;
+  const esPattern =
+    /(?:^|\s)(los|las|del|por|para|con|que|pero|más|muy|también|están|son|hay|fue|sus|una|como|este|esta|todo|todos)(?:\s|$)/i;
   if (frPattern.test(text)) return "fr";
+  if (dePattern.test(text)) return "de";
+  if (esPattern.test(text)) return "es";
   if (enPattern.test(text)) return "en";
   return "other";
 }
@@ -140,16 +146,28 @@ const i18n = {
     submit: "Generate user stories",
     loading: "Generating...",
   },
+  de: {
+    empty: "Das Brief darf nicht leer sein.",
+    submit: "User Stories generieren",
+    loading: "Generierung läuft...",
+  },
+  es: {
+    empty: "El brief no puede estar vacío.",
+    submit: "Generar user stories",
+    loading: "Generando...",
+  },
 };
 
-const LANG_ERROR = "Seuls le français et l'anglais sont pris en charge. / Only French and English are supported.";
+const LANG_ERROR = "Seuls le français, l'anglais, l'allemand et l'espagnol sont pris en charge. / Only French, English, German and Spanish are supported.";
+
+const SUPPORTED_LANGS = new Set(["fr", "en", "de", "es"]);
 
 function BriefInput({ onSubmit, isLoading }) {
   const [brief, setBrief] = useState("");
   const [fieldError, setFieldError] = useState("");
 
   const lang = detectLang(brief);
-  const isUnsupportedLang = lang === "other";
+  const isUnsupportedLang = !SUPPORTED_LANGS.has(lang);
   const t = i18n[isUnsupportedLang ? "fr" : lang];
 
   const handleSubmit = () => {
