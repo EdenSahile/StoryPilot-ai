@@ -4,6 +4,7 @@ import { generateStories } from "./components/services/claudeService";
 import BriefInput from "./components/BriefInput";
 import StoriesOutput from "./components/StoriesOutput";
 import ErrorBoundary from "./components/ErrorBoundary";
+import Footer from "./components/Footer";
 
 const Wrapper = styled.div`
   max-width: 800px;
@@ -112,6 +113,7 @@ function App() {
 
         {isLoading && <LoadingText>Génération en cours ...</LoadingText>}
         <StoriesOutput stories={stories} />
+        <Footer />
       </Wrapper>
     </ErrorBoundary>
   );
