@@ -27,6 +27,10 @@ const CopyError = styled.p`
     right: 12px;
     font-size: 0.72rem;
   }
+
+  @media (prefers-color-scheme: dark) {
+    color: #f87171;
+  }
 `;
 
 const CopyButton = styled.button`
@@ -66,6 +70,23 @@ const CopyButton = styled.button`
     font-size: 0.78rem;
     top: 12px;
     right: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    background: #1e293b;
+    border-color: #334155;
+    color: #818cf8;
+
+    &:hover {
+      background: #0f172a;
+      border-color: #6366f1;
+    }
+
+    &.copied {
+      background: #1e3a5f;
+      border-color: #0369a1;
+      color: #7dd3fc;
+    }
   }
 `;
 
@@ -157,6 +178,46 @@ const StoryCard = styled.div`
     @media (max-width: 480px) {
       font-size: 0.78rem;
       padding: 10px 12px;
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    background: #1e293b;
+    border-color: #334155;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+
+    h2 {
+      color: #818cf8;
+    }
+
+    h3 {
+      color: #e2e8f0;
+    }
+
+    p {
+      color: #cbd5e1;
+    }
+
+    ul,
+    ol {
+      color: #94a3b8;
+    }
+
+    strong {
+      color: #e2e8f0;
+    }
+
+    em {
+      color: #818cf8;
+    }
+
+    hr {
+      border-top-color: #334155;
+    }
+
+    code {
+      background: #0f172a;
+      color: #cbd5e1;
     }
   }
 `;

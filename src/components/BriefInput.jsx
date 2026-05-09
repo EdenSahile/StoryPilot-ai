@@ -15,6 +15,10 @@ const FieldError = styled.p`
   display: flex;
   align-items: center;
   gap: 6px;
+
+  @media (prefers-color-scheme: dark) {
+    color: #f87171;
+  }
 `;
 
 const InfoBanner = styled.div`
@@ -75,6 +79,25 @@ const TextArea = styled.textarea`
   @media (max-width: 480px) {
     font-size: 16px;
     min-height: 100px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    background: #1e293b;
+    color: #e2e8f0;
+    border-color: ${({ $hasError }) => ($hasError ? "#f87171" : "#334155")};
+
+    &::placeholder {
+      color: #64748b;
+    }
+
+    &:focus {
+      border-color: ${({ $hasError }) => ($hasError ? "#f87171" : "#6366f1")};
+    }
+
+    &:disabled {
+      background: #0f172a;
+      color: #475569;
+    }
   }
 `;
 
