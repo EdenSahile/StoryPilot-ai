@@ -48,15 +48,16 @@ const TextArea = styled.textarea`
   min-height: 120px;
   padding: 16px;
   border-radius: 12px;
-  border: 2px solid ${({ $hasError }) => ($hasError ? "var(--field-error)" : "var(--border)")};
+  border: 2px solid ${({ $hasError }) => ($hasError ? "var(--field-error)" : "var(--input-border)")};
   font-size: 1rem;
   font-family: "Plus Jakarta Sans", sans-serif;
   resize: vertical;
   outline: none;
-  transition: border-color 0.2s, background 0.2s, color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s, color 0.2s;
   box-sizing: border-box;
   background: var(--input-bg);
   color: var(--text);
+  box-shadow: var(--input-shadow);
 
   &::placeholder {
     color: var(--input-placeholder);
@@ -64,6 +65,7 @@ const TextArea = styled.textarea`
 
   &:focus {
     border-color: ${({ $hasError }) => ($hasError ? "var(--field-error)" : "#6366f1")};
+    box-shadow: 0 0 0 3px ${({ $hasError }) => ($hasError ? "rgba(239,68,68,0.15)" : "rgba(99,102,241,0.15)")};
   }
 
   &:disabled {
