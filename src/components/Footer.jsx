@@ -7,6 +7,12 @@ const FooterWrapper = styled.footer`
   border-top: 1px solid #e2e8f0;
   color: #94a3b8;
   font-size: 0.9rem;
+
+  @media (max-width: 768px) {
+    margin-top: 40px;
+    padding: 28px 16px 16px;
+    font-size: 0.85rem;
+  }
 `;
 
 const FeedbackLink = styled.a`

@@ -20,6 +20,13 @@ const CopyError = styled.p`
   font-size: 0.78rem;
   color: #dc2626;
   margin: 0;
+  max-width: calc(100% - 32px);
+
+  @media (max-width: 480px) {
+    top: 48px;
+    right: 12px;
+    font-size: 0.72rem;
+  }
 `;
 
 const CopyButton = styled.button`
@@ -31,10 +38,17 @@ const CopyButton = styled.button`
   border-radius: 6px;
   padding: 8px 12px;
   font-size: 0.85rem;
+  font-family: "Plus Jakarta Sans", sans-serif;
   cursor: pointer;
   transition: all 0.2s;
   color: #6366f1;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  white-space: nowrap;
 
   &:hover {
     background: #f8fafc;
@@ -46,6 +60,13 @@ const CopyButton = styled.button`
     border-color: #0284c7;
     color: #0284c7;
   }
+
+  @media (max-width: 480px) {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    top: 12px;
+    right: 12px;
+  }
 `;
 
 const StoryCard = styled.div`
@@ -55,6 +76,15 @@ const StoryCard = styled.div`
   padding: 32px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   line-height: 1.7;
+
+  @media (max-width: 768px) {
+    padding: 60px 20px 24px;
+    border-radius: 12px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 56px 16px 20px;
+  }
 
   h2 {
     font-size: 1.1rem;
@@ -114,6 +144,12 @@ const StoryCard = styled.div`
     white-space: pre-wrap;
     word-break: break-word;
     font-family: "Monaco", "Courier New", monospace;
+    overflow-x: auto;
+
+    @media (max-width: 480px) {
+      font-size: 0.78rem;
+      padding: 10px 12px;
+    }
   }
 `;
 
@@ -138,8 +174,18 @@ function StoriesOutput({ stories }) {
   return (
     <Container>
       <StoryCardWrapper>
-        <CopyButton onClick={handleCopy} className={copied ? "copied" : ""}>
-          {copied ? "✓ Copié!" : "📋 Copier"}
+        <CopyButton onClick={handleCopy} className={copied ? "copied" : ""} aria-label={copied ? "Copié" : "Copier le contenu"}>
+          {copied ? (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Copié!
+            </>
+          ) : (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copier
+            </>
+          )}
         </CopyButton>
         {copyError && <CopyError>Copie impossible — essayez manuellement</CopyError>}
         <StoryCard>

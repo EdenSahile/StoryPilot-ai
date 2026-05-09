@@ -16,7 +16,7 @@ const InfoBanner = styled.div`
   font-size: 0.85rem;
   color: #4c1d95;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
 
   @media (prefers-color-scheme: dark) {
@@ -25,8 +25,18 @@ const InfoBanner = styled.div`
     color: #e9d5ff;
   }
 
+  @media (max-width: 480px) {
+    font-size: 0.8rem;
+    padding: 10px 12px;
+  }
+
   strong {
     font-weight: 600;
+  }
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 1px;
   }
 `;
 
@@ -37,7 +47,7 @@ const TextArea = styled.textarea`
   border-radius: 12px;
   border: 2px solid #e2e8f0;
   font-size: 1rem;
-  font-family: "Inter", sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   resize: vertical;
   outline: none;
   transition: border-color 0.2s;
@@ -52,17 +62,24 @@ const TextArea = styled.textarea`
     color: #94a3b8;
     cursor: not-allowed;
   }
+
+  @media (max-width: 480px) {
+    font-size: 16px;
+    min-height: 100px;
+  }
 `;
 
 const Button = styled.button`
   align-self: flex-end;
   padding: 12px 28px;
+  min-height: 44px;
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: white;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
+  font-family: "Plus Jakarta Sans", sans-serif;
   cursor: pointer;
   transition: opacity 0.2s;
 
@@ -73,6 +90,11 @@ const Button = styled.button`
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  @media (max-width: 600px) {
+    align-self: stretch;
+    width: 100%;
   }
 `;
 
@@ -93,7 +115,11 @@ function BriefInput({ onSubmit, isLoading }) {
   return (
     <Container>
       <InfoBanner>
-        ℹ️{" "}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
         <span>
           <strong>Budget limité:</strong> Cette démo utilise un budget de
           $5/mois maximum (~660 générations). Si la limite est atteinte, vous
