@@ -18,7 +18,7 @@ const CopyError = styled.p`
   top: 52px;
   right: 16px;
   font-size: 0.78rem;
-  color: #dc2626;
+  color: var(--field-error);
   margin: 0;
   max-width: calc(100% - 32px);
 
@@ -27,18 +27,14 @@ const CopyError = styled.p`
     right: 12px;
     font-size: 0.72rem;
   }
-
-  @media (prefers-color-scheme: dark) {
-    color: #f87171;
-  }
 `;
 
 const CopyButton = styled.button`
   position: absolute;
   top: 16px;
   right: 16px;
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: var(--copy-bg);
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: 8px 12px;
   font-size: 0.85rem;
@@ -55,14 +51,14 @@ const CopyButton = styled.button`
   white-space: nowrap;
 
   &:hover {
-    background: #f8fafc;
+    background: var(--copy-hover-bg);
     border-color: #6366f1;
   }
 
   &.copied {
-    background: #dbeafe;
-    border-color: #0284c7;
-    color: #0284c7;
+    background: var(--copy-copied-bg);
+    border-color: var(--copy-copied-border);
+    color: var(--copy-copied-text);
   }
 
   @media (max-width: 480px) {
@@ -71,32 +67,16 @@ const CopyButton = styled.button`
     top: 12px;
     right: 12px;
   }
-
-  @media (prefers-color-scheme: dark) {
-    background: #1e293b;
-    border-color: #334155;
-    color: #818cf8;
-
-    &:hover {
-      background: #0f172a;
-      border-color: #6366f1;
-    }
-
-    &.copied {
-      background: #1e3a5f;
-      border-color: #0369a1;
-      color: #7dd3fc;
-    }
-  }
 `;
 
 const StoryCard = styled.div`
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 32px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--card-shadow);
   line-height: 1.7;
+  transition: background 0.2s, border-color 0.2s;
 
   @media (max-width: 768px) {
     padding: 60px 20px 24px;
@@ -116,7 +96,7 @@ const StoryCard = styled.div`
 
   h3 {
     font-size: 1rem;
-    color: #1e293b;
+    color: var(--text-strong);
     margin-top: 20px;
     margin-bottom: 8px;
     font-weight: 600;
@@ -124,13 +104,13 @@ const StoryCard = styled.div`
 
   p {
     margin-bottom: 8px;
-    color: #334155;
+    color: var(--text-body);
   }
 
   ul,
   ol {
     padding-left: 24px;
-    color: #475569;
+    color: var(--text-list);
     margin-bottom: 12px;
   }
 
@@ -146,7 +126,7 @@ const StoryCard = styled.div`
   }
 
   strong {
-    color: #1e293b;
+    color: var(--text-strong);
     font-weight: 600;
   }
 
@@ -157,18 +137,18 @@ const StoryCard = styled.div`
 
   hr {
     border: none;
-    border-top: 2px solid #e2e8f0;
+    border-top: 2px solid var(--border);
     margin: 28px 0;
   }
 
   code {
     display: block;
-    background: #f1f5f9;
+    background: var(--code-bg);
     border-left: 3px solid #6366f1;
     padding: 12px 16px;
     border-radius: 4px;
     font-size: 0.85rem;
-    color: #334155;
+    color: var(--code-text);
     margin: 8px 0;
     white-space: pre-wrap;
     word-break: break-word;
@@ -178,46 +158,6 @@ const StoryCard = styled.div`
     @media (max-width: 480px) {
       font-size: 0.78rem;
       padding: 10px 12px;
-    }
-  }
-
-  @media (prefers-color-scheme: dark) {
-    background: #1e293b;
-    border-color: #334155;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-
-    h2 {
-      color: #818cf8;
-    }
-
-    h3 {
-      color: #e2e8f0;
-    }
-
-    p {
-      color: #cbd5e1;
-    }
-
-    ul,
-    ol {
-      color: #94a3b8;
-    }
-
-    strong {
-      color: #e2e8f0;
-    }
-
-    em {
-      color: #818cf8;
-    }
-
-    hr {
-      border-top-color: #334155;
-    }
-
-    code {
-      background: #0f172a;
-      color: #cbd5e1;
     }
   }
 `;
