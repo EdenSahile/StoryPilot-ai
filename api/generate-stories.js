@@ -83,7 +83,13 @@ Réponds UNIQUEMENT au format demandé.`,
 - Format : "En tant que... Je veux... Afin de..."
 - 2 critères d'acceptation par story
 - Complexité : S, M ou L
-- 2 scénarios Gherkin par story (Étant donné / Quand / Alors)
+- 2 scénarios Gherkin numérotés par story. Format strict avec sous-puces :
+  1. Titre du scénario
+     - Étant donné [précondition]
+     - Quand [action]
+     - Alors [résultat attendu]
+     - Et [condition supplémentaire si nécessaire]
+  Chaque étape DOIT être sur sa propre puce. Ne fusionne JAMAIS plusieurs étapes en une seule ligne.
 
 Sépare chaque user story par ---
 
