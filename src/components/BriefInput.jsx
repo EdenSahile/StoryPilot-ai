@@ -107,7 +107,8 @@ function BriefInput({ onSubmit, isLoading }) {
   };
 
   const handleKeyDown = (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       handleSubmit();
     }
   };
@@ -127,7 +128,7 @@ function BriefInput({ onSubmit, isLoading }) {
         </span>
       </InfoBanner>
       <TextArea
-        placeholder="Décris ton besoin métier ici... (Ctrl+Entrée pour soumettre)"
+        placeholder="Décris ton besoin métier ici... (Entrée pour soumettre, Shift+Entrée pour aller à la ligne)"
         value={brief}
         onChange={(e) => setBrief(e.target.value)}
         onKeyDown={handleKeyDown}
