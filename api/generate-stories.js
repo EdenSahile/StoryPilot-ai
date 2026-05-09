@@ -1,9 +1,4 @@
-// NOTE: In-memory rate limiting — process-scoped, not persistent.
-// Vercel serverless functions are stateless: this Map resets on every cold start
-// and redeployment. The 10 req / 15 min window is enforced per function instance,
-// not globally across all instances.
-// For persistent rate limiting in production, use Vercel KV (@vercel/kv)
-// or Upstash Redis (@upstash/redis).
+
 const requestCounts = new Map();
 
 function checkRateLimit(ip) {
@@ -23,8 +18,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+
+
   // ✅ CORS
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173', 'https://storyforge-ai.vercel.app'];
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173', 'https://story-forge-ai-blond.vercel.app'];
 const origin = req.headers.origin;
 if (allowedOrigins.includes(origin)) {
   res.setHeader('Access-Control-Allow-Origin', origin);

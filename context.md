@@ -1,5 +1,5 @@
 # Audit StoryForge AI — Plan de corrections
-*Généré le 2026-05-08 — Dernière mise à jour : 2026-05-09*
+*Généré le 2026-05-08 — Clôturé le 2026-05-09*
 
 ## Statut sessions
 **Session 1 (2026-05-08) — TERMINÉE ✅** — 9/13 issues corrigées, commitées et pushées (`9123bdc`)
@@ -96,8 +96,8 @@
 
 ---
 
-## Tâches différées
+## Audit terminé ✅
 
-| ID | Notes |
-|----|-------|
-| TECH-005 | Migration TypeScript (~1j) — commencer par claudeService.js quand opportun |
+Toutes les failles de sécurité et dettes techniques identifiées ont été corrigées ou documentées.
+
+**TECH-005 (TypeScript)** — optionnel, différé. Le projet fonctionne correctement en JS. À envisager si le projet grossit.
