@@ -71,27 +71,31 @@ if (!checkRateLimit(clientIp)) {
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
         stream: true, // On utilise le streaming!
-        system: `Tu es un Product Owner expert en gestion de produit digital.
-        Tu génères des user stories au format Scrum avec rigueur.
-Réponds UNIQUEMENT au format demandé.`,
-        
+        system: `You are an expert Product Owner in digital product management.
+You generate Scrum user stories with rigor.
+IMPORTANT: Always respond in the same language as the user's brief. If the brief is in French, respond in French. If it is in English, respond in English. Match the language exactly.
+Reply ONLY in the requested format.`,
+
         messages: [
           {
             role: 'user',
             content: `
-À partir de ce brief métier, génère 3 user stories avec :
-- Format : "En tant que... Je veux... Afin de..."
-- 2 critères d'acceptation par story
-- Complexité : S, M ou L
-- 2 scénarios Gherkin numérotés par story. Format strict avec sous-puces :
-  1. Titre du scénario
-     - Étant donné [précondition]
-     - Quand [action]
-     - Alors [résultat attendu]
-     - Et [condition supplémentaire si nécessaire]
-  Chaque étape DOIT être sur sa propre puce. Ne fusionne JAMAIS plusieurs étapes en une seule ligne.
+Generate 3 user stories from the business brief below.
+Respond in the same language as the brief.
 
-Sépare chaque user story par ---
+Format for each user story:
+- "As a... I want... So that..."
+- 2 acceptance criteria
+- Complexity: S, M or L
+- 2 numbered Gherkin scenarios with sub-bullets:
+  1. Scenario title
+     - Given [precondition]
+     - When [action]
+     - Then [expected result]
+     - And [additional condition if needed]
+  Each step MUST be on its own bullet. NEVER merge multiple steps on one line.
+
+Separate each user story with ---
 
 Brief :
 """

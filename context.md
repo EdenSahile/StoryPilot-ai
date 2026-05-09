@@ -1,10 +1,12 @@
 # Audit StoryForge AI — Plan de corrections
-*Généré le 2026-05-08 — Clôturé le 2026-05-09*
+*Généré le 2026-05-08*
 
 ## Statut sessions
 **Session 1 (2026-05-08) — TERMINÉE ✅** — 9/13 issues corrigées, commitées et pushées (`9123bdc`)
 **Session 2 (2026-05-09) — TERMINÉE ✅** — TECH-001 : Vitest configuré, 20 tests écrits et passants ; `onKeyPress` → `onKeyDown` dans BriefInput
 **Session 3 (2026-05-09) — TERMINÉE ✅** — SEC-003 : limitation rate limiting documentée (code + README) ; TECH-005 TypeScript différé
+**Session 4 (2026-05-09) — TERMINÉE ✅** — Responsive design complet (breakpoints 480/600/768px), police Plus Jakarta Sans, SVG icons, bouton pleine largeur mobile, fix `ol` padding Gherkin, prompt Gherkin sous-puces, Enter pour soumettre, validation brief vide
+**Session 5 (2026-05-09) — EN COURS 🔄** — Tests recruteur en cours (voir section dédiée)
 
 > **Note préalable :** Le fichier `.env` est correctement ignoré par git (`.gitignore`). La clé API n'est PAS exposée dans le repo. Bonne nouvelle !
 
@@ -96,7 +98,54 @@
 
 ---
 
-## Audit terminé ✅
+---
+
+## Tests recruteur — Grille de validation (Session 5)
+
+### Inputs
+| Test | Statut | Résultat | Action |
+|---|---|---|---|
+| Brief > 2000 chars | ✅ OK | Alerte affichée | — |
+| Brief < 10 chars | ✅ OK | Alerte affichée | — |
+| Brief vide + clic bouton | ✅ OK | Alerte "Le brief ne peut pas être vide" | — |
+| Brief en anglais | ⚠️ BUG | 404 en local, génère en **français** sur Vercel | Fix prompt langue |
+| Brief espaces/retours à la ligne uniquement | ⬜ À tester | — | — |
+| Brief avec caractères spéciaux / XSS | ⬜ À tester | — | — |
+| Brief exactement 10 chars (limite basse) | ⬜ À tester | — | — |
+| Brief exactement 2000 chars (limite haute) | ⬜ À tester | — | — |
+
+### Comportement réseau
+| Test | Statut | Résultat | Action |
+|---|---|---|---|
+| Couper WiFi pendant génération | ⬜ À tester | — | — |
+| Recharger page pendant génération | ⬜ À tester | — | — |
+| Clic rapide multiple sur "Générer" | ⬜ À tester | — | — |
+| Génération successive (2x) | ⬜ À tester | — | — |
+
+### UX / Interface
+| Test | Statut | Résultat | Action |
+|---|---|---|---|
+| Bouton "Copier" → coller dans éditeur | ⬜ À tester | — | — |
+| Test sur vrai mobile | ⬜ À tester | — | — |
+| Mode sombre système | ⬜ À tester | — | — |
+| Lien feedback Google Form | ⬜ À tester | — | — |
+
+### Accessibilité
+| Test | Statut | Résultat | Action |
+|---|---|---|---|
+| Navigation clavier uniquement (Tab/Enter) | ⬜ À tester | — | — |
+| Zoom 200% navigateur | ⬜ À tester | — | — |
+
+---
+
+## Notes techniques
+
+- **404 en local** : attendu — `vite dev` ne sert pas `/api`. Utiliser `vercel dev` pour tester l'API localement.
+- **Langue de la réponse** : le prompt système est en français, Claude répond en français même si le brief est en anglais. À corriger.
+
+---
+
+## Audit sécurité/dette terminé ✅
 
 Toutes les failles de sécurité et dettes techniques identifiées ont été corrigées ou documentées.
 
