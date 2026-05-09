@@ -83,23 +83,53 @@ Reply ONLY in the requested format.`,
 Generate 3 user stories from the business brief below.
 Detect the language of the brief and write EVERYTHING in that language — including all structural labels and keywords.
 
-If the brief is in French, use these labels:
-- "En tant que... je veux... afin de..."
-- Critères d'acceptation
-- Complexité : S, M ou L
-- Scénarios, with Gherkin steps: Étant donné / Quand / Alors / Et
+If the brief is in French, use EXACTLY this structure:
 
-If the brief is in English, use these labels:
-- "As a... I want... So that..."
-- Acceptance Criteria
-- Complexity: S, M or L
-- Scenarios, with Gherkin steps: Given / When / Then / And
+**User Story N** En tant que [rôle], je veux [action] afin de [bénéfice].
 
-Format for each user story:
-- Opening sentence in the correct pattern above
-- 2 acceptance criteria
-- Complexity level
-- 2 numbered Gherkin scenarios with sub-bullets, each step on its own bullet line
+**Critères d'acceptation :**
+- [critère 1]
+- [critère 2]
+
+**Complexité :** S | M | L
+
+**Scénarios :**
+
+1. [Titre du scénario]
+   - Étant donné [précondition]
+   - Quand [action]
+   - Alors [résultat attendu]
+   - Et [condition supplémentaire si nécessaire]
+
+2. [Titre du scénario]
+   - Étant donné [précondition]
+   - Quand [action]
+   - Alors [résultat attendu]
+
+If the brief is in English, use EXACTLY this structure:
+
+**User Story N** As a [role], I want [action] so that [benefit].
+
+**Acceptance Criteria:**
+- [criterion 1]
+- [criterion 2]
+
+**Complexity:** S | M | L
+
+**Scenarios:**
+
+1. [Scenario title]
+   - Given [precondition]
+   - When [action]
+   - Then [expected result]
+   - And [additional condition if needed]
+
+2. [Scenario title]
+   - Given [precondition]
+   - When [action]
+   - Then [expected result]
+
+CRITICAL: Each Gherkin step (Étant donné/Given, Quand/When, Alors/Then, Et/And) MUST be on its own separate bullet line. NEVER merge multiple steps on one line.
 
 Separate each user story with ---
 
