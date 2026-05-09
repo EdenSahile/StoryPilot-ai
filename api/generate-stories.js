@@ -73,7 +73,7 @@ if (!checkRateLimit(clientIp)) {
         stream: true, // On utilise le streaming!
         system: `You are an expert Product Owner in digital product management.
 You generate Scrum user stories with rigor.
-IMPORTANT: Always respond in the same language as the user's brief. If the brief is in French, respond in French. If it is in English, respond in English. Match the language exactly.
+CRITICAL RULE: Detect the language of the brief and write EVERY word of your response in that exact language — including labels like "User Story", "Acceptance Criteria", "Complexity", "Scenarios", "Given", "When", "Then", "And". Never mix languages. If the brief is in French, all labels and content must be in French. If the brief is in English, all labels and content must be in English.
 Reply ONLY in the requested format.`,
 
         messages: [
@@ -81,23 +81,29 @@ Reply ONLY in the requested format.`,
             role: 'user',
             content: `
 Generate 3 user stories from the business brief below.
-Respond in the same language as the brief.
+Detect the language of the brief and write EVERYTHING in that language — including all structural labels and keywords.
+
+If the brief is in French, use these labels:
+- "En tant que... je veux... afin de..."
+- Critères d'acceptation
+- Complexité : S, M ou L
+- Scénarios, with Gherkin steps: Étant donné / Quand / Alors / Et
+
+If the brief is in English, use these labels:
+- "As a... I want... So that..."
+- Acceptance Criteria
+- Complexity: S, M or L
+- Scenarios, with Gherkin steps: Given / When / Then / And
 
 Format for each user story:
-- "As a... I want... So that..."
+- Opening sentence in the correct pattern above
 - 2 acceptance criteria
-- Complexity: S, M or L
-- 2 numbered Gherkin scenarios with sub-bullets:
-  1. Scenario title
-     - Given [precondition]
-     - When [action]
-     - Then [expected result]
-     - And [additional condition if needed]
-  Each step MUST be on its own bullet. NEVER merge multiple steps on one line.
+- Complexity level
+- 2 numbered Gherkin scenarios with sub-bullets, each step on its own bullet line
 
 Separate each user story with ---
 
-Brief :
+Brief:
 """
 ${brief.trim()}
 """`
