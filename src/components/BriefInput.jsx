@@ -84,8 +84,7 @@ function BriefInput({ onSubmit, isLoading }) {
     onSubmit(brief);
   };
 
-  const handleKeyPress = (e) => {
-    // Ctrl+Enter ou Cmd+Enter pour soumettre
+  const handleKeyDown = (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
       handleSubmit();
     }
@@ -105,7 +104,7 @@ function BriefInput({ onSubmit, isLoading }) {
         placeholder="Décris ton besoin métier ici... (Ctrl+Entrée pour soumettre)"
         value={brief}
         onChange={(e) => setBrief(e.target.value)}
-        onKeyPress={handleKeyPress}
+        onKeyDown={handleKeyDown}
         disabled={isLoading}
       />
       <Button onClick={handleSubmit} disabled={isLoading}>
