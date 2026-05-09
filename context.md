@@ -108,7 +108,7 @@
 | Brief > 2000 chars | ✅ OK | Alerte affichée | — |
 | Brief < 10 chars | ✅ OK | Alerte affichée | — |
 | Brief vide + clic bouton | ✅ OK | Alerte "Le brief ne peut pas être vide" | — |
-| Brief en anglais | ⚠️ BUG | 404 en local, génère en **français** sur Vercel | Fix prompt langue |
+| Brief en anglais | ✅ OK | Génère en anglais sur Vercel, bouton adapté | — |
 | Brief espaces/retours à la ligne uniquement | ⬜ À tester | — | — |
 | Brief avec caractères spéciaux / XSS | ⬜ À tester | — | — |
 | Brief exactement 10 chars (limite basse) | ⬜ À tester | — | — |
