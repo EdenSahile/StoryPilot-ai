@@ -13,6 +13,11 @@ const FooterWrapper = styled.footer`
     padding: 28px 16px 16px;
     font-size: 0.85rem;
   }
+
+  @media (prefers-color-scheme: dark) {
+    border-top-color: #334155;
+    color: #64748b;
+  }
 `;
 
 const FeedbackLink = styled.a`

@@ -7,4 +7,12 @@
 body {
   background: #f8fafc;
   color: #1e293b;
+  min-height: 100vh;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #0f172a;
+    color: #e2e8f0;
+  }
 }

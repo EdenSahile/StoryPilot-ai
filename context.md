@@ -127,7 +127,7 @@
 |---|---|---|---|
 | Bouton "Copier" → coller dans éditeur | ⬜ À tester | — | — |
 | Test sur vrai mobile | ⬜ À tester | — | — |
-| Mode sombre système | 🔜 À FAIRE | Bannière s'adapte, reste de l'app non → dark mode complet à implémenter | Option A choisie : implémenter `prefers-color-scheme: dark` sur tous les composants |
+| Mode sombre système | ✅ OK | Dark mode complet implémenté sur tous les composants (body, BriefInput, StoriesOutput, Footer, ErrorMessage) | — |
 | Lien feedback Google Form | ⬜ À tester | — | — |
 
 ### Accessibilité

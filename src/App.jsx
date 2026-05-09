@@ -87,6 +87,16 @@ const ErrorMessage = styled.div`
       opacity: 0.7;
     }
   }
+
+  @media (prefers-color-scheme: dark) {
+    background-color: #450a0a;
+    border-color: #7f1d1d;
+    color: #fca5a5;
+
+    button {
+      color: #fca5a5;
+    }
+  }
 `;
 
 function App() {
