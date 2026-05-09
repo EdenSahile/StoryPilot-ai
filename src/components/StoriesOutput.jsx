@@ -198,7 +198,7 @@ function StoriesOutput({ stories }) {
         </CopyButton>
         {copyError && <CopyError>Copie impossible — essayez manuellement</CopyError>}
         <StoryCard>
-          <ReactMarkdown>{stories}</ReactMarkdown>
+          <ReactMarkdown>{stories.replace(/^[ \t]*[-*][ \t]*$/gm, "").replace(/\n{3,}/g, "\n\n")}</ReactMarkdown>
         </StoryCard>
       </StoryCardWrapper>
     </Container>
