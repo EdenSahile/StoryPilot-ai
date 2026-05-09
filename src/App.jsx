@@ -21,22 +21,64 @@ const Wrapper = styled.div`
   }
 `;
 
+const HeaderRow = styled.div`
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 40px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 28px;
+  }
+
+  @media (max-width: 480px) {
+    margin-bottom: 20px;
+  }
+`;
+
 const Title = styled.h1`
   text-align: center;
   font-size: 2.5rem;
-  margin-bottom: 40px;
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 
   @media (max-width: 768px) {
     font-size: 1.9rem;
-    margin-bottom: 28px;
   }
 
   @media (max-width: 480px) {
     font-size: 1.5rem;
-    margin-bottom: 20px;
+  }
+`;
+
+const ThemeToggle = styled.button`
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  min-width: 36px;
+  min-height: 36px;
+
+  &:hover {
+    border-color: #6366f1;
+    color: #6366f1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
   }
 `;
 
@@ -59,12 +101,12 @@ const LoadingText = styled.p`
 `;
 
 const ErrorMessage = styled.div`
-  background-color: #fee2e2;
-  border: 1px solid #fecaca;
+  background-color: var(--error-bg);
+  border: 1px solid var(--error-border);
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 20px;
-  color: #991b1b;
+  color: var(--error-text);
   font-size: 0.95rem;
   display: flex;
   justify-content: space-between;
@@ -73,7 +115,7 @@ const ErrorMessage = styled.div`
   button {
     background: none;
     border: none;
-    color: #991b1b;
+    color: var(--error-text);
     cursor: pointer;
     font-size: 1.2rem;
     padding: 0;
@@ -87,30 +129,28 @@ const ErrorMessage = styled.div`
       opacity: 0.7;
     }
   }
-
-  @media (prefers-color-scheme: dark) {
-    background-color: #450a0a;
-    border-color: #7f1d1d;
-    color: #fca5a5;
-
-    button {
-      color: #fca5a5;
-    }
-  }
 `;
 
 function App() {
   const [stories, setStories] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isDark, setIsDark] = useState(
+    () => document.documentElement.getAttribute("data-theme") === "dark"
+  );
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
+    localStorage.setItem("sf-theme", next ? "dark" : "light");
+  };
 
   const handleSubmit = async (brief) => {
-    // Reset states
     setStories("");
     setError(null);
     setIsLoading(true);
 
-    // Appel au service Claude avec error handler
     await generateStories(
       brief,
       (chunk) => {
@@ -122,14 +162,39 @@ function App() {
       },
     );
 
-    // Marquer comme terminé une fois que tout est reçu
     setIsLoading(false);
   };
 
   return (
     <ErrorBoundary>
       <Wrapper>
-        <Title>StoryForge AI</Title>
+        <HeaderRow>
+          <Title>StoryForge AI</Title>
+          <ThemeToggle
+            onClick={toggleTheme}
+            aria-label={isDark ? "Passer en mode clair" : "Passer en mode sombre"}
+            title={isDark ? "Mode clair" : "Mode sombre"}
+          >
+            {isDark ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/>
+                <line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            )}
+          </ThemeToggle>
+        </HeaderRow>
+
         <BriefInput onSubmit={handleSubmit} isLoading={isLoading} />
 
         {error && (

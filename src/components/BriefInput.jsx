@@ -10,33 +10,23 @@ const Container = styled.div`
 
 const FieldError = styled.p`
   font-size: 0.85rem;
-  color: #dc2626;
+  color: var(--field-error);
   margin: 0;
   display: flex;
   align-items: center;
   gap: 6px;
-
-  @media (prefers-color-scheme: dark) {
-    color: #f87171;
-  }
 `;
 
 const InfoBanner = styled.div`
-  background: linear-gradient(135deg, #e0e7ff, #f0e7ff);
-  border: 1px solid #c7d2fe;
+  background: var(--info-bg);
+  border: 1px solid var(--info-border);
   border-radius: 8px;
   padding: 12px 16px;
   font-size: 0.85rem;
-  color: #4c1d95;
+  color: var(--info-text);
   display: flex;
   align-items: flex-start;
   gap: 8px;
-
-  @media (prefers-color-scheme: dark) {
-    background: linear-gradient(135deg, #3730a3, #4c1d95);
-    border-color: #6366f1;
-    color: #e9d5ff;
-  }
 
   @media (max-width: 480px) {
     font-size: 0.8rem;
@@ -58,46 +48,33 @@ const TextArea = styled.textarea`
   min-height: 120px;
   padding: 16px;
   border-radius: 12px;
-  border: 2px solid ${({ $hasError }) => ($hasError ? "#dc2626" : "#e2e8f0")};
+  border: 2px solid ${({ $hasError }) => ($hasError ? "var(--field-error)" : "var(--border)")};
   font-size: 1rem;
   font-family: "Plus Jakarta Sans", sans-serif;
   resize: vertical;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
   box-sizing: border-box;
+  background: var(--input-bg);
+  color: var(--text);
+
+  &::placeholder {
+    color: var(--input-placeholder);
+  }
 
   &:focus {
-    border-color: ${({ $hasError }) => ($hasError ? "#dc2626" : "#6366f1")};
+    border-color: ${({ $hasError }) => ($hasError ? "var(--field-error)" : "#6366f1")};
   }
 
   &:disabled {
-    background-color: #f1f5f9;
-    color: #94a3b8;
+    background-color: var(--input-disabled-bg);
+    color: var(--input-disabled-text);
     cursor: not-allowed;
   }
 
   @media (max-width: 480px) {
     font-size: 16px;
     min-height: 100px;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    background: #1e293b;
-    color: #e2e8f0;
-    border-color: ${({ $hasError }) => ($hasError ? "#f87171" : "#334155")};
-
-    &::placeholder {
-      color: #64748b;
-    }
-
-    &:focus {
-      border-color: ${({ $hasError }) => ($hasError ? "#f87171" : "#6366f1")};
-    }
-
-    &:disabled {
-      background: #0f172a;
-      color: #475569;
-    }
   }
 `;
 

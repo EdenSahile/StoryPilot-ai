@@ -4,19 +4,15 @@ const FooterWrapper = styled.footer`
   margin-top: 60px;
   padding: 40px 20px 20px;
   text-align: center;
-  border-top: 1px solid #e2e8f0;
-  color: #94a3b8;
+  border-top: 1px solid var(--border);
+  color: var(--footer-text);
   font-size: 0.9rem;
+  transition: border-color 0.2s, color 0.2s;
 
   @media (max-width: 768px) {
     margin-top: 40px;
     padding: 28px 16px 16px;
     font-size: 0.85rem;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    border-top-color: #334155;
-    color: #64748b;
   }
 `;
 
