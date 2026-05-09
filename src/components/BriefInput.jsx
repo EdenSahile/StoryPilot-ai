@@ -8,6 +8,15 @@ const Container = styled.div`
   margin-bottom: 32px;
 `;
 
+const FieldError = styled.p`
+  font-size: 0.85rem;
+  color: #dc2626;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
 const InfoBanner = styled.div`
   background: linear-gradient(135deg, #e0e7ff, #f0e7ff);
   border: 1px solid #c7d2fe;
@@ -45,7 +54,7 @@ const TextArea = styled.textarea`
   min-height: 120px;
   padding: 16px;
   border-radius: 12px;
-  border: 2px solid #e2e8f0;
+  border: 2px solid ${({ $hasError }) => ($hasError ? "#dc2626" : "#e2e8f0")};
   font-size: 1rem;
   font-family: "Plus Jakarta Sans", sans-serif;
   resize: vertical;
@@ -54,7 +63,7 @@ const TextArea = styled.textarea`
   box-sizing: border-box;
 
   &:focus {
-    border-color: #6366f1;
+    border-color: ${({ $hasError }) => ($hasError ? "#dc2626" : "#6366f1")};
   }
 
   &:disabled {
@@ -100,9 +109,14 @@ const Button = styled.button`
 
 function BriefInput({ onSubmit, isLoading }) {
   const [brief, setBrief] = useState("");
+  const [fieldError, setFieldError] = useState("");
 
   const handleSubmit = () => {
-    if (brief.trim() === "") return;
+    if (brief.trim() === "") {
+      setFieldError("Le brief ne peut pas être vide.");
+      return;
+    }
+    setFieldError("");
     onSubmit(brief);
   };
 
@@ -130,10 +144,19 @@ function BriefInput({ onSubmit, isLoading }) {
       <TextArea
         placeholder="Décris ton besoin métier ici... (Entrée pour soumettre, Shift+Entrée pour aller à la ligne)"
         value={brief}
-        onChange={(e) => setBrief(e.target.value)}
+        onChange={(e) => { setBrief(e.target.value); if (fieldError) setFieldError(""); }}
         onKeyDown={handleKeyDown}
         disabled={isLoading}
+        $hasError={!!fieldError}
+        aria-invalid={!!fieldError}
+        aria-describedby={fieldError ? "brief-error" : undefined}
       />
+      {fieldError && (
+        <FieldError id="brief-error" role="alert">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {fieldError}
+        </FieldError>
+      )}
       <Button onClick={handleSubmit} disabled={isLoading}>
         {isLoading ? "Génération en cours..." : "Générer les user stories"}
       </Button>
