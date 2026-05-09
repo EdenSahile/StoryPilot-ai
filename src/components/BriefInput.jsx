@@ -107,13 +107,35 @@ const Button = styled.button`
   }
 `;
 
+function detectLang(text) {
+  if (!text || text.trim().length < 8) return "fr";
+  const frPattern = /[àâéèêëîïôùûüç]|(?:^|\s)(je|le|la|les|de|du|un|une|et|est|ce|qui|que|dans|pour|avec|sur|pas|plus|nous|vous|ils|elles)(?:\s|$)/i;
+  return frPattern.test(text) ? "fr" : "en";
+}
+
+const i18n = {
+  fr: {
+    empty: "Le brief ne peut pas être vide.",
+    submit: "Générer les user stories",
+    loading: "Génération en cours...",
+  },
+  en: {
+    empty: "The brief cannot be empty.",
+    submit: "Generate user stories",
+    loading: "Generating...",
+  },
+};
+
 function BriefInput({ onSubmit, isLoading }) {
   const [brief, setBrief] = useState("");
   const [fieldError, setFieldError] = useState("");
 
+  const lang = detectLang(brief);
+  const t = i18n[lang];
+
   const handleSubmit = () => {
     if (brief.trim() === "") {
-      setFieldError("Le brief ne peut pas être vide.");
+      setFieldError(t.empty);
       return;
     }
     setFieldError("");
@@ -158,7 +180,7 @@ function BriefInput({ onSubmit, isLoading }) {
         </FieldError>
       )}
       <Button onClick={handleSubmit} disabled={isLoading}>
-        {isLoading ? "Génération en cours..." : "Générer les user stories"}
+        {isLoading ? t.loading : t.submit}
       </Button>
     </Container>
   );
