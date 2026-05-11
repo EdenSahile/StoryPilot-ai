@@ -33,7 +33,7 @@ function Footer() {
   return (
     <FooterWrapper>
       <p>
-        Built with Claude API |
+        Built with Claude Code · Powered by Claude API |
         <FeedbackLink
           href="https://docs.google.com/forms/d/e/1FAIpQLSfnTMvKkdxnuHXmAeXzJBofmfigbEQzIsZjIhyHzuDAizs4QQ/viewform?usp=publish-editor"
           target="_blank"
