@@ -209,8 +209,8 @@ function BriefInput({ onSubmit, isLoading }) {
         </svg>
         <span>
           <strong>Budget limité:</strong> Cette démo utilise un budget de
-          $5/mois maximum (~660 générations). Si la limite est atteinte, vous
-          verrez une erreur.
+          $5/mois maximum (~660 générations). Si la limite est atteinte,
+          un message d'erreur s'affichera.
         </span>
       </InfoBanner>
       <TextArea
