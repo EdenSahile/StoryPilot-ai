@@ -1035,8 +1035,9 @@ export default function Forge({ onNavigate, stories, setStories }) {
         <RightColumn>
           <KBPanel>
             <KBHeader>
-              <div className="left">
-                🗂️ Base de connaissance
+              <div className="left" style={{ flexDirection: "column", alignItems: "flex-start", gap: "2px" }}>
+                <span>🗂️ Base de connaissance</span>
+                <span style={{ fontSize: "11px", color: "#64748b", fontStyle: "italic", fontWeight: 400 }}>Données de démonstration</span>
               </div>
               <span className="indexed-badge">
                 <span className="icon">check_circle</span>
