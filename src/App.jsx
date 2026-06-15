@@ -8,6 +8,7 @@ import Sidebar from "./components/layout/Sidebar";
 import BottomNav from "./components/layout/BottomNav";
 import Dashboard from "./screens/Dashboard";
 import Forge from "./screens/Forge";
+import Results from "./screens/Results";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 // import Library from "./screens/Library";
@@ -85,13 +86,21 @@ const PlaceholderScreen = styled.div`
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState("dashboard");
+  const [stories, setStories] = useState("");
 
   const renderScreen = () => {
     switch (currentScreen) {
       case "dashboard":
         return <Dashboard onNavigate={setCurrentScreen} />;
       case "forge":
-        return <Forge onNavigate={setCurrentScreen} />;
+        return <Forge onNavigate={setCurrentScreen} stories={stories} setStories={setStories} />;
+      case "results":
+        return (
+          <Results
+            stories={stories}
+            onNewGeneration={() => { setStories(""); setCurrentScreen("forge"); }}
+          />
+        );
       case "library":
         return (
           <PlaceholderScreen>
