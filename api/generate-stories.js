@@ -88,10 +88,17 @@ Pour chaque user story, utilise EXACTEMENT ce format :
 - [critère précis et testable]
 
 **Scénarios Gherkin :**
-- Étant donné [contexte précis]
-- Quand [action utilisateur]
-- Alors [résultat attendu]
+
+Scénario 1 : [nom du scénario principal]
+- Étant donné [contexte]
+- Quand [action]
+- Alors [résultat]
 - Et [condition complémentaire]
+
+Scénario 2 : [nom du cas alternatif ou d'erreur]
+- Étant donné [contexte]
+- Quand [action]
+- Alors [résultat]
 
 **Complexité :** S|M|L
 
