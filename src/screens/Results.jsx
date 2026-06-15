@@ -601,14 +601,21 @@ function parseStories(rawText) {
           .filter(Boolean)
       : [];
 
-    // Gherkin
+    // Gherkin — groupes par "Scénario N : titre"
     const gherkinMatch = block.match(/\*\*Sc[ée]narios.*?\*\*\s*\n([\s\S]*?)(?=\*\*Complexit|$)/i);
-    const gherkin = gherkinMatch
-      ? gherkinMatch[1].split('\n')
+    const gherkinGroups = [];
+    if (gherkinMatch) {
+      const sections = gherkinMatch[1].split(/(?=Sc[ée]nario\s+\d+\s*:)/i).filter(Boolean);
+      sections.forEach(section => {
+        const titleLine = section.match(/Sc[ée]nario\s+\d+\s*:\s*(.+)/i);
+        if (!titleLine) return;
+        const lines = section.split('\n')
           .filter(l => l.trim().startsWith('-'))
           .map(l => l.replace(/^-\s*/, '').trim())
-          .filter(Boolean)
-      : [];
+          .filter(Boolean);
+        if (lines.length > 0) gherkinGroups.push({ title: titleLine[1].trim(), lines });
+      });
+    }
 
     // Complexité
     const complexityMatch = block.match(/\*\*Complexit[ée]\s*:\*\*\s*([SML])/i);
@@ -638,7 +645,7 @@ function parseStories(rawText) {
         benefit: benefitMatch[1].trim(),
       } : null,
       criteria,
-      gherkin,
+      gherkinGroups,
     };
   }).filter(s => s.fullStatement);
 }
@@ -757,7 +764,7 @@ export default function Results({ stories, onNewGeneration }) {
                     )}
 
                     {/* Grid: Criteria + Gherkin */}
-                    {(story.criteria.length > 0 || story.gherkin.length > 0) && (
+                    {(story.criteria.length > 0 || story.gherkinGroups.length > 0) && (
                       <CardGrid>
                         {/* Criteria */}
                         {story.criteria.length > 0 && (
@@ -775,23 +782,30 @@ export default function Results({ stories, onNewGeneration }) {
                         )}
 
                         {/* Gherkin */}
-                        {story.gherkin.length > 0 && (
+                        {story.gherkinGroups.length > 0 && (
                           <GherkinSection>
-                            <h4>Scénario Gherkin</h4>
-                            <GherkinBlock>
-                              {story.gherkin.map((line, j) => {
-                                const lower = line.toLowerCase();
-                                if (lower.startsWith("étant donné") || lower.startsWith("given"))
-                                  return <div key={j}><span className="keyword-given">{line.split(" ")[0]} {line.split(" ")[1]}</span> {line.split(" ").slice(2).join(" ")}</div>;
-                                if (lower.startsWith("quand") || lower.startsWith("when"))
-                                  return <div key={j}><span className="keyword-when">{line.split(" ")[0]}</span> {line.split(" ").slice(1).join(" ")}</div>;
-                                if (lower.startsWith("alors") || lower.startsWith("then"))
-                                  return <div key={j}><span className="keyword-then">{line.split(" ")[0]}</span> {line.split(" ").slice(1).join(" ")}</div>;
-                                if (lower.startsWith("et ") || lower.startsWith("and "))
-                                  return <div key={j}><span className="keyword-and">{line.split(" ")[0]}</span> {line.split(" ").slice(1).join(" ")}</div>;
-                                return <div key={j}>{line}</div>;
-                              })}
-                            </GherkinBlock>
+                            <h4>Scénarios Gherkin</h4>
+                            {story.gherkinGroups.map((group, gi) => (
+                              <div key={gi} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                <p style={{ fontSize: "11px", fontWeight: 700, color: theme.colors.primary, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                  {group.title}
+                                </p>
+                                <GherkinBlock>
+                                  {group.lines.map((line, j) => {
+                                    const lower = line.toLowerCase();
+                                    if (lower.startsWith("étant donné") || lower.startsWith("given"))
+                                      return <div key={j}><span className="keyword-given">{line.split(" ")[0]} {line.split(" ")[1]}</span> {line.split(" ").slice(2).join(" ")}</div>;
+                                    if (lower.startsWith("quand") || lower.startsWith("when"))
+                                      return <div key={j}><span className="keyword-when">{line.split(" ")[0]}</span> {line.split(" ").slice(1).join(" ")}</div>;
+                                    if (lower.startsWith("alors") || lower.startsWith("then"))
+                                      return <div key={j}><span className="keyword-then">{line.split(" ")[0]}</span> {line.split(" ").slice(1).join(" ")}</div>;
+                                    if (lower.startsWith("et ") || lower.startsWith("and "))
+                                      return <div key={j}><span className="keyword-and">{line.split(" ")[0]}</span> {line.split(" ").slice(1).join(" ")}</div>;
+                                    return <div key={j}>{line}</div>;
+                                  })}
+                                </GherkinBlock>
+                              </div>
+                            ))}
                           </GherkinSection>
                         )}
                       </CardGrid>
