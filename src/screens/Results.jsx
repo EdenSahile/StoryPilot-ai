@@ -861,7 +861,10 @@ export default function Results({ stories, onNewGeneration }) {
           {/* Recent Library */}
           <Panel>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <PanelLabel>Générations Récentes</PanelLabel>
+              <div>
+                <PanelLabel>Générations Récentes</PanelLabel>
+                <span style={{ fontSize: "11px", color: "#64748b", fontStyle: "italic" }}>Données de démonstration</span>
+              </div>
               <span style={{
                 fontSize: "10px", fontWeight: 700,
                 background: theme.colors.surfaceContainerHighest,
