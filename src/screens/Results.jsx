@@ -585,73 +585,54 @@ const MobileStickyBar = styled.div`
 function parseStories(rawText) {
   if (!rawText) return [];
 
-  const storyBlocks = rawText.split(/(?=User Story \d+|US-\d+|#{1,3}\s)/);
+  const blocks = rawText.split(/---+/).filter(b => b.trim().length > 30);
 
-  return storyBlocks
-    .filter((block) => block.trim().length > 50)
-    .map((block, index) => {
-      const lines = block.trim().split("\n").filter(Boolean);
+  return blocks.map((block, index) => {
+    // Titre et statement
+    const titleMatch = block.match(/\*\*User Story \d+\*\*\s*(.+?)(?=\n)/);
+    const fullStatement = titleMatch ? titleMatch[1].trim() : "";
 
-      const titleLine = lines[0] || `User Story ${index + 1}`;
-      const title = titleLine
-        .replace(/^#+\s*/, "")
-        .replace(/^\*+\s*/, "")
-        .trim();
+    // Critères
+    const criteriaMatch = block.match(/\*\*Crit[èe]res.*?\*\*\s*\n([\s\S]*?)(?=\*\*Sc[ée]narios|\*\*Complexit|$)/i);
+    const criteria = criteriaMatch
+      ? criteriaMatch[1].split('\n')
+          .filter(l => l.trim().startsWith('-'))
+          .map(l => l.replace(/^-\s*/, '').trim())
+          .filter(Boolean)
+      : [];
 
-      // Extract complexity
-      const complexityMatch = block.match(/Complexit[ée]\s*:\s*([SML])/i);
-      const complexity = complexityMatch ? complexityMatch[1].toUpperCase() : "M";
+    // Gherkin
+    const gherkinMatch = block.match(/\*\*Sc[ée]narios.*?\*\*\s*\n([\s\S]*?)(?=\*\*Complexit|$)/i);
+    const gherkin = gherkinMatch
+      ? gherkinMatch[1].split('\n')
+          .filter(l => l.trim().startsWith('-'))
+          .map(l => l.replace(/^-\s*/, '').trim())
+          .filter(Boolean)
+      : [];
 
-      // Extract "En tant que" statement
-      const statementMatch = block.match(
-        /En tant qu[e']\s*(.*?)(?:,|\n).*?(?:je veux|je souhaite)\s*(.*?)(?:,|\n).*?(?:afin de|pour)\s*(.*?)(?:\n|$)/is
-      );
+    // Complexité
+    const complexityMatch = block.match(/\*\*Complexit[ée]\s*:\*\*\s*([SML])/i);
+    const complexity = complexityMatch ? complexityMatch[1] : "M";
 
-      // Extract criteria
-      const criteriaSection = block.match(
-        /Crit[èe]res?\s+d['']acceptation\s*:?\n([\s\S]*?)(?=Sc[ée]nario|Complexit|$)/i
-      );
-      const criteriaLines = criteriaSection
-        ? criteriaSection[1]
-            .split("\n")
-            .filter((l) => l.trim().match(/^[-•*]|^\d+\./))
-            .map((l) => l.replace(/^[-•*]\s*|\d+\.\s*/, "").trim())
-            .filter(Boolean)
-            .slice(0, 4)
-        : [];
+    // Statement colorisé
+    const roleMatch = fullStatement.match(/En tant qu[e']\s*([^,]+)/i);
+    const actionMatch = fullStatement.match(/je veux\s*([^,]+(?:,(?!.*afin)[^,]*)?)/i);
+    const benefitMatch = fullStatement.match(/afin de\s*(.+?)\.?\s*$/i);
 
-      // Extract Gherkin scenarios
-      const gherkinSection = block.match(
-        /Sc[ée]narios?\s*(?:Gherkin)?\s*:?\n([\s\S]*?)(?=Complexit|---|\n\n\n|$)/i
-      );
-      const gherkinLines = gherkinSection
-        ? gherkinSection[1]
-            .split("\n")
-            .filter((l) => l.trim())
-            .map((l) => l.replace(/^\s*-\s*/, "").trim())
-            .filter(Boolean)
-            .slice(0, 5)
-        : [];
-
-      return {
-        id: index + 1,
-        title,
-        complexity,
-        statement: statementMatch
-          ? {
-              role: statementMatch[1].trim(),
-              action: statementMatch[2].trim(),
-              benefit: statementMatch[3].trim(),
-            }
-          : null,
-        rawStatement: block.match(
-          /En tant qu[e'].+?(?=\n\n|Crit[èe]res|$)/is
-        )?.[0] || "",
-        criteria: criteriaLines,
-        gherkin: gherkinLines,
-      };
-    })
-    .filter((s) => s.title && s.title.length > 2);
+    return {
+      id: index + 1,
+      title: `User Story ${index + 1}`,
+      fullStatement,
+      complexity,
+      statement: roleMatch && actionMatch && benefitMatch ? {
+        role: roleMatch[1].trim(),
+        action: actionMatch[1].trim(),
+        benefit: benefitMatch[1].trim(),
+      } : null,
+      criteria,
+      gherkin,
+    };
+  }).filter(s => s.fullStatement);
 }
 
 // ─── Generic stories for comparison ──────────────────────

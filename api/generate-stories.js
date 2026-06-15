@@ -71,118 +71,30 @@ if (!checkRateLimit(clientIp)) {
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
         stream: true, // On utilise le streaming!
-        system: `You are an expert Product Owner in digital product management.
-You generate Scrum user stories with rigor.
-CRITICAL RULE: Detect the language of the brief and write EVERY word of your response in that exact language — including labels like "User Story", "Acceptance Criteria", "Complexity", "Scenarios", "Given", "When", "Then", "And". Never mix languages. Supported languages: French, English, German, Spanish.
-Reply ONLY in the requested format.`,
-
-        messages: [
-          {
-            role: 'user',
-            content: `
-Generate 3 user stories from the business brief below.
-Detect the language of the brief and write EVERYTHING in that language — including all structural labels and keywords.
-
-If the brief is in French, use EXACTLY this structure:
+        system: `Tu es un expert Product Owner. Pour chaque user story, génère exactement ce format :
 
 **User Story N** En tant que [rôle], je veux [action] afin de [bénéfice].
 
 **Critères d'acceptation :**
-- [critère 1]
-- [critère 2]
+- critère 1
+- critère 2
+- critère 3
 
-**Complexité :** S | M | L
+**Scénarios Gherkin :**
+- Étant donné [contexte]
+- Quand [action]
+- Alors [résultat]
 
-**Scénarios :**
+**Complexité :** S|M|L
 
-1. [Titre du scénario]
-   - Étant donné [précondition]
-   - Quand [action]
-   - Alors [résultat attendu]
-   - Et [condition supplémentaire si nécessaire]
+---
 
-2. [Titre du scénario]
-   - Étant donné [précondition]
-   - Quand [action]
-   - Alors [résultat attendu]
+Génère entre 3 et 5 user stories. Sépare chaque story par ---`,
 
-If the brief is in English, use EXACTLY this structure:
-
-**User Story N** As a [role], I want [action] so that [benefit].
-
-**Acceptance Criteria:**
-- [criterion 1]
-- [criterion 2]
-
-**Complexity:** S | M | L
-
-**Scenarios:**
-
-1. [Scenario title]
-   - Given [precondition]
-   - When [action]
-   - Then [expected result]
-   - And [additional condition if needed]
-
-2. [Scenario title]
-   - Given [precondition]
-   - When [action]
-   - Then [expected result]
-
-If the brief is in German, use EXACTLY this structure:
-
-**User Story N** Als [Rolle] möchte ich [Aktion], damit [Nutzen].
-
-**Akzeptanzkriterien:**
-- [Kriterium 1]
-- [Kriterium 2]
-
-**Komplexität:** S | M | L
-
-**Szenarien:**
-
-1. [Szenariotitel]
-   - Gegeben [Vorbedingung]
-   - Wenn [Aktion]
-   - Dann [erwartetes Ergebnis]
-   - Und [zusätzliche Bedingung falls nötig]
-
-2. [Szenariotitel]
-   - Gegeben [Vorbedingung]
-   - Wenn [Aktion]
-   - Dann [erwartetes Ergebnis]
-
-If the brief is in Spanish, use EXACTLY this structure:
-
-**User Story N** Como [rol], quiero [acción] para [beneficio].
-
-**Criterios de aceptación:**
-- [criterio 1]
-- [criterio 2]
-
-**Complejidad:** S | M | L
-
-**Escenarios:**
-
-1. [Título del escenario]
-   - Dado [precondición]
-   - Cuando [acción]
-   - Entonces [resultado esperado]
-   - Y [condición adicional si es necesario]
-
-2. [Título del escenario]
-   - Dado [precondición]
-   - Cuando [acción]
-   - Entonces [resultado esperado]
-
-CRITICAL: Each Gherkin step MUST be on its own separate bullet line. NEVER merge multiple steps on one line.
-
-Separate each user story with ---
-
-Brief:
-"""
-${brief.trim()}
-"""`
+        messages: [
+          {
+            role: 'user',
+            content: `Brief :\n"""\n${brief.trim()}\n"""`
           }
         ]
       })
