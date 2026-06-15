@@ -363,8 +363,8 @@ const GherkinBlock = styled.div`
   border-radius: 0 ${theme.radii.sm} ${theme.radii.sm} 0;
   padding: ${theme.spacing.md};
   font-family: ${theme.fonts.mono};
-  font-size: 12px;
-  line-height: 1.8;
+  font-size: 13px;
+  line-height: 2;
   color: ${theme.colors.onSurfaceVariant};
   overflow-x: auto;
 
@@ -616,14 +616,22 @@ function parseStories(rawText) {
 
     // Statement colorisé
     const roleMatch = fullStatement.match(/En tant qu[e']\s*([^,]+)/i);
-    const actionMatch = fullStatement.match(/je veux\s*([^,]+(?:,(?!.*afin)[^,]*)?)/i);
-    const benefitMatch = fullStatement.match(/afin de\s*(.+?)\.?\s*$/i);
+    const actionMatch = fullStatement.match(/je veux\s*([\s\S]+?)(?=\safin de)/i);
+    const benefitMatch = fullStatement.match(/afin de\s*([\s\S]+?)\.?\s*$/i);
+
+    const descriptionMatch = block.match(
+      /\*\*Description\s*:\*\*\s*\n([\s\S]*?)(?=\*\*Crit|$)/i
+    );
+    const description = descriptionMatch
+      ? descriptionMatch[1].trim()
+      : "";
 
     return {
       id: index + 1,
       title: `User Story ${index + 1}`,
       fullStatement,
       complexity,
+      description,
       statement: roleMatch && actionMatch && benefitMatch ? {
         role: roleMatch[1].trim(),
         action: actionMatch[1].trim(),
@@ -719,19 +727,33 @@ export default function Results({ stories, onNewGeneration }) {
 
                   <CardBody>
                     {/* Statement */}
-                    {story.statement ? (
-                      <StoryStatement>
-                        En tant que{" "}
-                        <span className="role">{story.statement.role}</span>, je
-                        veux{" "}
-                        <span className="action">{story.statement.action}</span>{" "}
-                        afin de{" "}
-                        <span className="benefit">{story.statement.benefit}</span>.
-                      </StoryStatement>
-                    ) : (
-                      <StoryStatement>
-                        {story.rawStatement}
-                      </StoryStatement>
+                    <StoryStatement>
+                      {story.statement ? (
+                        <>
+                          En tant que{" "}
+                          <span className="role">{story.statement.role}</span>, je veux{" "}
+                          <span className="action">{story.statement.action}</span>{" "}
+                          afin de{" "}
+                          <span className="benefit">{story.statement.benefit}</span>.
+                        </>
+                      ) : (
+                        story.fullStatement
+                      )}
+                    </StoryStatement>
+
+                    {story.description && (
+                      <p style={{
+                        fontSize: "14px",
+                        color: theme.colors.onSurfaceVariant,
+                        lineHeight: 1.7,
+                        fontStyle: "italic",
+                        padding: "12px 16px",
+                        background: "rgba(16, 32, 52, 0.4)",
+                        borderRadius: "8px",
+                        borderLeft: "3px solid rgba(192, 193, 255, 0.2)"
+                      }}>
+                        {story.description}
+                      </p>
                     )}
 
                     {/* Grid: Criteria + Gherkin */}

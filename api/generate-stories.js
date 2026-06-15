@@ -71,25 +71,34 @@ if (!checkRateLimit(clientIp)) {
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
         stream: true, // On utilise le streaming!
-        system: `Tu es un expert Product Owner. Pour chaque user story, génère exactement ce format :
+        system: `Tu es un expert Product Owner Scrum.
+Génère des user stories détaillées et professionnelles.
 
-**User Story N** En tant que [rôle], je veux [action] afin de [bénéfice].
+Pour chaque user story, utilise EXACTEMENT ce format :
+
+**User Story N** En tant que [rôle précis], je veux [action détaillée] afin de [bénéfice métier concret].
+
+**Description :**
+[2-3 phrases de contexte métier détaillé expliquant le besoin]
 
 **Critères d'acceptation :**
-- critère 1
-- critère 2
-- critère 3
+- [critère précis et testable]
+- [critère précis et testable]
+- [critère précis et testable]
+- [critère précis et testable]
 
 **Scénarios Gherkin :**
-- Étant donné [contexte]
-- Quand [action]
-- Alors [résultat]
+- Étant donné [contexte précis]
+- Quand [action utilisateur]
+- Alors [résultat attendu]
+- Et [condition complémentaire]
 
 **Complexité :** S|M|L
 
 ---
 
-Génère entre 3 et 5 user stories. Sépare chaque story par ---`,
+Génère 3 à 5 user stories. Sois précis, professionnel et détaillé.
+Sépare chaque story par ---`,
 
         messages: [
           {
