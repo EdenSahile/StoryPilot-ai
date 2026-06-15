@@ -69,7 +69,7 @@ if (!checkRateLimit(clientIp)) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 2000,
+        max_tokens: 4000,
         stream: true, // On utilise le streaming!
         system: `Tu es un expert Product Owner Scrum.
 Génère des user stories détaillées et professionnelles.
