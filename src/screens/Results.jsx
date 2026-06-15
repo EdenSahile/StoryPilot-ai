@@ -620,7 +620,7 @@ function parseStories(rawText) {
     const benefitMatch = fullStatement.match(/afin de\s*([\s\S]+?)\.?\s*$/i);
 
     const descriptionMatch = block.match(
-      /\*\*Description\s*:\*\*\s*\n([\s\S]*?)(?=\*\*Crit|$)/i
+      /\*\*Description\s*:\*\*\s*\n([\s\S]*?)(?=\n\*\*Crit|\n\*\*Sc[ée]n|\n\*\*Compl|$)/i
     );
     const description = descriptionMatch
       ? descriptionMatch[1].trim()
