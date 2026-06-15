@@ -1,5 +1,5 @@
 // src/screens/Forge.jsx
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { theme } from "../theme";
 import { generateStories } from "../components/services/claudeService";
@@ -850,18 +850,22 @@ const RAG_CHUNKS = [
 ];
 
 // ─── Component ────────────────────────────────────────────
-export default function Forge({ onNavigate }) {
+export default function Forge({ onNavigate, stories, setStories }) {
   const [brief, setBrief] = useState("");
-  const [stories, setStories] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [copied, setCopied] = useState(false);
   const [ragOpen, setRagOpen] = useState(true);
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
 
   const charCount = brief.length;
   const MAX = 2000;
+
+  useEffect(() => {
+    if (!isLoading && stories) {
+      onNavigate("results");
+    }
+  }, [isLoading, stories]);
 
   const handleSubmit = async () => {
     if (!brief.trim() || isLoading) return;
@@ -883,16 +887,6 @@ export default function Forge({ onNavigate }) {
 
   const handleKeyDown = (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") handleSubmit();
-  };
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(stories);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // silent fail
-    }
   };
 
   const handleDrop = (e) => {
@@ -1026,27 +1020,6 @@ export default function Forge({ onNavigate }) {
                 <Cursor />
               </StreamingText>
             </StreamingCard>
-          )}
-
-          {/* Result complet */}
-          {!isLoading && stories && (
-            <div style={{ display: "flex", flexDirection: "column", gap: theme.spacing.md }}>
-              <ResultActions>
-                <CopyBtn onClick={handleCopy} $copied={copied}>
-                  <span className="icon">{copied ? "done" : "content_copy"}</span>
-                  {copied ? "Copié !" : "Copier"}
-                </CopyBtn>
-              </ResultActions>
-              <StreamingCard style={{ animation: "none", borderColor: theme.colors.outlineVariant }}>
-                <StreamingText
-                  dangerouslySetInnerHTML={{
-                    __html: stories
-                      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                      .replace(/\n/g, "<br/>")
-                  }}
-                />
-              </StreamingCard>
-            </div>
           )}
 
           {/* Empty state */}
