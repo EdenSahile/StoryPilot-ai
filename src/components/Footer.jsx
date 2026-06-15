@@ -1,23 +1,23 @@
 import styled from "styled-components";
+import { theme } from "../theme";
 
 const FooterWrapper = styled.footer`
   margin-top: 60px;
   padding: 40px 20px 20px;
   text-align: center;
-  border-top: 1px solid var(--border);
-  color: var(--footer-text);
-  font-size: 0.9rem;
-  transition: border-color 0.2s, color 0.2s;
+  border-top: 1px solid ${theme.colors.outlineVariant};
+  color: ${theme.colors.onSurfaceVariant};
+  font-size: ${theme.fontSizes.sm};
 
-  @media (max-width: 768px) {
+  @media (max-width: ${theme.breakpoints.mobile}) {
     margin-top: 40px;
     padding: 28px 16px 16px;
-    font-size: 0.85rem;
+    font-size: ${theme.fontSizes.xs};
   }
 `;
 
 const FeedbackLink = styled.a`
-  color: #6366f1;
+  color: ${theme.colors.primary};
   text-decoration: none;
   font-weight: 500;
   cursor: pointer;

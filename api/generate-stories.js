@@ -68,121 +68,42 @@ if (!checkRateLimit(clientIp)) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
+        model: 'claude-sonnet-4-5',
+        max_tokens: 4000,
         stream: true, // On utilise le streaming!
-        system: `You are an expert Product Owner in digital product management.
-You generate Scrum user stories with rigor.
-CRITICAL RULE: Detect the language of the brief and write EVERY word of your response in that exact language — including labels like "User Story", "Acceptance Criteria", "Complexity", "Scenarios", "Given", "When", "Then", "And". Never mix languages. Supported languages: French, English, German, Spanish.
-Reply ONLY in the requested format.`,
+        system: `Tu es un expert Product Owner Scrum.
+Génère des user stories détaillées et professionnelles.
+
+Pour chaque user story, utilise EXACTEMENT ce format :
+
+**User Story N** En tant que [rôle précis], je veux [action détaillée] afin de [bénéfice métier concret].
+
+**Description :**
+[2-3 phrases de contexte métier détaillé expliquant le besoin]
+
+**Critères d'acceptation :**
+- [critère précis et testable]
+- [critère précis et testable]
+- [critère précis et testable]
+- [critère précis et testable]
+
+**Scénarios Gherkin :**
+- Étant donné [contexte précis]
+- Quand [action utilisateur]
+- Alors [résultat attendu]
+- Et [condition complémentaire]
+
+**Complexité :** S|M|L
+
+---
+
+Génère 3 à 5 user stories. Sois précis, professionnel et détaillé.
+Sépare chaque story par ---`,
 
         messages: [
           {
             role: 'user',
-            content: `
-Generate 3 user stories from the business brief below.
-Detect the language of the brief and write EVERYTHING in that language — including all structural labels and keywords.
-
-If the brief is in French, use EXACTLY this structure:
-
-**User Story N** En tant que [rôle], je veux [action] afin de [bénéfice].
-
-**Critères d'acceptation :**
-- [critère 1]
-- [critère 2]
-
-**Complexité :** S | M | L
-
-**Scénarios :**
-
-1. [Titre du scénario]
-   - Étant donné [précondition]
-   - Quand [action]
-   - Alors [résultat attendu]
-   - Et [condition supplémentaire si nécessaire]
-
-2. [Titre du scénario]
-   - Étant donné [précondition]
-   - Quand [action]
-   - Alors [résultat attendu]
-
-If the brief is in English, use EXACTLY this structure:
-
-**User Story N** As a [role], I want [action] so that [benefit].
-
-**Acceptance Criteria:**
-- [criterion 1]
-- [criterion 2]
-
-**Complexity:** S | M | L
-
-**Scenarios:**
-
-1. [Scenario title]
-   - Given [precondition]
-   - When [action]
-   - Then [expected result]
-   - And [additional condition if needed]
-
-2. [Scenario title]
-   - Given [precondition]
-   - When [action]
-   - Then [expected result]
-
-If the brief is in German, use EXACTLY this structure:
-
-**User Story N** Als [Rolle] möchte ich [Aktion], damit [Nutzen].
-
-**Akzeptanzkriterien:**
-- [Kriterium 1]
-- [Kriterium 2]
-
-**Komplexität:** S | M | L
-
-**Szenarien:**
-
-1. [Szenariotitel]
-   - Gegeben [Vorbedingung]
-   - Wenn [Aktion]
-   - Dann [erwartetes Ergebnis]
-   - Und [zusätzliche Bedingung falls nötig]
-
-2. [Szenariotitel]
-   - Gegeben [Vorbedingung]
-   - Wenn [Aktion]
-   - Dann [erwartetes Ergebnis]
-
-If the brief is in Spanish, use EXACTLY this structure:
-
-**User Story N** Como [rol], quiero [acción] para [beneficio].
-
-**Criterios de aceptación:**
-- [criterio 1]
-- [criterio 2]
-
-**Complejidad:** S | M | L
-
-**Escenarios:**
-
-1. [Título del escenario]
-   - Dado [precondición]
-   - Cuando [acción]
-   - Entonces [resultado esperado]
-   - Y [condición adicional si es necesario]
-
-2. [Título del escenario]
-   - Dado [precondición]
-   - Cuando [acción]
-   - Entonces [resultado esperado]
-
-CRITICAL: Each Gherkin step MUST be on its own separate bullet line. NEVER merge multiple steps on one line.
-
-Separate each user story with ---
-
-Brief:
-"""
-${brief.trim()}
-"""`
+            content: `Brief :\n"""\n${brief.trim()}\n"""`
           }
         ]
       })
