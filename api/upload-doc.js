@@ -3,6 +3,7 @@
 
 import { Pinecone } from "@pinecone-database/pinecone";
 import OpenAI from "openai";
+import pdfParse from "pdf-parse/lib/pdf-parse.js";
 
 export const config = {
   api: {
@@ -48,7 +49,6 @@ async function extractText(content, filename) {
   }
 
   if (ext === "pdf") {
-    const pdfParse = (await import("pdf-parse/lib/pdf-parse.js")).default;
     const buffer = Buffer.from(content, "base64");
     const data = await pdfParse(buffer);
     return data.text;
