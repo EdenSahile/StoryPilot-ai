@@ -899,6 +899,7 @@ export default function Forge({ onNavigate, stories, setStories }) {
   };
 
   const handleFileUpload = async (files) => {
+    console.log("Files selected:", files);
     for (const file of files) {
       try {
         setUploadError(null);
@@ -931,6 +932,7 @@ export default function Forge({ onNavigate, stories, setStories }) {
         );
         setUploadingFile(null);
       } catch (err) {
+        console.error("uploadDocument failed:", err);
         setDocuments(prev =>
           prev.map(d =>
             d.name === file.name
