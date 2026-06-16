@@ -18,7 +18,7 @@ function chunkText(text, maxTokens = 500) {
   const sentences = text
     .replace(/\n{3,}/g, "\n\n")
     .split(/(?<=[.!?])\s+|\n\n/)
-    .filter((s) => s.trim().length > 10);
+    .filter((s) => s.trim().length > 0);
 
   const chunks = [];
   let current = "";
@@ -110,7 +110,12 @@ export default async function handler(req, res) {
 
     // 2. Chunk
     console.log(`[upload] Chunking text (${text.length} chars)...`);
+    console.log("[debug] Raw text length:", text.length);
+    console.log("[debug] Raw text sample:", JSON.stringify(text.substring(0, 300)));
+
     const chunks = chunkText(text);
+    console.log("[debug] Chunks count:", chunks.length);
+    console.log("[debug] First chunk:", chunks[0]);
     console.log(`[upload] ${chunks.length} chunks created.`);
 
     if (chunks.length === 0) {
