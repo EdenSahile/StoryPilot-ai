@@ -78,3 +78,18 @@ export async function retrieveContext(brief, topK = 5) {
 
   return response.json();
 }
+
+export async function deleteDocument(filename) {
+  const response = await fetch("/api/delete-doc", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ filename }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || "Erreur lors de la suppression.");
+  }
+
+  return response.json();
+}

@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { theme } from "../theme";
 import { generateStories } from "../components/services/claudeService";
-import { uploadDocument, retrieveContext } from "../components/services/ragService";
+import { uploadDocument, retrieveContext, deleteDocument } from "../components/services/ragService";
 
 // ─── Animations ───────────────────────────────────────────
 const fadeInUp = keyframes`
@@ -765,6 +765,25 @@ const UploadZone = styled.div`
   }
 `;
 
+const DeleteDocBtn = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: ${theme.radii.sm};
+  color: ${theme.colors.outline};
+  font-family: "Material Symbols Outlined";
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.2s, background 0.2s;
+
+  &:hover {
+    color: ${theme.colors.error};
+    background: rgba(255, 180, 171, 0.1);
+  }
+`;
+
 const IndexBtn = styled.button`
   width: 100%;
   padding: ${theme.spacing.md};
@@ -943,6 +962,16 @@ export default function Forge({ onNavigate, stories, setStories }) {
         setUploadError(err.message);
         setUploadingFile(null);
       }
+    }
+  };
+
+  const handleDeleteDoc = async (doc) => {
+    if (!confirm(`Supprimer "${doc.name}" et ses ${doc.chunks || 0} chunks ?`)) return;
+    try {
+      await deleteDocument(doc.name);
+      setDocuments((prev) => prev.filter((d) => d.id !== doc.id));
+    } catch (err) {
+      setUploadError(err.message);
     }
   };
 
@@ -1134,6 +1163,14 @@ export default function Forge({ onNavigate, stories, setStories }) {
                   )}
                   {doc.status === "loading" && (
                     <span className="percent">{doc.pct}%</span>
+                  )}
+                  {doc.status !== "loading" && (
+                    <DeleteDocBtn
+                      title={`Supprimer ${doc.name}`}
+                      onClick={() => handleDeleteDoc(doc)}
+                    >
+                      delete
+                    </DeleteDocBtn>
                   )}
                 </DocCard>
               ))}
