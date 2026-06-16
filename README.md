@@ -1,274 +1,185 @@
-# 📖 StoryForge AI
+# StoryForge AI
 
-**Générateur intelligent de user stories avec streaming en temps réel**
+**Générateur de user stories contextualisé par IA — pour les Product Owners qui veulent des specs précises, pas des généricités.**
 
-Un outil IA qui transforme un brief métier en user stories formatées, avec critères d'acceptation, complexité et scénarios Gherkin — le tout généré par Claude en streaming.
+StoryForge transforme un brief métier en user stories structurées avec critères d'acceptation, estimation de complexité et scénarios Gherkin multi-cas — le tout généré par Claude en streaming temps réel.
 
----
-
-## ✨ Features
-
-- ✅ **Streaming en temps réel** : Voir la génération des user stories au fur et à mesure (UX fluide)
-- ✅ **Format structuré** : 3 user stories avec "En tant que / Je veux / Afin de"
-- ✅ **Critères d'acceptation** : 2 critères par story pour la qualité
-- ✅ **Complexité estimée** : Sizing S/M/L intégré
-- ✅ **Scénarios Gherkin** : 2 scénarios BDD en français (Étant donné / Quand / Alors)
-- ✅ **Gestion d'erreurs robuste** : Validation input, timeouts, messages d'erreur clairs
-- ✅ **UX réfléchie** : Copy-to-clipboard, loading state, dark mode ready
-- ✅ **API key sécurisée** : Configuration via .env, jamais exposée
+🔗 **[Démo live](https://story-forge-ai-blond.vercel.app)** · 💼 **[Eden IA Studio](https://www.linkedin.com/in/edensahile-99b088112)**
 
 ---
 
-## 🛠 Stack Technique
+## Ce que fait StoryForge
 
-| Technologie | Version | Rôle |
-|------------|---------|------|
-| **React** | 18+ | Framework UI |
-| **Vite** | 5+ | Bundler ultra-rapide |
-| **styled-components** | 6+ | CSS-in-JS |
-| **react-markdown** | 9+ | Rendu Markdown |
-| **Claude API** | Sonnet 4 | Génération IA |
+Un PO écrit un brief en langage naturel. StoryForge génère instantanément des user stories complètes, prêtes à intégrer dans un backlog Jira/Linear :
 
----
+- **Statement** structuré : En tant que / Je veux / Afin de
+- **Description métier** : contexte fonctionnel détaillé
+- **Critères d'acceptation** : 4-6 critères précis et testables
+- **Scénarios Gherkin** : plusieurs scénarios par story (happy path + edge cases)
+- **Complexité** : estimation S / M / L
 
-## 🚀 Mise en place
-
-### Prérequis
-- Node.js 18+
-- Une clé API Anthropic Claude ([obtenez-la ici](https://console.anthropic.com/))
-
-### Installation
-
-```bash
-# Clone le projet
-git clone https://github.com/eden-sahile/storyforge-ai.git
-cd storyforge-ai
-
-# Installe les dépendances
-npm install
-
-# Configure ta clé API
-cp .env.example .env.local
-# Édite .env.local et ajoute ta clé API
-```
-
-### Développement
-
-```bash
-npm run dev
-# Ouvre http://localhost:5173
-```
-
-### Build pour production
-
-```bash
-npm run build
-npm run preview
-```
+Le tout arrive en streaming — l'utilisateur voit la génération en temps réel.
 
 ---
 
-## 📋 Utilisation
+## Screens
 
-1. **Écris un brief métier** dans la textarea
-   - Exemple : *"Je veux permettre aux libraires de gérer leurs inventaires en temps réel avec notifications"*
+### Dashboard
+Vue d'ensemble avec statistiques de génération, historique des sessions récentes et accès rapide à la Forge.
 
-2. **Clique "Générer les user stories"** (ou Ctrl+Entrée)
+### Forge
+L'écran principal. Deux colonnes : le brief à gauche, la base de connaissance à droite. Pendant la génération, les chunks RAG récupérés s'affichent avec leur score de pertinence, et le résultat stream en direct.
 
-3. **Regarde le streaming** : Les user stories s'affichent en temps réel
-
-4. **Copie le résultat** : Utilise le bouton "📋 Copier" pour exporter
+### Results
+Les user stories parsées et structurées en cards visuelles. Chaque card affiche le statement colorisé, la description, les critères avec checkmarks, et les scénarios Gherkin avec coloration syntaxique (Étant donné / Quand / Alors / Et). Un toggle permet de comparer avec une version générique sans RAG.
 
 ---
 
-## 🔍 Détails Techniques
+## Stack technique
 
-### Architecture
+| Technologie | Rôle |
+|---|---|
+| React 18 + Vite | Framework UI + bundler |
+| styled-components | CSS-in-JS, design tokens centralisés |
+| Claude API (Sonnet) | Génération IA en streaming SSE |
+| Vercel | Déploiement + serverless functions |
+
+---
+
+## Architecture
 
 ```
-StoryForge/
-├── App.jsx                 # Composant principal, gestion état
-├── BriefInput.jsx          # Textarea + button
-├── StoriesOutput.jsx       # Rendu Markdown + copy button
-├── claudeService.js        # Service API Claude (streaming, erreurs)
-├── .env.example           # Template env
-└── package.json           # Dépendances
+src/
+├── theme.js                          # Design tokens (couleurs, spacing, fonts)
+├── App.jsx                           # Router + state partagé
+├── components/
+│   ├── layout/
+│   │   ├── Sidebar.jsx               # Navigation desktop
+│   │   └── BottomNav.jsx             # Navigation mobile
+│   ├── services/
+│   │   └── claudeService.js          # Client API Claude (streaming SSE)
+│   ├── BriefInput.jsx                # Composant textarea (legacy v1)
+│   ├── StoriesOutput.jsx             # Rendu markdown (legacy v1)
+│   ├── ErrorBoundary.jsx             # Catch erreurs React
+│   └── Footer.jsx
+├── screens/
+│   ├── Dashboard.jsx                 # Stats + historique
+│   ├── Forge.jsx                     # Brief + KB + streaming
+│   └── Results.jsx                   # Stories structurées + Gherkin
+└── styles/
+
+api/
+└── generate-stories.js               # Vercel serverless — proxy Claude API
 ```
 
 ### Flow de données
 
 ```
-User Input (textarea)
-    ↓
-BriefInput → handleSubmit
-    ↓
-App.jsx → generateStories()
-    ↓
-claudeService.js → Claude API (streaming)
-    ↓
-onChunk callback → setStories (accumule chunks)
-    ↓
-StoriesOutput → ReactMarkdown render
+[Dashboard] → clic "New Story"
+     ↓
+[Forge] → brief + base de connaissance
+     ↓  clic "Générer"
+[Forge loading] → chunks RAG affichés + streaming result
+     ↓  génération terminée
+[Results] → stories parsées en cards structurées
+     ↓  clic "Nouvelle génération"
+[Forge] ← retour
 ```
 
-### Gestion des erreurs
-
-L'app gère les cas suivants :
-- ❌ Brief vide ou trop court (< 10 caractères)
-- ❌ Clé API manquante ou invalide (401)
-- ❌ Rate limiting Claude (429)
-- ❌ Serveur indisponible (500)
-- ❌ Timeout réseau (30s)
-- ❌ Output trop long (> 4000 caractères)
-
-Chaque erreur affiche un message utilisateur clair et actionnable.
-
-### Optimisations
-
-- **Streaming**: Les chunks arrivent en real-time (pas d'attente)
-- **Buffer handling**: Gère les lignes incomplètes du streaming SSE
-- **Timeouts**: 30 secondes max pour éviter les requêtes orphelines
-- **Output limit**: Plafonne la réponse à 4000 chars (évite les freezes UI)
-- **Debouncing**: Le bouton se désactive pendant la génération
-
 ---
 
-## 💡 Lessons Learned
-
-### Ce qui a bien marché
-
-✅ **Streaming avec ReadableStream** : Beaucoup plus fluide qu'une réponse complète
-✅ **Validation input côté client** : Évite les appels API inutiles
-✅ **Messages d'erreur contextualisés** : Les utilisateurs savent quoi faire
-
-### Challenges
-
-⚠️ **Parsing SSE malformé** : Certaines lignes arrivent incomplètes en streaming → solution : buffer partiel
-⚠️ **UX loading state** : Désactiver le bouton est crucial pour éviter les appels multiples
-⚠️ **Output formatage** : Claude produit du Markdown, react-markdown doit l'interpréter correctement
-
----
-
-## 🔗 Déploiement sur Vercel
-
-### Configuration
-
-1. **Push le projet sur GitHub**
+## Installation
 
 ```bash
-git add .
-git commit -m "feat: StoryForge AI MVP"
-git push origin main
+git clone https://github.com/EdenSahile/StoryForgeAI.git
+cd StoryForgeAI
+npm install
 ```
 
-2. **Connecte Vercel à ton repo GitHub**
-   - https://vercel.com/new
-   - Sélectionne ton repo
-   - Clique "Deploy"
+### Variables d'environnement
 
-3. **Ajoute la variable d'environnement**
-   - Dans Vercel Dashboard → Settings → Environment Variables
-   - Ajoute : `VITE_ANTHROPIC_API_KEY` = ta clé API
+```bash
+cp .env.example .env.local
+```
 
-4. **Redéploie**
-   - Vercel va rebuilder automatiquement
+Ajoute ta clé API Anthropic dans `.env.local` :
 
-### Résultat
+```
+ANTHROPIC_API_KEY=sk-ant-...
+```
 
-Ton app sera live sur : `https://storyforge-ai.vercel.app`
+### Développement
 
----
+```bash
+# Avec Vercel CLI (recommandé — les serverless functions marchent)
+npm i -g vercel
+vercel dev
 
-## 📊 Metrics
+# Ou sans l'API (front uniquement)
+npm run dev
+```
 
-**Performance**
-- ⚡ First Contentful Paint: ~800ms (Vite)
-- ⚡ Time to Streaming: ~1-2s
-- ⚡ Chunk latency: 50-200ms
+### Déploiement
 
-**Limitations Claude API**
-- Max tokens output: 1000
-- Timeout: 30s
-- Rate limit: 5 req/min (free tier)
+Push sur `main` → Vercel déploie automatiquement. Ajoute `ANTHROPIC_API_KEY` dans Vercel → Settings → Environment Variables (Production + Preview).
 
 ---
 
-## 🎯 Use Cases
+## Gestion des erreurs
 
-### Pour les Product Owners
-- Générer rapidement des user stories à partir de briefs métier
-- Structurer les spécifications avant les estimations
-- Avoir un format cohérent pour tout le backlog
+- Brief vide ou trop court (< 10 caractères)
+- Clé API manquante ou invalide (401)
+- Rate limiting Claude (429)
+- Timeout réseau (30s)
+- Modèle indisponible (500)
 
-### Pour les Equipes Agile
-- Accélérer les sprint planning
-- Normaliser la formulation des stories
-- Réduire les allers-retours PO/Dev sur le formatage
-
-### Pour les Consultants
-- Démontrer comment l'IA peut accélérer la gestion produit
-- Showcaser l'intégration Claude dans un workflow réel
+Chaque erreur affiche un message clair et actionnable.
 
 ---
 
-## 🚧 Roadmap Future
+## Roadmap
 
-- [ ] Intégration Jira : exporter les user stories directement dans Jira
-- [ ] Génération de tests : créer les cas de test à partir des stories
-- [ ] Historique : sauvegarder et revoir les générations précédentes
-- [ ] Personnalisation du prompt : adapter le format (Scrum vs Kanban, etc.)
-- [ ] Support multilingue : générer en FR/EN/ES
-- [ ] Analytics : tracker les briefs les plus convertis
+### v2 — UI complète ✅
+- [x] Dashboard avec stats et historique
+- [x] Forge : brief + base de connaissance + streaming
+- [x] Results : cards structurées + Gherkin multi-scénarios
+- [x] Navigation sidebar desktop + bottom nav mobile
+- [x] Design tokens centralisés (theme.js)
+- [x] Prompt enrichi : description + critères + Gherkin
 
----
+### v3 — RAG contextuel (en cours)
+- [ ] Upload documents client (PDF, Word, TXT)
+- [ ] Chunking + embeddings via OpenAI
+- [ ] Stockage vectoriel Pinecone
+- [ ] Retrieval sémantique sur le brief
+- [ ] Stories ancrées dans le vocabulaire et les contraintes du client
+- [ ] Persistence des générations dans Supabase
 
-## 💬 Questions Fréquentes
-
-**Q: Ma clé API est exposée dans les logs?**
-A: Non. Vite cache les variables env en production. Elles ne remontent jamais aux logs serveur.
-
-**Q: Pourquoi le streaming s'arrête parfois?**
-A: C'est un timeout (30s) ou une limite Claude. Réessayez avec un brief plus court.
-
-**Q: Peux-tu générer en d'autres langues?**
-A: Oui, modifie simplement le prompt dans `claudeService.js`. Actuellement c'est en FR.
-
-**Q: Combien ça coûte?**
-A: Zéro pour toi. C'est facturé à la clé API utilisateur (quelques centimes par requête avec Sonnet).
+### v4 — Intégrations
+- [ ] Export Jira / Trello
+- [ ] Historique réel des générations (Library)
+- [ ] Support multilingue (FR/EN)
 
 ---
 
-## 📝 License
+## Pourquoi ce projet
 
-MIT © 2025 Eden Sahilé
+StoryForge n'est pas un wrapper ChatGPT. C'est un outil de Product Owner conçu par une PO.
 
----
+La v3 avec RAG est ce qui fait la différence : un client alimente l'outil avec ses docs métier, et les user stories générées utilisent **son vocabulaire, ses règles de gestion, ses contraintes techniques** — pas des généricités.
 
-## 🙋 Support
-
-Des questions ou bugs? 
-- 📧 Email: edensahile.pro@gmail.com
-- 🔗 LinkedIn: [eden-sahile](https://www.linkedin.com/in/edensahile-99b088112)
-- 💻 Portfolio: [edensahile.fr](https://edensahile.fr)
+C'est exactement le pattern qu'une entreprise a vendu 20 000€ pour automatiser les réponses aux appels d'offres. StoryForge applique la même approche à la rédaction de specs produit.
 
 ---
 
-## ⚠️ Known Limitations
+## Auteur
 
-### Rate limiting is not persistent
+**Eden Sahilé** — PO technique & AI Product Builder
 
-The rate limiter (10 req / 15 min per IP) uses an in-memory `Map` that resets on every Vercel cold start and redeployment. In practice, the window is enforced **per function instance**, not globally across all instances. For true persistent rate limiting in production, replace the in-memory Map with [Vercel KV](https://vercel.com/docs/storage/vercel-kv) or [Upstash Redis](https://upstash.com/).
+- 🔗 [LinkedIn](https://www.linkedin.com/in/edensahile-99b088112)
+- 💻 [Eden IA Studio](https://edensahile.fr)
+- 📧 edensahile.pro@gmail.com
 
 ---
 
-## 🎓 What I Learned
-
-Ce projet m'a permis de :
-- ✅ Approfondir React (hooks, state management)
-- ✅ Implémenter le streaming SSE côté client
-- ✅ Gérer les erreurs API et les edge cases
-- ✅ Intégrer Claude API dans une véritable app
-- ✅ Penser "product" : gestion erreurs, UX, messages clairs
-- ✅ Préparer le déploiement production-ready
-
-C'est le type de projet que j'aime : **petit mais complet, avec de vraies contraintes métier**.
+© 2025-2026 Eden Sahilé
