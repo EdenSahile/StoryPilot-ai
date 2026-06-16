@@ -151,6 +151,11 @@ export default async function handler(req, res) {
       },
     }));
 
+    console.log("[debug] Text extracted length:", text.length);
+console.log("[debug] First 200 chars:", text.substring(0, 200));
+console.log("[debug] Chunks created:", chunks.length);
+console.log("[debug] Vectors to upsert:", vectors.length);
+
     // Upsert in batches of 100
     const batchSize = 100;
     for (let i = 0; i < vectors.length; i += batchSize) {
