@@ -4,13 +4,12 @@
 
 StoryForge transforme un brief métier en user stories structurées avec critères d'acceptation, estimation de complexité et scénarios Gherkin multi-cas — le tout généré par Claude en streaming temps réel.
 
-🔗 **[Démo live](https://story-forge-ai-blond.vercel.app)** · 💼 **[Eden IA Studio](https://www.linkedin.com/in/edensahile-99b088112)**
-
+🔗 **[Démo live](https://story-forge-ai-blond.vercel.app)** · 
 ---
 
 ## Ce que fait StoryForge
 
-Un PO écrit un brief en langage naturel. StoryForge génère instantanément des user stories complètes, prêtes à intégrer dans un backlog Jira/Linear :
+Un PO écrit un brief en langage naturel. Sto     ryForge génère instantanément des user stories complètes, prêtes à intégrer dans un backlog Jira/Linear :
 
 - **Statement** structuré : En tant que / Je veux / Afin de
 - **Description métier** : contexte fonctionnel détaillé
@@ -176,9 +175,7 @@ C'est exactement le pattern qu'une entreprise a vendu 20 000€ pour automatiser
 
 **Eden Sahilé** — PO technique & AI Product Builder
 
-- 🔗 [LinkedIn](https://www.linkedin.com/in/edensahile-99b088112)
-- 💻 [Eden IA Studio](https://edensahile.fr)
-- 📧 edensahile.pro@gmail.com
+- 🔗 [LinkedIn](https://www.linkedin.com/in/eden-sahil%C3%A9-99b088112/)
 
 ---
 
