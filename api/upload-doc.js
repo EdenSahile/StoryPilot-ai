@@ -3,7 +3,7 @@
 
 import { Pinecone } from "@pinecone-database/pinecone";
 import OpenAI from "openai";
-import { extractText, getDocumentProxy } from "unpdf";
+import { extractText as extractPdfText, getDocumentProxy } from "unpdf";
 
 export const config = {
   api: {
@@ -51,7 +51,7 @@ async function extractText(content, filename) {
   if (ext === "pdf") {
     const buffer = Buffer.from(content, "base64");
     const pdf = await getDocumentProxy(new Uint8Array(buffer));
-    const { text } = await extractText(pdf, { mergePages: true });
+    const { text } = await extractPdfText(pdf, { mergePages: true });
     return text;
   }
 
