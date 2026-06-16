@@ -36,7 +36,7 @@ if (!checkRateLimit(clientIp)) {
   return res.status(429).json({ error: 'Trop de requêtes. Maximum 10 par 15 minutes.' });
 }
 
-  const { brief } = req.body;
+  const { brief, contextChunks } = req.body;
 
   // Validation du brief
   if (!brief || brief.trim().length === 0) {
@@ -59,6 +59,10 @@ if (!checkRateLimit(clientIp)) {
   }
 
   try {
+    const contextBlock = contextChunks && contextChunks.length > 0
+      ? `\n\nCONTEXTE DOCUMENTAIRE (extrait des documents du client) :\n${contextChunks.map((c, i) => `[Source ${i + 1} - ${c.filename}] ${c.text}`).join("\n\n")}\n\nUtilise ce contexte pour ancrer les user stories dans le vocabulaire et les contraintes réelles du client.`
+      : "";
+
     // Appel à Claude API avec streaming
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -105,7 +109,7 @@ Scénario 2 : [nom du cas alternatif ou d'erreur]
 ---
 
 Génère 3 à 5 user stories. Sois précis, professionnel et détaillé.
-Sépare chaque story par ---`,
+Sépare chaque story par ---${contextBlock}`,
 
         messages: [
           {
