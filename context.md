@@ -6,7 +6,44 @@
 **Session 2 (2026-05-09) — TERMINÉE ✅** — TECH-001 : Vitest configuré, 20 tests écrits et passants ; `onKeyPress` → `onKeyDown` dans BriefInput
 **Session 3 (2026-05-09) — TERMINÉE ✅** — SEC-003 : limitation rate limiting documentée (code + README) ; TECH-005 TypeScript différé
 **Session 4 (2026-05-09) — TERMINÉE ✅** — Responsive design complet (breakpoints 480/600/768px), police Plus Jakarta Sans, SVG icons, bouton pleine largeur mobile, fix `ol` padding Gherkin, prompt Gherkin sous-puces, Enter pour soumettre, validation brief vide
-**Session 5 (2026-05-09) — EN COURS 🔄** — Tests recruteur en cours (voir section dédiée)
+**Session 5 (2026-05-09) — TERMINÉE ✅** — Tests recruteur en cours (voir section dédiée)
+
+---
+
+## Feature RAG — Base de connaissance documentaire
+
+**Session RAG-1 (2026-06-16) — TERMINÉE ✅** — Pipeline RAG complet : upload PDF/DOCX/TXT → chunking → embeddings OpenAI → upsert Pinecone → retrieve → injection dans prompt Claude. UI : panel upload, progression, bouton supprimer par document.
+
+**Session RAG-2 (2026-06-20) — TERMINÉE ✅** — Nombreux bugs résolus, voir détail ci-dessous.
+
+### Ce qui fonctionne (post session RAG-2)
+- `api/list-docs.js` — liste les documents depuis Pinecone au démarrage, survit aux navigations
+- `documents` et `ragChunks` remontés dans `App.jsx` — plus de race condition ni de perte d'état
+- RAG toujours déclenché (garde `indexedDocs.length > 0` supprimée)
+- Panel "passages récupérés" visible sur la page Résultats
+- Prompt Claude renforcé : contexte RAG obligatoire, vocabulaire métier forcé
+- Chunking par sections structurelles (titres, Q&A, paragraphes) au lieu de tokens fixes
+
+### Action requise avant prochaine session
+- **Re-indexer tous les documents** : le nouveau chunking ne s'applique qu'aux nouveaux uploads. Supprimer les docs dans l'UI puis les re-déposer pour obtenir des chunks sémantiques et des scores 60-75%+ (actuellement 38-51% avec l'ancien chunking plat).
+
+### Fichiers modifiés session RAG-2
+```
+api/list-docs.js              (nouveau)
+api/upload-doc.js             (chunking par sections, debug logs nettoyés)
+api/generate-stories.js       (prompt RAG renforcé)
+src/App.jsx                   (state documents + ragChunks globaux, listDocuments au montage)
+src/screens/Forge.jsx         (reçoit documents/ragChunks en props, guard RAG supprimé)
+src/screens/Results.jsx       (panel RAG chunks dans colonne droite)
+src/components/services/ragService.js  (ajout listDocuments())
+```
+
+### Stack RAG
+- Index Pinecone : `storyforge`, dimension 512, cosine, serverless AWS us-east-1
+- Embedding : OpenAI `text-embedding-3-small` 512 dims
+- Env vars : `OPENAI_API_KEY`, `PINECONE_API_KEY`, `PINECONE_INDEX_URL`
+- URL index : `https://storyforge-g08tbyk.svc.aped-4627-b74a.pinecone.io`
+- ⚠️ Index partagé entre tous les visiteurs (pas d'isolation multi-tenant) — ne pas publier avec de vrais docs sensibles
 
 > **Note préalable :** Le fichier `.env` est correctement ignoré par git (`.gitignore`). La clé API n'est PAS exposée dans le repo. Bonne nouvelle !
 

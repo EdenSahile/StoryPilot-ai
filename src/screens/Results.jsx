@@ -650,6 +650,49 @@ function parseStories(rawText) {
   }).filter(s => s.fullStatement);
 }
 
+// ─── RAG Chunk styled components ─────────────────────────
+const ChunkList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing.sm};
+`;
+
+const ChunkItem = styled.div`
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: ${theme.radii.lg};
+  padding: ${theme.spacing.sm} ${theme.spacing.md};
+
+  .score {
+    font-size: ${theme.fontSizes.xs};
+    font-weight: 700;
+    color: ${({ $score }) => $score >= 65 ? "#4ade80" : $score >= 50 ? "#fbbf24" : theme.colors.onSurfaceVariant};
+    margin-bottom: 4px;
+  }
+
+  .excerpt {
+    font-size: ${theme.fontSizes.xs};
+    color: ${theme.colors.onSurfaceVariant};
+    line-height: 1.5;
+    font-style: italic;
+  }
+
+  .bar-track {
+    margin-top: 6px;
+    height: 2px;
+    background: ${theme.colors.outlineVariant};
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    width: ${({ $score }) => $score}%;
+    background: ${({ $score }) => $score >= 65 ? "#4ade80" : $score >= 50 ? "#fbbf24" : theme.colors.outline};
+    border-radius: 2px;
+  }
+`;
+
 // ─── Generic stories for comparison ──────────────────────
 const GENERIC_STORIES = `En tant qu'utilisateur, je veux me connecter afin d'accéder à mon compte.
 
@@ -664,7 +707,7 @@ const RECENT_GENERATIONS = [
 ];
 
 // ─── Component ────────────────────────────────────────────
-export default function Results({ stories, onNewGeneration }) {
+export default function Results({ stories, ragChunks = [], onNewGeneration }) {
   const [copied, setCopied] = useState(false);
   const [comparisonOpen, setComparisonOpen] = useState(false);
 
@@ -871,6 +914,24 @@ export default function Results({ stories, onNewGeneration }) {
               Sauvegarder en Library
             </QuickActionBtn>
           </Panel>
+
+          {/* RAG Chunks */}
+          {ragChunks.length > 0 && (
+            <Panel>
+              <PanelLabel>
+                {ragChunks.length} passage{ragChunks.length > 1 ? "s" : ""} récupéré{ragChunks.length > 1 ? "s" : ""} depuis vos docs
+              </PanelLabel>
+              <ChunkList>
+                {ragChunks.map((chunk, i) => (
+                  <ChunkItem key={i} $score={chunk.score}>
+                    <div className="score">{chunk.score}% MATCH — {chunk.filename}</div>
+                    <div className="excerpt">{chunk.text?.slice(0, 100)}…</div>
+                    <div className="bar-track"><div className="bar-fill" /></div>
+                  </ChunkItem>
+                ))}
+              </ChunkList>
+            </Panel>
+          )}
 
           {/* Recent Library */}
           <Panel>

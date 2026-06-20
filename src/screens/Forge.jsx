@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { theme } from "../theme";
 import { generateStories } from "../components/services/claudeService";
-import { uploadDocument, retrieveContext, deleteDocument, listDocuments } from "../components/services/ragService";
+import { uploadDocument, retrieveContext, deleteDocument } from "../components/services/ragService";
 
 // ─── Animations ───────────────────────────────────────────
 const fadeInUp = keyframes`
@@ -858,14 +858,12 @@ const CopyBtn = styled.button`
 
 
 // ─── Component ────────────────────────────────────────────
-export default function Forge({ onNavigate, stories, setStories }) {
+export default function Forge({ onNavigate, stories, setStories, ragChunks, setRagChunks, documents, setDocuments }) {
   const [brief, setBrief] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [ragOpen, setRagOpen] = useState(true);
   const [dragOver, setDragOver] = useState(false);
-  const [documents, setDocuments] = useState([]);
-  const [ragChunks, setRagChunks] = useState([]);
   const [uploadingFile, setUploadingFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState(null);
@@ -873,22 +871,6 @@ export default function Forge({ onNavigate, stories, setStories }) {
 
   const charCount = brief.length;
   const MAX = 2000;
-
-  useEffect(() => {
-    listDocuments()
-      .then((docs) =>
-        setDocuments(
-          docs.map((d) => ({
-            id: d.filename,
-            name: d.filename,
-            chunks: d.totalChunks,
-            uploadedAt: d.uploadedAt,
-            status: "indexed",
-          }))
-        )
-      )
-      .catch((err) => console.warn("[list-docs] Failed to load documents:", err));
-  }, []);
 
   useEffect(() => {
     if (!isLoading && stories) {
@@ -903,17 +885,14 @@ export default function Forge({ onNavigate, stories, setStories }) {
     setIsLoading(true);
     setRagChunks([]);
 
-    const indexedDocs = documents.filter(d => d.status === "indexed");
     let contextChunks = [];
 
-    if (indexedDocs.length > 0) {
-      try {
-        const ragResult = await retrieveContext(brief);
-        contextChunks = ragResult.chunks || [];
-        setRagChunks(contextChunks);
-      } catch (err) {
-        console.warn("RAG retrieval failed, generating without context:", err);
-      }
+    try {
+      const ragResult = await retrieveContext(brief);
+      contextChunks = ragResult.chunks || [];
+      setRagChunks(contextChunks);
+    } catch (err) {
+      console.warn("RAG retrieval failed, generating without context:", err);
     }
 
     await generateStories(
