@@ -98,10 +98,10 @@ npm install
 ### Variables d'environnement
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
-Ajoute ta clé API Anthropic dans `.env.local` :
+Ajoute ta clé API Anthropic dans `.env` :
 
 ```
 ANTHROPIC_API_KEY=sk-ant-...
