@@ -79,6 +79,22 @@ export async function retrieveContext(brief, topK = 5) {
   return response.json();
 }
 
+/**
+ * Récupère la liste des documents indexés dans Pinecone
+ * @returns {Promise<Array<{filename, totalChunks, uploadedAt}>>}
+ */
+export async function listDocuments() {
+  const response = await fetch("/api/list-docs");
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || "Erreur lors du listing des documents.");
+  }
+
+  const { documents } = await response.json();
+  return documents;
+}
+
 export async function deleteDocument(filename) {
   const response = await fetch("/api/delete-doc", {
     method: "POST",

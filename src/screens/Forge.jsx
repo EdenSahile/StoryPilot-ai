@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { theme } from "../theme";
 import { generateStories } from "../components/services/claudeService";
-import { uploadDocument, retrieveContext, deleteDocument } from "../components/services/ragService";
+import { uploadDocument, retrieveContext, deleteDocument, listDocuments } from "../components/services/ragService";
 
 // ─── Animations ───────────────────────────────────────────
 const fadeInUp = keyframes`
@@ -873,6 +873,22 @@ export default function Forge({ onNavigate, stories, setStories }) {
 
   const charCount = brief.length;
   const MAX = 2000;
+
+  useEffect(() => {
+    listDocuments()
+      .then((docs) =>
+        setDocuments(
+          docs.map((d) => ({
+            id: d.filename,
+            name: d.filename,
+            chunks: d.totalChunks,
+            uploadedAt: d.uploadedAt,
+            status: "indexed",
+          }))
+        )
+      )
+      .catch((err) => console.warn("[list-docs] Failed to load documents:", err));
+  }, []);
 
   useEffect(() => {
     if (!isLoading && stories) {
