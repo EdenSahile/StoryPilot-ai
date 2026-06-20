@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { theme } from "../theme";
 import { generateStories } from "../components/services/claudeService";
+import { uploadDocument, retrieveContext, deleteDocument, listDocuments } from "../components/services/ragService";
 
 // ─── Animations ───────────────────────────────────────────
 const fadeInUp = keyframes`
@@ -764,6 +765,25 @@ const UploadZone = styled.div`
   }
 `;
 
+const DeleteDocBtn = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: ${theme.radii.sm};
+  color: ${theme.colors.outline};
+  font-family: "Material Symbols Outlined";
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.2s, background 0.2s;
+
+  &:hover {
+    color: ${theme.colors.error};
+    background: rgba(255, 180, 171, 0.1);
+  }
+`;
+
 const IndexBtn = styled.button`
   width: 100%;
   padding: ${theme.spacing.md};
@@ -836,18 +856,6 @@ const CopyBtn = styled.button`
   }
 `;
 
-// ─── Mock docs data ───────────────────────────────────────
-const MOCK_DOCS = [
-  { id: 1, name: "Cahier_des_Charges_vFinal.pdf", status: "loading", pct: 65 },
-  { id: 2, name: "Notes_Brainstorming_Atelier_UX.docx", status: "indexed", chunks: 38 },
-  { id: 3, name: "Architecture_Technique_Draft.txt", status: "error" },
-];
-
-const RAG_CHUNKS = [
-  { score: 94, excerpt: '"L\'authentification doit supporter TOTP..."' },
-  { score: 89, excerpt: '"Le système doit verrouiller le compte après..."' },
-  { score: 81, excerpt: '"Documentation technique sur les flux OAuth2..."' },
-];
 
 // ─── Component ────────────────────────────────────────────
 export default function Forge({ onNavigate, stories, setStories }) {
@@ -856,10 +864,31 @@ export default function Forge({ onNavigate, stories, setStories }) {
   const [error, setError] = useState(null);
   const [ragOpen, setRagOpen] = useState(true);
   const [dragOver, setDragOver] = useState(false);
+  const [documents, setDocuments] = useState([]);
+  const [ragChunks, setRagChunks] = useState([]);
+  const [uploadingFile, setUploadingFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState(null);
   const fileInputRef = useRef(null);
 
   const charCount = brief.length;
   const MAX = 2000;
+
+  useEffect(() => {
+    listDocuments()
+      .then((docs) =>
+        setDocuments(
+          docs.map((d) => ({
+            id: d.filename,
+            name: d.filename,
+            chunks: d.totalChunks,
+            uploadedAt: d.uploadedAt,
+            status: "indexed",
+          }))
+        )
+      )
+      .catch((err) => console.warn("[list-docs] Failed to load documents:", err));
+  }, []);
 
   useEffect(() => {
     if (!isLoading && stories) {
@@ -872,6 +901,20 @@ export default function Forge({ onNavigate, stories, setStories }) {
     setStories("");
     setError(null);
     setIsLoading(true);
+    setRagChunks([]);
+
+    const indexedDocs = documents.filter(d => d.status === "indexed");
+    let contextChunks = [];
+
+    if (indexedDocs.length > 0) {
+      try {
+        const ragResult = await retrieveContext(brief);
+        contextChunks = ragResult.chunks || [];
+        setRagChunks(contextChunks);
+      } catch (err) {
+        console.warn("RAG retrieval failed, generating without context:", err);
+      }
+    }
 
     await generateStories(
       brief,
@@ -879,7 +922,8 @@ export default function Forge({ onNavigate, stories, setStories }) {
       (errMsg) => {
         setError(errMsg);
         setIsLoading(false);
-      }
+      },
+      contextChunks
     );
 
     setIsLoading(false);
@@ -889,10 +933,69 @@ export default function Forge({ onNavigate, stories, setStories }) {
     if ((e.ctrlKey || e.metaKey) && e.key === "Enter") handleSubmit();
   };
 
+  const handleFileUpload = async (files) => {
+    console.log("Files selected:", files);
+    for (const file of files) {
+      try {
+        setUploadError(null);
+        const newDoc = {
+          id: Date.now(),
+          name: file.name,
+          size: file.size,
+          status: "loading",
+          pct: 0,
+          chunks: 0,
+        };
+        setDocuments(prev => [...prev, newDoc]);
+        setUploadingFile(file.name);
+
+        const result = await uploadDocument(file, (pct) => {
+          setUploadProgress(pct);
+          setDocuments(prev =>
+            prev.map(d =>
+              d.name === file.name ? { ...d, pct } : d
+            )
+          );
+        });
+
+        setDocuments(prev =>
+          prev.map(d =>
+            d.name === file.name
+              ? { ...d, status: "indexed", chunks: result.chunks, pct: 100 }
+              : d
+          )
+        );
+        setUploadingFile(null);
+      } catch (err) {
+        console.error("uploadDocument failed:", err);
+        setDocuments(prev =>
+          prev.map(d =>
+            d.name === file.name
+              ? { ...d, status: "error" }
+              : d
+          )
+        );
+        setUploadError(err.message);
+        setUploadingFile(null);
+      }
+    }
+  };
+
+  const handleDeleteDoc = async (doc) => {
+    if (!confirm(`Supprimer "${doc.name}" et ses ${doc.chunks || 0} chunks ?`)) return;
+    try {
+      await deleteDocument(doc.name);
+      setDocuments((prev) => prev.filter((d) => d.id !== doc.id));
+    } catch (err) {
+      setUploadError(err.message);
+    }
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
-    // TODO: handle file upload in v2
+    const files = Array.from(e.dataTransfer.files);
+    handleFileUpload(files);
   };
 
   return (
@@ -972,12 +1075,12 @@ export default function Forge({ onNavigate, stories, setStories }) {
           )}
 
           {/* RAG Chunks Panel — visible pendant génération */}
-          {isLoading && (
+          {isLoading && ragChunks.length > 0 && (
             <RAGPanel>
               <RAGHeader $open={ragOpen}>
                 <div className="left">
                   <span className="icon">search</span>
-                  3 passages récupérés depuis vos docs
+                  {ragChunks.length} passages récupérés depuis vos docs
                 </div>
                 <button className="toggle" onClick={() => setRagOpen(!ragOpen)}>
                   expand_more
@@ -985,7 +1088,7 @@ export default function Forge({ onNavigate, stories, setStories }) {
               </RAGHeader>
               {ragOpen && (
                 <ChunkCards>
-                  {RAG_CHUNKS.map((chunk, i) => (
+                  {ragChunks.map((chunk, i) => (
                     <ChunkCard key={i} $score={chunk.score}>
                       <div className="score-row">
                         <span className="score-badge">{chunk.score}% MATCH</span>
@@ -995,7 +1098,7 @@ export default function Forge({ onNavigate, stories, setStories }) {
                           color: theme.colors.onSurfaceVariant
                         }}>description</span>
                       </div>
-                      <p className="excerpt">{chunk.excerpt}</p>
+                      <p className="excerpt">{chunk.text?.slice(0, 120)}...</p>
                       <div className="bar-track">
                         <div className="bar-fill" />
                       </div>
@@ -1035,14 +1138,15 @@ export default function Forge({ onNavigate, stories, setStories }) {
         <RightColumn>
           <KBPanel>
             <KBHeader>
-              <div className="left" style={{ flexDirection: "column", alignItems: "flex-start", gap: "2px" }}>
+              <div className="left">
                 <span>🗂️ Base de connaissance</span>
-                <span style={{ fontSize: "11px", color: "#64748b", fontStyle: "italic", fontWeight: 400 }}>Données de démonstration</span>
               </div>
-              <span className="indexed-badge">
-                <span className="icon">check_circle</span>
-                Indexée
-              </span>
+              {documents.filter(d => d.status === "indexed").length > 0 && (
+                <span className="indexed-badge">
+                  <span className="icon">check_circle</span>
+                  {documents.filter(d => d.status === "indexed").length} indexé{documents.filter(d => d.status === "indexed").length > 1 ? "s" : ""}
+                </span>
+              )}
             </KBHeader>
 
             <KBSubtitle>
@@ -1050,7 +1154,7 @@ export default function Forge({ onNavigate, stories, setStories }) {
             </KBSubtitle>
 
             <DocList>
-              {MOCK_DOCS.map((doc) => (
+              {documents.map((doc) => (
                 <DocCard key={doc.id} $status={doc.status}>
                   <span className="doc-icon">
                     {doc.status === "indexed" ? "description" : doc.status === "loading" ? "picture_as_pdf" : "article"}
@@ -1076,9 +1180,24 @@ export default function Forge({ onNavigate, stories, setStories }) {
                   {doc.status === "loading" && (
                     <span className="percent">{doc.pct}%</span>
                   )}
+                  {doc.status !== "loading" && (
+                    <DeleteDocBtn
+                      title={`Supprimer ${doc.name}`}
+                      onClick={() => handleDeleteDoc(doc)}
+                    >
+                      delete
+                    </DeleteDocBtn>
+                  )}
                 </DocCard>
               ))}
             </DocList>
+
+            {uploadError && (
+              <ErrorMsg>
+                <span>{uploadError}</span>
+                <button onClick={() => setUploadError(null)}>✕</button>
+              </ErrorMsg>
+            )}
 
             <UploadZone
               $dragOver={dragOver}
@@ -1094,8 +1213,8 @@ export default function Forge({ onNavigate, stories, setStories }) {
                 multiple
                 style={{ display: "none" }}
                 onChange={(e) => {
-                  // TODO: upload handler v2
-                  console.log("Files:", e.target.files);
+                  const files = Array.from(e.target.files);
+                  handleFileUpload(files);
                 }}
               />
               <span className="upload-icon">cloud_upload</span>

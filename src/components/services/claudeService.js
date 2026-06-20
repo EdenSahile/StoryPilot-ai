@@ -8,7 +8,7 @@ const MAX_OUTPUT_LENGTH = 4000; // Limiter output pour éviter freeze
  * @param {(message: string) => void} onError - Appelé en cas d'erreur (validation, réseau, timeout)
  * @returns {Promise<void>} Se résout quand le stream est terminé ou interrompu
  */
-export async function generateStories(brief, onChunk, onError) {
+export async function generateStories(brief, onChunk, onError, contextChunks = []) {
   // Validation du brief
   if (!brief || brief.trim().length === 0) {
     onError('Veuillez entrer un brief métier.');
@@ -36,7 +36,7 @@ export async function generateStories(brief, onChunk, onError) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ brief }),
+      body: JSON.stringify({ brief, contextChunks }),
       signal: controller.signal
     });
 
