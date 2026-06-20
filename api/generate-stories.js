@@ -60,7 +60,7 @@ if (!checkRateLimit(clientIp)) {
 
   try {
     const contextBlock = contextChunks && contextChunks.length > 0
-      ? `\n\nCONTEXTE DOCUMENTAIRE (extrait des documents du client) :\n${contextChunks.map((c, i) => `[Source ${i + 1} - ${c.filename}] ${c.text}`).join("\n\n")}\n\nUtilise ce contexte pour ancrer les user stories dans le vocabulaire et les contraintes réelles du client.`
+      ? `\n\n---\nCONTEXTE DOCUMENTAIRE OBLIGATOIRE (documents internes du client) :\n${contextChunks.map((c, i) => `[Source ${i + 1} — ${c.filename}]\n${c.text}`).join("\n\n")}\n---\n\nINSTRUCTIONS IMPÉRATIVES pour utiliser ce contexte :\n- Tu DOIS mentionner le nom de l'entreprise et ses spécificités trouvées dans les documents\n- Tu DOIS réutiliser le vocabulaire exact des documents (noms de produits, délais, processus, références)\n- Chaque user story DOIT contenir au moins un élément concret issu des documents ci-dessus\n- Les critères d'acceptation DOIVENT refléter les règles métier réelles du client\n- INTERDIT de générer des user stories génériques qui s'appliqueraient à n'importe quelle entreprise`
       : "";
 
     // Appel à Claude API avec streaming

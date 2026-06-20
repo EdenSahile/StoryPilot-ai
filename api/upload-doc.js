@@ -14,28 +14,49 @@ export const config = {
 };
 
 // ─── Chunking ─────────────────────────────────────────────
-function chunkText(text, maxTokens = 500) {
-  const sentences = text
-    .replace(/\n{3,}/g, "\n\n")
-    .split(/(?<=[.!?])\s+|\n\n/)
-    .filter((s) => s.trim().length > 0);
+function chunkText(text, maxTokens = 400) {
+  const MAX_CHARS = maxTokens * 4;
+  const MIN_CHARS = 80;
+
+  // Découpe d'abord par sections structurelles
+  const sections = text
+    .replace(/\r\n/g, "\n")
+    .split(/\n(?=\s*(?:[A-ZÀÂÉÈÊËÎÏÔÙÛÜÇ][^a-z\n]{2,}|#{1,3}\s|\d+[.)]\s|\*\*[^*]+\*\*\s*\n|Q\s*:|Question\s*:))/m)
+    .map(s => s.trim())
+    .filter(s => s.length >= MIN_CHARS);
+
+  // Si pas de structure détectée, revient au découpage par double saut de ligne
+  const blocks = sections.length > 1
+    ? sections
+    : text.split(/\n\n+/).map(s => s.trim()).filter(s => s.length >= MIN_CHARS);
 
   const chunks = [];
   let current = "";
 
-  for (const sentence of sentences) {
-    // Approximation : 1 token ≈ 4 caractères en français
-    if ((current + " " + sentence).length / 4 > maxTokens && current) {
-      chunks.push(current.trim());
-      current = sentence;
+  for (const block of blocks) {
+    if ((current + "\n\n" + block).length <= MAX_CHARS) {
+      current = current ? current + "\n\n" + block : block;
     } else {
-      current = current ? current + " " + sentence : sentence;
+      if (current) chunks.push(current.trim());
+      // Si le bloc seul dépasse la limite, le découpe par phrases
+      if (block.length > MAX_CHARS) {
+        const sentences = block.split(/(?<=[.!?])\s+/);
+        current = "";
+        for (const sentence of sentences) {
+          if ((current + " " + sentence).length <= MAX_CHARS) {
+            current = current ? current + " " + sentence : sentence;
+          } else {
+            if (current) chunks.push(current.trim());
+            current = sentence;
+          }
+        }
+      } else {
+        current = block;
+      }
     }
   }
 
-  if (current.trim()) {
-    chunks.push(current.trim());
-  }
+  if (current.trim().length >= MIN_CHARS) chunks.push(current.trim());
 
   return chunks;
 }
