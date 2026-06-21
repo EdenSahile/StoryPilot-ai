@@ -280,6 +280,16 @@ const ComplexityBadge = styled.span`
       : "rgba(239, 68, 68, 0.2)"};
 `;
 
+const IncompleteTag = styled.span`
+  font-size: ${theme.fontSizes.xs};
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: ${theme.radii.full};
+  background: rgba(234, 179, 8, 0.1);
+  color: #ca8a04;
+  border: 1px solid rgba(234, 179, 8, 0.3);
+`;
+
 const CardBody = styled.div`
   padding: ${theme.spacing.lg};
   display: flex;
@@ -612,7 +622,7 @@ function parseStories(rawText) {
 
   return blocks.map((block, index) => {
     // Titre et statement
-    const titleMatch = block.match(/\*\*User Story \d+\*\*\s*(.+?)(?=\n)/);
+    const titleMatch = block.match(/\*\*User Story \d+\*\*\s*(.+?)(?=\n|$)/);
     const fullStatement = titleMatch ? titleMatch[1].trim() : "";
 
     // Critères
@@ -656,10 +666,14 @@ function parseStories(rawText) {
       ? descriptionMatch[1].trim()
       : "";
 
+    const hasValidTitle = /\*\*User Story \d+\*\*/.test(block);
+
     return {
       id: index + 1,
       title: `User Story ${index + 1}`,
       fullStatement,
+      incomplete: hasValidTitle && !fullStatement,
+      hasValidTitle,
       complexity,
       description,
       statement: roleMatch && actionMatch && benefitMatch ? {
@@ -670,7 +684,8 @@ function parseStories(rawText) {
       criteria,
       gherkinGroups,
     };
-  }).filter(s => s.fullStatement);
+  }).filter(s => s.hasValidTitle)
+    .map((story, i) => ({ ...story, id: i + 1, title: `User Story ${i + 1}` }));
 }
 
 // ─── RAG Sources styled components ───────────────────────
@@ -793,9 +808,14 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
                 <StoryCard key={story.id} $index={i}>
                   <CardHeader>
                     <h3>US-{String(story.id).padStart(2, "0")} — {story.title}</h3>
-                    <ComplexityBadge $level={story.complexity}>
-                      {story.complexity}
-                    </ComplexityBadge>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      {story.incomplete && (
+                        <IncompleteTag>Story incomplète</IncompleteTag>
+                      )}
+                      <ComplexityBadge $level={story.complexity}>
+                        {story.complexity}
+                      </ComplexityBadge>
+                    </div>
                   </CardHeader>
 
                   <CardBody>
@@ -810,7 +830,11 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
                           <span className="benefit">{story.statement.benefit}</span>.
                         </>
                       ) : (
-                        story.fullStatement
+                        story.fullStatement || (
+                          <span style={{ fontStyle: "italic", opacity: 0.6 }}>
+                            Contenu non reçu — stream interrompu avant la fin de la story.
+                          </span>
+                        )
                       )}
                     </StoryStatement>
 
