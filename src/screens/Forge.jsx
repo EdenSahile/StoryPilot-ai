@@ -37,6 +37,7 @@ const PageWrapper = styled.div`
   min-height: 100vh;
   background: ${theme.colors.background};
   animation: ${fadeInUp} 0.4s ease;
+  overflow-x: clip;
 
   @media (max-width: ${theme.breakpoints.mobile}) {
     margin-left: 0;
@@ -63,20 +64,27 @@ const TopBarLeft = styled.div`
   align-items: center;
   gap: ${theme.spacing.sm};
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 
   .title {
     font-size: ${theme.fontSizes.xl};
     font-weight: 800;
     color: ${theme.colors.onSurface};
+    white-space: nowrap;
   }
 
   .sep {
     color: ${theme.colors.outline};
+    flex-shrink: 0;
   }
 
   .sub {
     font-size: ${theme.fontSizes.md};
     color: ${theme.colors.onSurfaceVariant};
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   @media (max-width: ${theme.breakpoints.mobile}) {
@@ -88,6 +96,11 @@ const TopBarRight = styled.div`
   display: flex;
   align-items: center;
   gap: ${theme.spacing.md};
+  flex-shrink: 0;
+
+  @media (max-width: ${theme.breakpoints.mobile}) {
+    gap: ${theme.spacing.xs};
+  }
 `;
 
 const GeneratingBadge = styled.div`
@@ -109,6 +122,13 @@ const GeneratingBadge = styled.div`
     border-radius: 50%;
     background: ${theme.colors.primary};
     animation: ${pulse} 1.5s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  .badge-text {
+    @media (max-width: ${theme.breakpoints.mobile}) {
+      display: none;
+    }
   }
 `;
 
@@ -223,6 +243,11 @@ const StyledTextarea = styled.textarea`
   &:focus {
     border-color: ${({ $disabled }) =>
       $disabled ? theme.colors.outlineVariant : theme.colors.primary};
+  }
+
+  @media (max-width: ${theme.breakpoints.mobile}) {
+    min-height: 160px;
+    font-size: ${theme.fontSizes.md};
   }
 `;
 
@@ -444,6 +469,8 @@ const StreamingText = styled.div`
   color: ${theme.colors.onSurface};
   line-height: 1.8;
   white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
   font-family: ${theme.fonts.sans};
 
   h2, h3 {
@@ -511,6 +538,10 @@ const EmptyState = styled.div`
 const RightColumn = styled.div`
   @media (max-width: 1024px) {
     order: -1;
+  }
+
+  @media (max-width: ${theme.breakpoints.mobile}) {
+    order: 2;
   }
 `;
 
@@ -1098,7 +1129,7 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
           {status === 'loading' && (
             <GeneratingBadge>
               <span className="dot" />
-              Génération en cours...
+              <span className="badge-text">Génération en cours...</span>
             </GeneratingBadge>
           )}
           <IconBtn><span className="icon">dark_mode</span></IconBtn>
