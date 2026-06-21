@@ -92,6 +92,8 @@ export const theme = {
 
   breakpoints: {
     mobile: "768px",
+    tablet: "1024px",
+    xs: "480px",
   },
 };
 

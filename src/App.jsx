@@ -14,6 +14,7 @@ import Results from "./screens/Results";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 import Library from "./screens/Library";
+import Settings from "./screens/Settings";
 
 const GlobalStyle = createGlobalStyle`
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -59,32 +60,6 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-// Placeholder screens pour les routes pas encore construites
-const PlaceholderScreen = styled.div`
-  margin-left: 240px;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 16px;
-  color: ${theme.colors.onSurfaceVariant};
-
-  @media (max-width: ${theme.breakpoints.mobile}) {
-    margin-left: 0;
-  }
-
-  .icon {
-    font-family: "Material Symbols Outlined";
-    font-size: 48px;
-    opacity: 0.3;
-  }
-
-  p {
-    font-size: 18px;
-    opacity: 0.5;
-  }
-`;
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState("dashboard");
@@ -156,12 +131,7 @@ function App() {
       case "library":
         return <Library onNavigate={handleNavigate} />;
       case "settings":
-        return (
-          <PlaceholderScreen>
-            <span className="icon">settings</span>
-            <p>Settings — en cours de construction</p>
-          </PlaceholderScreen>
-        );
+        return <Settings />;
       default:
         return <Dashboard onNavigate={setCurrentScreen} />;
     }

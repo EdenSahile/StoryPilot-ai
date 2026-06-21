@@ -360,6 +360,8 @@ const StoriesBlock = styled.div`
   color: ${theme.colors.onSurface};
   line-height: 1.8;
   white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
   font-family: ${theme.fonts.sans};
 
   h2, h3 { color: ${theme.colors.primary}; margin: 16px 0 8px; }
