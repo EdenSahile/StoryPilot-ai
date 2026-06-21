@@ -685,6 +685,12 @@ const UploadZone = styled.div`
   border-color: ${({ $dragOver }) =>
     $dragOver ? theme.colors.primary : theme.colors.outlineVariant};
 
+  ${({ $disabled }) => $disabled && `
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+  `}
+
   &:hover {
     border-color: rgba(192, 193, 255, 0.4);
     background: rgba(99, 102, 241, 0.03);
@@ -764,6 +770,46 @@ const IndexBtn = styled.button`
     background: ${theme.colors.surfaceContainerHighest};
     color: ${theme.colors.onSurface};
     border-color: rgba(192, 193, 255, 0.3);
+  }
+`;
+
+// ─── Demo Chips ───────────────────────────────────────────
+const DemoContext = styled.p`
+  font-size: ${theme.fontSizes.sm};
+  color: ${theme.colors.onSurfaceVariant};
+  line-height: 1.5;
+  margin: 0;
+
+  strong {
+    color: ${theme.colors.onSurface};
+  }
+`;
+
+const ChipRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${theme.spacing.sm};
+`;
+
+const Chip = styled.button`
+  padding: 6px 14px;
+  border-radius: ${theme.radii.full};
+  border: 1px solid ${theme.colors.outlineVariant};
+  background: ${theme.colors.surfaceContainerHigh};
+  color: ${theme.colors.onSurface};
+  font-size: ${theme.fontSizes.sm};
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: ${theme.colors.primary};
+    color: ${theme.colors.primary};
+    background: rgba(99, 102, 241, 0.06);
+  }
+
+  &:active {
+    transform: scale(0.97);
   }
 `;
 
@@ -861,6 +907,26 @@ const CopyBtn = styled.button`
   }
 `;
 
+
+// ─── Demo briefs ──────────────────────────────────────────
+const DEMO_BRIEFS = [
+  {
+    label: "Gérer les retours produits",
+    text: "En tant que responsable SAV de Lumeo Boutique, je veux pouvoir gérer les demandes de retour produit des clients : accepter ou refuser la demande selon notre politique de retour, et déclencher le remboursement dès réception du colis.",
+  },
+  {
+    label: "Tableau de bord des litiges SAV",
+    text: "En tant que responsable SAV de Lumeo Boutique, je veux un tableau de bord centralisant tous les litiges ouverts (retards de livraison, produits endommagés, non-conformités), avec des filtres par statut, ancienneté et montant, afin de prioriser les traitements et réduire notre délai de résolution moyen.",
+  },
+  {
+    label: "Paiement fractionné Alma",
+    text: "En tant que client de Lumeo Boutique, je veux pouvoir régler mes achats en plusieurs fois via Alma, afin de faciliter l'achat de luminaires à prix élevé. L'option doit s'afficher au checkout à partir d'un certain montant de panier, avec un retour visuel clair sur les échéances.",
+  },
+  {
+    label: "Suivi des livraisons et stock fournisseurs",
+    text: "En tant que gestionnaire logistique de Lumeo Boutique, je veux suivre en temps réel l'état des livraisons en cours et les niveaux de stock fournisseurs, afin d'anticiper les ruptures, mettre à jour automatiquement la disponibilité sur le site et informer les clients des délais estimés.",
+  },
+];
 
 // ─── Component ────────────────────────────────────────────
 export default function Forge({ onNavigate, stories, setStories, ragChunks, setRagChunks, documents, setDocuments, setTruncated }) {
@@ -1037,6 +1103,23 @@ export default function Forge({ onNavigate, stories, setStories, ragChunks, setR
               <span className="version">Version 2.4</span>
             </SectionLabel>
 
+            <DemoContext>
+              <strong>Lumeo Boutique</strong> — e-commerce fictif de déco / luminaires.
+              Testez un besoin lié aux commandes, retours, livraison ou SAV.
+            </DemoContext>
+
+            <ChipRow>
+              {DEMO_BRIEFS.map((b) => (
+                <Chip
+                  key={b.label}
+                  type="button"
+                  onClick={() => setBrief(b.text)}
+                >
+                  {b.label}
+                </Chip>
+              ))}
+            </ChipRow>
+
             <TextareaWrapper>
               <StyledTextarea
                 placeholder="Décris ton besoin métier ici... (Ctrl+Entrée pour soumettre)"
@@ -1181,8 +1264,9 @@ export default function Forge({ onNavigate, stories, setStories, ragChunks, setR
                   )}
                   {doc.status !== "loading" && (
                     <DeleteDocBtn
-                      title={`Supprimer ${doc.name}`}
-                      onClick={() => handleDeleteDoc(doc)}
+                      disabled
+                      title="Suppression désactivée en mode démo — pour préserver l'expérience des autres visiteurs."
+                      style={{ opacity: 0.35, cursor: "not-allowed" }}
                     >
                       delete
                     </DeleteDocBtn>
@@ -1210,35 +1294,22 @@ export default function Forge({ onNavigate, stories, setStories, ragChunks, setR
               </ErrorMsg>
             )}
 
-            <UploadZone
-              $dragOver={dragOver}
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.docx,.txt"
-                multiple
-                style={{ display: "none" }}
-                onChange={(e) => {
-                  const files = Array.from(e.target.files);
-                  handleFileUpload(files);
-                }}
-              />
+            <UploadZone $disabled>
               <span className="upload-icon">cloud_upload</span>
-              <p className="upload-title">Glissez vos docs ici</p>
-              <p className="upload-sub">ou cliquez pour parcourir — Max 10 Mo</p>
-              <div className="format-badges">
-                <span className="format-badge">PDF</span>
-                <span className="format-badge">DOCX</span>
-                <span className="format-badge">TXT</span>
-              </div>
+              <p className="upload-title">Upload désactivé en mode démo publique</p>
+              <p className="upload-sub">
+                La base de connaissance (8 documents fictifs sur Lumeo Boutique)
+                est pré-configurée pour cette démo.
+              </p>
             </UploadZone>
 
-            <IndexBtn>Indexer les documents</IndexBtn>
+            <IndexBtn
+              disabled
+              title="Indexation désactivée en mode démo — pour préserver l'expérience des autres visiteurs."
+              style={{ opacity: 0.35, cursor: "not-allowed" }}
+            >
+              Indexer les documents
+            </IndexBtn>
           </KBPanel>
         </RightColumn>
       </Content>

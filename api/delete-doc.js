@@ -16,6 +16,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Méthode non autorisée" });
   }
 
+  if (process.env.DEMO_MODE === "true") {
+    return res.status(403).json({ error: "Suppression désactivée en mode démo." });
+  }
+
   const { PINECONE_API_KEY, PINECONE_INDEX_URL } = process.env;
 
   if (!PINECONE_API_KEY || !PINECONE_INDEX_URL) {

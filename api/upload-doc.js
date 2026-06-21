@@ -65,6 +65,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Méthode non autorisée" });
   }
 
+  if (process.env.DEMO_MODE === "true") {
+    return res.status(403).json({ error: "Upload désactivé en mode démo." });
+  }
+
   // Validate env
   const { OPENAI_API_KEY, PINECONE_API_KEY, PINECONE_INDEX_URL } = process.env;
 
