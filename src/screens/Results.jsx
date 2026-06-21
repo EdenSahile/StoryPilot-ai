@@ -21,6 +21,7 @@ const PageWrapper = styled.div`
   min-height: 100vh;
   background: ${theme.colors.background};
   animation: ${fadeInUp} 0.4s ease;
+  overflow-x: clip;
 
   @media (max-width: ${theme.breakpoints.mobile}) {
     margin-left: 0;
@@ -46,18 +47,32 @@ const TopBarLeft = styled.div`
   display: flex;
   align-items: center;
   gap: ${theme.spacing.sm};
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 
   .title {
     font-size: ${theme.fontSizes.xl};
     font-weight: 800;
     color: ${theme.colors.onSurface};
+    white-space: nowrap;
   }
 
-  .sep { color: ${theme.colors.outline}; }
+  .sep {
+    color: ${theme.colors.outline};
+    flex-shrink: 0;
+  }
 
   .sub {
     font-size: ${theme.fontSizes.md};
     color: ${theme.colors.onSurfaceVariant};
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: ${theme.breakpoints.mobile}) {
+    .sep, .sub { display: none; }
   }
 `;
 
@@ -65,6 +80,11 @@ const TopBarRight = styled.div`
   display: flex;
   align-items: center;
   gap: ${theme.spacing.md};
+  flex-shrink: 0;
+
+  @media (max-width: ${theme.breakpoints.mobile}) {
+    gap: ${theme.spacing.xs};
+  }
 `;
 
 const IconBtn = styled.button`
@@ -120,12 +140,20 @@ const PageHeader = styled.div`
     font-weight: 700;
     color: ${theme.colors.onSurface};
     letter-spacing: -0.01em;
+
+    @media (max-width: ${theme.breakpoints.mobile}) {
+      font-size: ${theme.fontSizes["2xl"]};
+    }
   }
 
   p {
     font-size: ${theme.fontSizes.md};
     color: ${theme.colors.onSurfaceVariant};
     margin-top: 4px;
+
+    @media (max-width: ${theme.breakpoints.mobile}) {
+      font-size: ${theme.fontSizes.sm};
+    }
   }
 `;
 
@@ -162,6 +190,15 @@ const ActionBtns = styled.div`
   display: flex;
   align-items: center;
   gap: ${theme.spacing.sm};
+
+  @media (max-width: 480px) {
+    width: 100%;
+
+    button {
+      flex: 1;
+      justify-content: center;
+    }
+  }
 `;
 
 const OutlineBtn = styled.button`
@@ -256,6 +293,15 @@ const CardHeader = styled.div`
     font-size: ${theme.fontSizes.xl};
     font-weight: 700;
     color: ${theme.colors.primary};
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: ${theme.spacing.sm};
+
+    @media (max-width: ${theme.breakpoints.mobile}) {
+      font-size: ${theme.fontSizes.lg};
+    }
   }
 `;
 
@@ -305,6 +351,10 @@ const StoryStatement = styled.p`
   .role { color: ${theme.colors.secondary}; font-weight: 700; }
   .action { color: ${theme.colors.secondary}; font-weight: 700; }
   .benefit { color: ${theme.colors.secondary}; font-weight: 700; }
+
+  @media (max-width: ${theme.breakpoints.mobile}) {
+    font-size: ${theme.fontSizes.md};
+  }
 `;
 
 const CardGrid = styled.div`
