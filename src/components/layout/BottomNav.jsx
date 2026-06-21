@@ -62,7 +62,7 @@ const NavItem = styled.a`
 const NAV_ITEMS = [
   { id: "dashboard", label: "Tableau", icon: "dashboard" },
   { id: "forge", label: "Forge", icon: "auto_awesome" },
-  { id: "library", label: "Biblio", icon: "library_books" },
+  { id: "library", label: "Hist.", icon: "history" },
   { id: "settings", label: "Réglages", icon: "settings" },
 ];
 
