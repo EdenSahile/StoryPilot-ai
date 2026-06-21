@@ -4,6 +4,7 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 import OpenAI from "openai";
 import { extractText as extractPdfText, getDocumentProxy } from "unpdf";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 export const config = {
   api: {
@@ -14,51 +15,14 @@ export const config = {
 };
 
 // ─── Chunking ─────────────────────────────────────────────
-function chunkText(text, maxTokens = 400) {
-  const MAX_CHARS = maxTokens * 4;
-  const MIN_CHARS = 80;
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 500,
+  chunkOverlap: 50,
+  separators: ["\n\n", "\n", ". ", "! ", "? ", " ", ""],
+});
 
-  // Découpe d'abord par sections structurelles
-  const sections = text
-    .replace(/\r\n/g, "\n")
-    .split(/\n(?=\s*(?:[A-ZÀÂÉÈÊËÎÏÔÙÛÜÇ][^a-z\n]{2,}|#{1,3}\s|\d+[.)]\s|\*\*[^*]+\*\*\s*\n|Q\s*:|Question\s*:))/m)
-    .map(s => s.trim())
-    .filter(s => s.length >= MIN_CHARS);
-
-  // Si pas de structure détectée, revient au découpage par double saut de ligne
-  const blocks = sections.length > 1
-    ? sections
-    : text.split(/\n\n+/).map(s => s.trim()).filter(s => s.length >= MIN_CHARS);
-
-  const chunks = [];
-  let current = "";
-
-  for (const block of blocks) {
-    if ((current + "\n\n" + block).length <= MAX_CHARS) {
-      current = current ? current + "\n\n" + block : block;
-    } else {
-      if (current) chunks.push(current.trim());
-      // Si le bloc seul dépasse la limite, le découpe par phrases
-      if (block.length > MAX_CHARS) {
-        const sentences = block.split(/(?<=[.!?])\s+/);
-        current = "";
-        for (const sentence of sentences) {
-          if ((current + " " + sentence).length <= MAX_CHARS) {
-            current = current ? current + " " + sentence : sentence;
-          } else {
-            if (current) chunks.push(current.trim());
-            current = sentence;
-          }
-        }
-      } else {
-        current = block;
-      }
-    }
-  }
-
-  if (current.trim().length >= MIN_CHARS) chunks.push(current.trim());
-
-  return chunks;
+async function chunkText(text) {
+  return splitter.splitText(text);
 }
 
 // ─── Text extraction ──────────────────────────────────────
@@ -131,12 +95,7 @@ export default async function handler(req, res) {
 
     // 2. Chunk
     console.log(`[upload] Chunking text (${text.length} chars)...`);
-    console.log("[debug] Raw text length:", text.length);
-    console.log("[debug] Raw text sample:", JSON.stringify(text.substring(0, 300)));
-
-    const chunks = chunkText(text);
-    console.log("[debug] Chunks count:", chunks.length);
-    console.log("[debug] First chunk:", chunks[0]);
+    const chunks = await chunkText(text);
     console.log(`[upload] ${chunks.length} chunks created.`);
 
     if (chunks.length === 0) {
@@ -177,16 +136,10 @@ export default async function handler(req, res) {
       },
     }));
 
-    console.log("[debug] Text extracted length:", text.length);
-console.log("[debug] First 200 chars:", text.substring(0, 200));
-console.log("[debug] Chunks created:", chunks.length);
-console.log("[debug] Vectors to upsert:", vectors.length);
-
     // Upsert in batches of 100
     const batchSize = 100;
     for (let i = 0; i < vectors.length; i += batchSize) {
       const batch = vectors.slice(i, i + batchSize);
-      console.log("[debug] Batch structure:", JSON.stringify(batch[0]));
       await index.upsert({ records: batch });
     }
 

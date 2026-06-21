@@ -90,6 +90,7 @@ function App() {
   const [stories, setStories] = useState("");
   const [ragChunks, setRagChunks] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const [truncated, setTruncated] = useState(false);
 
   useEffect(() => {
     listDocuments()
@@ -112,13 +113,14 @@ function App() {
       case "dashboard":
         return <Dashboard onNavigate={setCurrentScreen} />;
       case "forge":
-        return <Forge onNavigate={setCurrentScreen} stories={stories} setStories={setStories} ragChunks={ragChunks} setRagChunks={setRagChunks} documents={documents} setDocuments={setDocuments} />;
+        return <Forge onNavigate={setCurrentScreen} stories={stories} setStories={setStories} ragChunks={ragChunks} setRagChunks={setRagChunks} documents={documents} setDocuments={setDocuments} setTruncated={setTruncated} />;
       case "results":
         return (
           <Results
             stories={stories}
             ragChunks={ragChunks}
-            onNewGeneration={() => { setStories(""); setRagChunks([]); setCurrentScreen("forge"); }}
+            truncated={truncated}
+            onNewGeneration={() => { setStories(""); setRagChunks([]); setTruncated(false); setCurrentScreen("forge"); }}
           />
         );
       case "library":
