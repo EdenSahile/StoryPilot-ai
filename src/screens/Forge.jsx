@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { theme } from "../theme";
 import { generateStories } from "../components/services/claudeService";
-import { uploadDocument, retrieveContext, deleteDocument, listDocuments } from "../components/services/ragService";
+import { uploadDocument, retrieveContext, deleteDocument } from "../components/services/ragService";
 
 // ─── Animations ───────────────────────────────────────────
 const fadeInUp = keyframes`
@@ -355,72 +355,36 @@ const RAGHeader = styled.div`
   }
 `;
 
-const ChunkCards = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: ${theme.spacing.md};
-
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
+const SourcePills = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 `;
 
-const ChunkCard = styled.div`
-  background: ${theme.colors.surfaceContainerLow};
-  border: 1px solid ${theme.colors.outlineVariant};
-  border-radius: ${theme.radii.md};
-  padding: ${theme.spacing.md};
+const SourcePill = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: ${theme.spacing.sm};
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  border-radius: 999px;
+  font-size: 11px;
+  color: ${theme.colors.onSurface};
+  max-width: 200px;
 
-  .score-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4ade80;
+    flex-shrink: 0;
   }
 
-  .score-badge {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 4px;
-    background: ${({ $score }) =>
-      $score >= 90
-        ? "rgba(74, 222, 128, 0.1)"
-        : $score >= 85
-        ? "rgba(251, 191, 36, 0.1)"
-        : "rgba(144, 143, 160, 0.1)"};
-    color: ${({ $score }) =>
-      $score >= 90 ? "#4ade80" : $score >= 85 ? "#fbbf24" : theme.colors.onSurfaceVariant};
-    border: 1px solid ${({ $score }) =>
-      $score >= 90
-        ? "rgba(74, 222, 128, 0.2)"
-        : $score >= 85
-        ? "rgba(251, 191, 36, 0.2)"
-        : "rgba(144, 143, 160, 0.2)"};
-  }
-
-  .excerpt {
-    font-size: ${theme.fontSizes.sm};
-    color: ${theme.colors.onSurfaceVariant};
-    font-style: italic;
-    line-height: 1.5;
-  }
-
-  .bar-track {
-    height: 3px;
-    background: ${theme.colors.surfaceContainerHighest};
-    border-radius: 999px;
+  .name {
+    white-space: nowrap;
     overflow: hidden;
-  }
-
-  .bar-fill {
-    height: 100%;
-    border-radius: 999px;
-    background: ${({ $score }) =>
-      $score >= 90 ? "#4ade80" : $score >= 85 ? "#fbbf24" : theme.colors.outline};
-    width: ${({ $score }) => $score}%;
+    text-overflow: ellipsis;
   }
 `;
 
@@ -721,6 +685,12 @@ const UploadZone = styled.div`
   border-color: ${({ $dragOver }) =>
     $dragOver ? theme.colors.primary : theme.colors.outlineVariant};
 
+  ${({ $disabled }) => $disabled && `
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+  `}
+
   &:hover {
     border-color: rgba(192, 193, 255, 0.4);
     background: rgba(99, 102, 241, 0.03);
@@ -803,7 +773,88 @@ const IndexBtn = styled.button`
   }
 `;
 
+// ─── Demo Chips ───────────────────────────────────────────
+const DemoContext = styled.p`
+  font-size: ${theme.fontSizes.sm};
+  color: ${theme.colors.onSurfaceVariant};
+  line-height: 1.5;
+  margin: 0;
+
+  strong {
+    color: ${theme.colors.onSurface};
+  }
+`;
+
+const ChipRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${theme.spacing.sm};
+`;
+
+const Chip = styled.button`
+  padding: 6px 14px;
+  border-radius: ${theme.radii.full};
+  border: 1px solid ${theme.colors.outlineVariant};
+  background: ${theme.colors.surfaceContainerHigh};
+  color: ${theme.colors.onSurface};
+  font-size: ${theme.fontSizes.sm};
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: ${theme.colors.primary};
+    color: ${theme.colors.primary};
+    background: rgba(99, 102, 241, 0.06);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+`;
+
 // ─── Error / Copy ─────────────────────────────────────────
+const ConfirmBanner = styled.div`
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: ${theme.radii.lg};
+  padding: ${theme.spacing.sm} ${theme.spacing.md};
+  font-size: ${theme.fontSizes.sm};
+  color: ${theme.colors.onSurface};
+
+  .message {
+    margin-bottom: ${theme.spacing.sm};
+  }
+
+  .filename {
+    font-weight: 600;
+  }
+
+  .actions {
+    display: flex;
+    gap: ${theme.spacing.sm};
+  }
+
+  button {
+    padding: 4px 12px;
+    border-radius: ${theme.radii.md};
+    font-size: ${theme.fontSizes.xs};
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn-replace {
+    background: ${theme.colors.primary};
+    color: #fff;
+  }
+
+  .btn-cancel {
+    background: ${theme.colors.surfaceContainerHighest};
+    color: ${theme.colors.onSurfaceVariant};
+  }
+`;
+
 const ErrorMsg = styled.div`
   background: rgba(255, 180, 171, 0.1);
   border: 1px solid rgba(255, 180, 171, 0.3);
@@ -857,76 +908,83 @@ const CopyBtn = styled.button`
 `;
 
 
+// ─── Demo briefs ──────────────────────────────────────────
+const DEMO_BRIEFS = [
+  {
+    label: "Gérer les retours produits",
+    text: "En tant que responsable SAV de Lumeo Boutique, je veux pouvoir gérer les demandes de retour produit des clients : accepter ou refuser la demande selon notre politique de retour, et déclencher le remboursement dès réception du colis.",
+  },
+  {
+    label: "Tableau de bord des litiges SAV",
+    text: "En tant que responsable SAV de Lumeo Boutique, je veux un tableau de bord centralisant tous les litiges ouverts (retards de livraison, produits endommagés, non-conformités), avec des filtres par statut, ancienneté et montant, afin de prioriser les traitements et réduire notre délai de résolution moyen.",
+  },
+  {
+    label: "Paiement fractionné Alma",
+    text: "En tant que client de Lumeo Boutique, je veux pouvoir régler mes achats en plusieurs fois via Alma, afin de faciliter l'achat de luminaires à prix élevé. L'option doit s'afficher au checkout à partir d'un certain montant de panier, avec un retour visuel clair sur les échéances.",
+  },
+  {
+    label: "Suivi des livraisons et stock fournisseurs",
+    text: "En tant que gestionnaire logistique de Lumeo Boutique, je veux suivre en temps réel l'état des livraisons en cours et les niveaux de stock fournisseurs, afin d'anticiper les ruptures, mettre à jour automatiquement la disponibilité sur le site et informer les clients des délais estimés.",
+  },
+];
+
 // ─── Component ────────────────────────────────────────────
-export default function Forge({ onNavigate, stories, setStories }) {
+export default function Forge({ onNavigate, stories, setStories, ragChunks, setRagChunks, documents, setDocuments, setTruncated }) {
   const [brief, setBrief] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
   const [error, setError] = useState(null);
   const [ragOpen, setRagOpen] = useState(true);
   const [dragOver, setDragOver] = useState(false);
-  const [documents, setDocuments] = useState([]);
-  const [ragChunks, setRagChunks] = useState([]);
   const [uploadingFile, setUploadingFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState(null);
+  const [pendingReplaceFile, setPendingReplaceFile] = useState(null);
   const fileInputRef = useRef(null);
+  const documentsRef = useRef(documents);
+  useEffect(() => { documentsRef.current = documents; }, [documents]);
 
   const charCount = brief.length;
   const MAX = 2000;
 
   useEffect(() => {
-    listDocuments()
-      .then((docs) =>
-        setDocuments(
-          docs.map((d) => ({
-            id: d.filename,
-            name: d.filename,
-            chunks: d.totalChunks,
-            uploadedAt: d.uploadedAt,
-            status: "indexed",
-          }))
-        )
-      )
-      .catch((err) => console.warn("[list-docs] Failed to load documents:", err));
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading && stories) {
+    if (status === 'success' && stories) {
       onNavigate("results");
     }
-  }, [isLoading, stories]);
+  }, [status, stories]);
 
   const handleSubmit = async () => {
-    if (!brief.trim() || isLoading) return;
+    if (!brief.trim() || status === 'loading') return;
     setStories("");
     setError(null);
-    setIsLoading(true);
+    setStatus('loading');
     setRagChunks([]);
+    setTruncated?.(false);
 
-    const indexedDocs = documents.filter(d => d.status === "indexed");
     let contextChunks = [];
 
-    if (indexedDocs.length > 0) {
-      try {
-        const ragResult = await retrieveContext(brief);
-        contextChunks = ragResult.chunks || [];
-        setRagChunks(contextChunks);
-      } catch (err) {
-        console.warn("RAG retrieval failed, generating without context:", err);
-      }
+    try {
+      const ragResult = await retrieveContext(brief);
+      contextChunks = ragResult.chunks || [];
+      setRagChunks(contextChunks);
+    } catch (err) {
+      console.warn("RAG retrieval failed, generating without context:", err);
     }
+
+    let hasError = false;
 
     await generateStories(
       brief,
       (chunk) => setStories((prev) => prev + chunk),
       (errMsg) => {
+        hasError = true;
         setError(errMsg);
-        setIsLoading(false);
+        setStatus('error');
       },
-      contextChunks
+      contextChunks,
+      () => setTruncated?.(true)
     );
 
-    setIsLoading(false);
+    if (!hasError) setStatus('success');
   };
 
   const handleKeyDown = (e) => {
@@ -934,9 +992,18 @@ export default function Forge({ onNavigate, stories, setStories }) {
   };
 
   const handleFileUpload = async (files) => {
-    console.log("Files selected:", files);
     for (const file of files) {
-      try {
+      const alreadyIndexed = documentsRef.current.some((d) => d.name === file.name && d.status === "indexed");
+      if (alreadyIndexed) {
+        setPendingReplaceFile(file);
+        return;
+      }
+      await uploadSingleFile(file);
+    }
+  };
+
+  const uploadSingleFile = async (file) => {
+    try {
         setUploadError(null);
         const newDoc = {
           id: Date.now(),
@@ -978,8 +1045,16 @@ export default function Forge({ onNavigate, stories, setStories }) {
         setUploadError(err.message);
         setUploadingFile(null);
       }
-    }
   };
+
+  const handleConfirmReplace = async () => {
+    const file = pendingReplaceFile;
+    setPendingReplaceFile(null);
+    setDocuments((prev) => prev.filter((d) => d.name !== file.name));
+    await uploadSingleFile(file);
+  };
+
+  const handleCancelReplace = () => setPendingReplaceFile(null);
 
   const handleDeleteDoc = async (doc) => {
     if (!confirm(`Supprimer "${doc.name}" et ses ${doc.chunks || 0} chunks ?`)) return;
@@ -1007,7 +1082,7 @@ export default function Forge({ onNavigate, stories, setStories }) {
           <span className="sub">Drafting User Stories</span>
         </TopBarLeft>
         <TopBarRight>
-          {isLoading && (
+          {status === 'loading' && (
             <GeneratingBadge>
               <span className="dot" />
               Génération en cours...
@@ -1028,14 +1103,31 @@ export default function Forge({ onNavigate, stories, setStories }) {
               <span className="version">Version 2.4</span>
             </SectionLabel>
 
+            <DemoContext>
+              <strong>Lumeo Boutique</strong> — e-commerce fictif de déco / luminaires.
+              Testez un besoin lié aux commandes, retours, livraison ou SAV.
+            </DemoContext>
+
+            <ChipRow>
+              {DEMO_BRIEFS.map((b) => (
+                <Chip
+                  key={b.label}
+                  type="button"
+                  onClick={() => setBrief(b.text)}
+                >
+                  {b.label}
+                </Chip>
+              ))}
+            </ChipRow>
+
             <TextareaWrapper>
               <StyledTextarea
                 placeholder="Décris ton besoin métier ici... (Ctrl+Entrée pour soumettre)"
                 value={brief}
                 onChange={(e) => setBrief(e.target.value)}
                 onKeyDown={handleKeyDown}
-                $disabled={isLoading}
-                disabled={isLoading}
+                $disabled={status === 'loading'}
+                disabled={status === 'loading'}
               />
               <TextareaFooter>
                 <KbdHint>⌘ + Enter</KbdHint>
@@ -1047,14 +1139,14 @@ export default function Forge({ onNavigate, stories, setStories }) {
 
             <GenerateBtn
               onClick={handleSubmit}
-              $disabled={!brief.trim() || isLoading || charCount > MAX}
-              $loading={isLoading}
-              disabled={!brief.trim() || isLoading || charCount > MAX}
+              $disabled={!brief.trim() || status === 'loading' || charCount > MAX}
+              $loading={status === 'loading'}
+              disabled={!brief.trim() || status === 'loading' || charCount > MAX}
             >
               <span className="icon">
-                {isLoading ? "sync" : "auto_awesome"}
+                {status === 'loading' ? "sync" : "auto_awesome"}
               </span>
-              {isLoading ? "Génération en cours..." : "Générer les user stories"}
+              {status === 'loading' ? "Génération en cours..." : "Générer les user stories"}
             </GenerateBtn>
 
             <InfoBanner>
@@ -1074,43 +1166,33 @@ export default function Forge({ onNavigate, stories, setStories }) {
             </ErrorMsg>
           )}
 
-          {/* RAG Chunks Panel — visible pendant génération */}
-          {isLoading && ragChunks.length > 0 && (
+          {/* RAG Sources Panel — visible pendant génération */}
+          {status === 'loading' && ragChunks.length > 0 && (
             <RAGPanel>
               <RAGHeader $open={ragOpen}>
                 <div className="left">
                   <span className="icon">search</span>
-                  {ragChunks.length} passages récupérés depuis vos docs
+                  Sources utilisées
                 </div>
                 <button className="toggle" onClick={() => setRagOpen(!ragOpen)}>
                   expand_more
                 </button>
               </RAGHeader>
               {ragOpen && (
-                <ChunkCards>
-                  {ragChunks.map((chunk, i) => (
-                    <ChunkCard key={i} $score={chunk.score}>
-                      <div className="score-row">
-                        <span className="score-badge">{chunk.score}% MATCH</span>
-                        <span style={{
-                          fontFamily: "Material Symbols Outlined",
-                          fontSize: 16,
-                          color: theme.colors.onSurfaceVariant
-                        }}>description</span>
-                      </div>
-                      <p className="excerpt">{chunk.text?.slice(0, 120)}...</p>
-                      <div className="bar-track">
-                        <div className="bar-fill" />
-                      </div>
-                    </ChunkCard>
+                <SourcePills>
+                  {[...new Set(ragChunks.map((c) => c.filename))].map((filename) => (
+                    <SourcePill key={filename}>
+                      <span className="dot" />
+                      <span className="name" title={filename}>{filename}</span>
+                    </SourcePill>
                   ))}
-                </ChunkCards>
+                </SourcePills>
               )}
             </RAGPanel>
           )}
 
           {/* Streaming Result */}
-          {isLoading && stories && (
+          {status === 'loading' && stories && (
             <StreamingCard>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <StreamingBadge>
@@ -1126,7 +1208,7 @@ export default function Forge({ onNavigate, stories, setStories }) {
           )}
 
           {/* Empty state */}
-          {!isLoading && !stories && (
+          {status !== 'loading' && !stories && (
             <EmptyState>
               <span className="icon">description</span>
               <p>Les user stories générées apparaîtront ici.<br />Commencez par décrire votre projet.</p>
@@ -1182,8 +1264,9 @@ export default function Forge({ onNavigate, stories, setStories }) {
                   )}
                   {doc.status !== "loading" && (
                     <DeleteDocBtn
-                      title={`Supprimer ${doc.name}`}
-                      onClick={() => handleDeleteDoc(doc)}
+                      disabled
+                      title="Suppression désactivée en mode démo — pour préserver l'expérience des autres visiteurs."
+                      style={{ opacity: 0.35, cursor: "not-allowed" }}
                     >
                       delete
                     </DeleteDocBtn>
@@ -1192,6 +1275,18 @@ export default function Forge({ onNavigate, stories, setStories }) {
               ))}
             </DocList>
 
+            {pendingReplaceFile && (
+              <ConfirmBanner>
+                <p className="message">
+                  <span className="filename">{pendingReplaceFile.name}</span> est déjà indexé. Remplacer ?
+                </p>
+                <div className="actions">
+                  <button className="btn-replace" onClick={handleConfirmReplace}>Remplacer</button>
+                  <button className="btn-cancel" onClick={handleCancelReplace}>Annuler</button>
+                </div>
+              </ConfirmBanner>
+            )}
+
             {uploadError && (
               <ErrorMsg>
                 <span>{uploadError}</span>
@@ -1199,35 +1294,22 @@ export default function Forge({ onNavigate, stories, setStories }) {
               </ErrorMsg>
             )}
 
-            <UploadZone
-              $dragOver={dragOver}
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.docx,.txt"
-                multiple
-                style={{ display: "none" }}
-                onChange={(e) => {
-                  const files = Array.from(e.target.files);
-                  handleFileUpload(files);
-                }}
-              />
+            <UploadZone $disabled>
               <span className="upload-icon">cloud_upload</span>
-              <p className="upload-title">Glissez vos docs ici</p>
-              <p className="upload-sub">ou cliquez pour parcourir — Max 10 Mo</p>
-              <div className="format-badges">
-                <span className="format-badge">PDF</span>
-                <span className="format-badge">DOCX</span>
-                <span className="format-badge">TXT</span>
-              </div>
+              <p className="upload-title">Upload désactivé en mode démo publique</p>
+              <p className="upload-sub">
+                La base de connaissance (8 documents fictifs sur Lumeo Boutique)
+                est pré-configurée pour cette démo.
+              </p>
             </UploadZone>
 
-            <IndexBtn>Indexer les documents</IndexBtn>
+            <IndexBtn
+              disabled
+              title="Indexation désactivée en mode démo — pour préserver l'expérience des autres visiteurs."
+              style={{ opacity: 0.35, cursor: "not-allowed" }}
+            >
+              Indexer les documents
+            </IndexBtn>
           </KBPanel>
         </RightColumn>
       </Content>

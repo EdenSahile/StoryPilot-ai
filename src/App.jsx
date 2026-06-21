@@ -1,7 +1,8 @@
 // App.jsx — StoryForge AI v2
 // Remplace l'App.jsx existant
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { listDocuments } from "./components/services/ragService";
 import styled, { createGlobalStyle } from "styled-components";
 import { theme } from "./theme";
 import Sidebar from "./components/layout/Sidebar";
@@ -87,18 +88,39 @@ const PlaceholderScreen = styled.div`
 function App() {
   const [currentScreen, setCurrentScreen] = useState("dashboard");
   const [stories, setStories] = useState("");
+  const [ragChunks, setRagChunks] = useState([]);
+  const [documents, setDocuments] = useState([]);
+  const [truncated, setTruncated] = useState(false);
+
+  useEffect(() => {
+    listDocuments()
+      .then((docs) =>
+        setDocuments(
+          docs.map((d) => ({
+            id: d.filename,
+            name: d.filename,
+            chunks: d.totalChunks,
+            uploadedAt: d.uploadedAt,
+            status: "indexed",
+          }))
+        )
+      )
+      .catch((err) => console.warn("[list-docs] Failed to load documents:", err));
+  }, []);
 
   const renderScreen = () => {
     switch (currentScreen) {
       case "dashboard":
         return <Dashboard onNavigate={setCurrentScreen} />;
       case "forge":
-        return <Forge onNavigate={setCurrentScreen} stories={stories} setStories={setStories} />;
+        return <Forge onNavigate={setCurrentScreen} stories={stories} setStories={setStories} ragChunks={ragChunks} setRagChunks={setRagChunks} documents={documents} setDocuments={setDocuments} setTruncated={setTruncated} />;
       case "results":
         return (
           <Results
             stories={stories}
-            onNewGeneration={() => { setStories(""); setCurrentScreen("forge"); }}
+            ragChunks={ragChunks}
+            truncated={truncated}
+            onNewGeneration={() => { setStories(""); setRagChunks([]); setTruncated(false); setCurrentScreen("forge"); }}
           />
         );
       case "library":

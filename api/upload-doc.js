@@ -4,6 +4,7 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 import OpenAI from "openai";
 import { extractText as extractPdfText, getDocumentProxy } from "unpdf";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 export const config = {
   api: {
@@ -14,30 +15,14 @@ export const config = {
 };
 
 // ─── Chunking ─────────────────────────────────────────────
-function chunkText(text, maxTokens = 500) {
-  const sentences = text
-    .replace(/\n{3,}/g, "\n\n")
-    .split(/(?<=[.!?])\s+|\n\n/)
-    .filter((s) => s.trim().length > 0);
+const splitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 500,
+  chunkOverlap: 50,
+  separators: ["\n\n", "\n", ". ", "! ", "? ", " ", ""],
+});
 
-  const chunks = [];
-  let current = "";
-
-  for (const sentence of sentences) {
-    // Approximation : 1 token ≈ 4 caractères en français
-    if ((current + " " + sentence).length / 4 > maxTokens && current) {
-      chunks.push(current.trim());
-      current = sentence;
-    } else {
-      current = current ? current + " " + sentence : sentence;
-    }
-  }
-
-  if (current.trim()) {
-    chunks.push(current.trim());
-  }
-
-  return chunks;
+async function chunkText(text) {
+  return splitter.splitText(text);
 }
 
 // ─── Text extraction ──────────────────────────────────────
@@ -80,6 +65,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Méthode non autorisée" });
   }
 
+  if (process.env.DEMO_MODE === "true") {
+    return res.status(403).json({ error: "Upload désactivé en mode démo." });
+  }
+
   // Validate env
   const { OPENAI_API_KEY, PINECONE_API_KEY, PINECONE_INDEX_URL } = process.env;
 
@@ -110,12 +99,7 @@ export default async function handler(req, res) {
 
     // 2. Chunk
     console.log(`[upload] Chunking text (${text.length} chars)...`);
-    console.log("[debug] Raw text length:", text.length);
-    console.log("[debug] Raw text sample:", JSON.stringify(text.substring(0, 300)));
-
-    const chunks = chunkText(text);
-    console.log("[debug] Chunks count:", chunks.length);
-    console.log("[debug] First chunk:", chunks[0]);
+    const chunks = await chunkText(text);
     console.log(`[upload] ${chunks.length} chunks created.`);
 
     if (chunks.length === 0) {
@@ -156,16 +140,10 @@ export default async function handler(req, res) {
       },
     }));
 
-    console.log("[debug] Text extracted length:", text.length);
-console.log("[debug] First 200 chars:", text.substring(0, 200));
-console.log("[debug] Chunks created:", chunks.length);
-console.log("[debug] Vectors to upsert:", vectors.length);
-
     // Upsert in batches of 100
     const batchSize = 100;
     for (let i = 0; i < vectors.length; i += batchSize) {
       const batch = vectors.slice(i, i + batchSize);
-      console.log("[debug] Batch structure:", JSON.stringify(batch[0]));
       await index.upsert({ records: batch });
     }
 
