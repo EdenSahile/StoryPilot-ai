@@ -355,72 +355,36 @@ const RAGHeader = styled.div`
   }
 `;
 
-const ChunkCards = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: ${theme.spacing.md};
-
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
+const SourcePills = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 `;
 
-const ChunkCard = styled.div`
-  background: ${theme.colors.surfaceContainerLow};
-  border: 1px solid ${theme.colors.outlineVariant};
-  border-radius: ${theme.radii.md};
-  padding: ${theme.spacing.md};
+const SourcePill = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: ${theme.spacing.sm};
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  border-radius: 999px;
+  font-size: 11px;
+  color: ${theme.colors.onSurface};
+  max-width: 200px;
 
-  .score-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4ade80;
+    flex-shrink: 0;
   }
 
-  .score-badge {
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 4px;
-    background: ${({ $score }) =>
-      $score >= 90
-        ? "rgba(74, 222, 128, 0.1)"
-        : $score >= 85
-        ? "rgba(251, 191, 36, 0.1)"
-        : "rgba(144, 143, 160, 0.1)"};
-    color: ${({ $score }) =>
-      $score >= 90 ? "#4ade80" : $score >= 85 ? "#fbbf24" : theme.colors.onSurfaceVariant};
-    border: 1px solid ${({ $score }) =>
-      $score >= 90
-        ? "rgba(74, 222, 128, 0.2)"
-        : $score >= 85
-        ? "rgba(251, 191, 36, 0.2)"
-        : "rgba(144, 143, 160, 0.2)"};
-  }
-
-  .excerpt {
-    font-size: ${theme.fontSizes.sm};
-    color: ${theme.colors.onSurfaceVariant};
-    font-style: italic;
-    line-height: 1.5;
-  }
-
-  .bar-track {
-    height: 3px;
-    background: ${theme.colors.surfaceContainerHighest};
-    border-radius: 999px;
+  .name {
+    white-space: nowrap;
     overflow: hidden;
-  }
-
-  .bar-fill {
-    height: 100%;
-    border-radius: 999px;
-    background: ${({ $score }) =>
-      $score >= 90 ? "#4ade80" : $score >= 85 ? "#fbbf24" : theme.colors.outline};
-    width: ${({ $score }) => $score}%;
+    text-overflow: ellipsis;
   }
 `;
 
@@ -804,6 +768,47 @@ const IndexBtn = styled.button`
 `;
 
 // ─── Error / Copy ─────────────────────────────────────────
+const ConfirmBanner = styled.div`
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: ${theme.radii.lg};
+  padding: ${theme.spacing.sm} ${theme.spacing.md};
+  font-size: ${theme.fontSizes.sm};
+  color: ${theme.colors.onSurface};
+
+  .message {
+    margin-bottom: ${theme.spacing.sm};
+  }
+
+  .filename {
+    font-weight: 600;
+  }
+
+  .actions {
+    display: flex;
+    gap: ${theme.spacing.sm};
+  }
+
+  button {
+    padding: 4px 12px;
+    border-radius: ${theme.radii.md};
+    font-size: ${theme.fontSizes.xs};
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+  }
+
+  .btn-replace {
+    background: ${theme.colors.primary};
+    color: #fff;
+  }
+
+  .btn-cancel {
+    background: ${theme.colors.surfaceContainerHighest};
+    color: ${theme.colors.onSurfaceVariant};
+  }
+`;
+
 const ErrorMsg = styled.div`
   background: rgba(255, 180, 171, 0.1);
   border: 1px solid rgba(255, 180, 171, 0.3);
@@ -858,32 +863,36 @@ const CopyBtn = styled.button`
 
 
 // ─── Component ────────────────────────────────────────────
-export default function Forge({ onNavigate, stories, setStories, ragChunks, setRagChunks, documents, setDocuments }) {
+export default function Forge({ onNavigate, stories, setStories, ragChunks, setRagChunks, documents, setDocuments, setTruncated }) {
   const [brief, setBrief] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
   const [error, setError] = useState(null);
   const [ragOpen, setRagOpen] = useState(true);
   const [dragOver, setDragOver] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState(null);
+  const [pendingReplaceFile, setPendingReplaceFile] = useState(null);
   const fileInputRef = useRef(null);
+  const documentsRef = useRef(documents);
+  useEffect(() => { documentsRef.current = documents; }, [documents]);
 
   const charCount = brief.length;
   const MAX = 2000;
 
   useEffect(() => {
-    if (!isLoading && stories) {
+    if (status === 'success' && stories) {
       onNavigate("results");
     }
-  }, [isLoading, stories]);
+  }, [status, stories]);
 
   const handleSubmit = async () => {
-    if (!brief.trim() || isLoading) return;
+    if (!brief.trim() || status === 'loading') return;
     setStories("");
     setError(null);
-    setIsLoading(true);
+    setStatus('loading');
     setRagChunks([]);
+    setTruncated?.(false);
 
     let contextChunks = [];
 
@@ -895,17 +904,21 @@ export default function Forge({ onNavigate, stories, setStories, ragChunks, setR
       console.warn("RAG retrieval failed, generating without context:", err);
     }
 
+    let hasError = false;
+
     await generateStories(
       brief,
       (chunk) => setStories((prev) => prev + chunk),
       (errMsg) => {
+        hasError = true;
         setError(errMsg);
-        setIsLoading(false);
+        setStatus('error');
       },
-      contextChunks
+      contextChunks,
+      () => setTruncated?.(true)
     );
 
-    setIsLoading(false);
+    if (!hasError) setStatus('success');
   };
 
   const handleKeyDown = (e) => {
@@ -913,9 +926,18 @@ export default function Forge({ onNavigate, stories, setStories, ragChunks, setR
   };
 
   const handleFileUpload = async (files) => {
-    console.log("Files selected:", files);
     for (const file of files) {
-      try {
+      const alreadyIndexed = documentsRef.current.some((d) => d.name === file.name && d.status === "indexed");
+      if (alreadyIndexed) {
+        setPendingReplaceFile(file);
+        return;
+      }
+      await uploadSingleFile(file);
+    }
+  };
+
+  const uploadSingleFile = async (file) => {
+    try {
         setUploadError(null);
         const newDoc = {
           id: Date.now(),
@@ -957,8 +979,16 @@ export default function Forge({ onNavigate, stories, setStories, ragChunks, setR
         setUploadError(err.message);
         setUploadingFile(null);
       }
-    }
   };
+
+  const handleConfirmReplace = async () => {
+    const file = pendingReplaceFile;
+    setPendingReplaceFile(null);
+    setDocuments((prev) => prev.filter((d) => d.name !== file.name));
+    await uploadSingleFile(file);
+  };
+
+  const handleCancelReplace = () => setPendingReplaceFile(null);
 
   const handleDeleteDoc = async (doc) => {
     if (!confirm(`Supprimer "${doc.name}" et ses ${doc.chunks || 0} chunks ?`)) return;
@@ -986,7 +1016,7 @@ export default function Forge({ onNavigate, stories, setStories, ragChunks, setR
           <span className="sub">Drafting User Stories</span>
         </TopBarLeft>
         <TopBarRight>
-          {isLoading && (
+          {status === 'loading' && (
             <GeneratingBadge>
               <span className="dot" />
               Génération en cours...
@@ -1013,8 +1043,8 @@ export default function Forge({ onNavigate, stories, setStories, ragChunks, setR
                 value={brief}
                 onChange={(e) => setBrief(e.target.value)}
                 onKeyDown={handleKeyDown}
-                $disabled={isLoading}
-                disabled={isLoading}
+                $disabled={status === 'loading'}
+                disabled={status === 'loading'}
               />
               <TextareaFooter>
                 <KbdHint>⌘ + Enter</KbdHint>
@@ -1026,14 +1056,14 @@ export default function Forge({ onNavigate, stories, setStories, ragChunks, setR
 
             <GenerateBtn
               onClick={handleSubmit}
-              $disabled={!brief.trim() || isLoading || charCount > MAX}
-              $loading={isLoading}
-              disabled={!brief.trim() || isLoading || charCount > MAX}
+              $disabled={!brief.trim() || status === 'loading' || charCount > MAX}
+              $loading={status === 'loading'}
+              disabled={!brief.trim() || status === 'loading' || charCount > MAX}
             >
               <span className="icon">
-                {isLoading ? "sync" : "auto_awesome"}
+                {status === 'loading' ? "sync" : "auto_awesome"}
               </span>
-              {isLoading ? "Génération en cours..." : "Générer les user stories"}
+              {status === 'loading' ? "Génération en cours..." : "Générer les user stories"}
             </GenerateBtn>
 
             <InfoBanner>
@@ -1053,43 +1083,33 @@ export default function Forge({ onNavigate, stories, setStories, ragChunks, setR
             </ErrorMsg>
           )}
 
-          {/* RAG Chunks Panel — visible pendant génération */}
-          {isLoading && ragChunks.length > 0 && (
+          {/* RAG Sources Panel — visible pendant génération */}
+          {status === 'loading' && ragChunks.length > 0 && (
             <RAGPanel>
               <RAGHeader $open={ragOpen}>
                 <div className="left">
                   <span className="icon">search</span>
-                  {ragChunks.length} passages récupérés depuis vos docs
+                  Sources utilisées
                 </div>
                 <button className="toggle" onClick={() => setRagOpen(!ragOpen)}>
                   expand_more
                 </button>
               </RAGHeader>
               {ragOpen && (
-                <ChunkCards>
-                  {ragChunks.map((chunk, i) => (
-                    <ChunkCard key={i} $score={chunk.score}>
-                      <div className="score-row">
-                        <span className="score-badge">{chunk.score}% MATCH</span>
-                        <span style={{
-                          fontFamily: "Material Symbols Outlined",
-                          fontSize: 16,
-                          color: theme.colors.onSurfaceVariant
-                        }}>description</span>
-                      </div>
-                      <p className="excerpt">{chunk.text?.slice(0, 120)}...</p>
-                      <div className="bar-track">
-                        <div className="bar-fill" />
-                      </div>
-                    </ChunkCard>
+                <SourcePills>
+                  {[...new Set(ragChunks.map((c) => c.filename))].map((filename) => (
+                    <SourcePill key={filename}>
+                      <span className="dot" />
+                      <span className="name" title={filename}>{filename}</span>
+                    </SourcePill>
                   ))}
-                </ChunkCards>
+                </SourcePills>
               )}
             </RAGPanel>
           )}
 
           {/* Streaming Result */}
-          {isLoading && stories && (
+          {status === 'loading' && stories && (
             <StreamingCard>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <StreamingBadge>
@@ -1105,7 +1125,7 @@ export default function Forge({ onNavigate, stories, setStories, ragChunks, setR
           )}
 
           {/* Empty state */}
-          {!isLoading && !stories && (
+          {status !== 'loading' && !stories && (
             <EmptyState>
               <span className="icon">description</span>
               <p>Les user stories générées apparaîtront ici.<br />Commencez par décrire votre projet.</p>
@@ -1170,6 +1190,18 @@ export default function Forge({ onNavigate, stories, setStories, ragChunks, setR
                 </DocCard>
               ))}
             </DocList>
+
+            {pendingReplaceFile && (
+              <ConfirmBanner>
+                <p className="message">
+                  <span className="filename">{pendingReplaceFile.name}</span> est déjà indexé. Remplacer ?
+                </p>
+                <div className="actions">
+                  <button className="btn-replace" onClick={handleConfirmReplace}>Remplacer</button>
+                  <button className="btn-cancel" onClick={handleCancelReplace}>Annuler</button>
+                </div>
+              </ConfirmBanner>
+            )}
 
             {uploadError && (
               <ErrorMsg>

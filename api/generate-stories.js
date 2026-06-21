@@ -12,6 +12,8 @@ function checkRateLimit(ip) {
   return true;
 }
 
+export const config = { maxDuration: 60 }; // Streaming 3-5 stories peut dépasser le défaut sans config explicite
+
 export default async function handler(req, res) {
   // Seulement POST
   if (req.method !== 'POST') {
@@ -73,7 +75,7 @@ if (!checkRateLimit(clientIp)) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 4000,
+        max_tokens: 8000, // Augmenté : 3-5 stories avec Gherkin ≈ 5 000-7 000 tokens (CLAUDE.md: justification requise)
         stream: true, // On utilise le streaming!
         system: `Tu es un expert Product Owner Scrum.
 Génère des user stories détaillées et professionnelles.
@@ -91,16 +93,16 @@ Pour chaque user story, utilise EXACTEMENT ce format :
 - [critère précis et testable]
 - [critère précis et testable]
 
-**Scénarios Gherkin :**
+**Scénarios Gherkin :** (MAXIMUM 2 scénarios, 4 lignes chacun — ne pas dépasser)
 
 Scénario 1 : [nom du scénario principal]
 - Étant donné [contexte]
 - Quand [action]
-- Alors [résultat]
+- Alors [résultat attendu]
 - Et [condition complémentaire]
 
-Scénario 2 : [nom du cas alternatif ou d'erreur]
-- Étant donné [contexte]
+Scénario 2 : [cas alternatif ou d'erreur]
+- Étant donné [contexte différent]
 - Quand [action]
 - Alors [résultat]
 
@@ -174,8 +176,15 @@ Sépare chaque story par ---${contextBlock}`,
           const text = parsed.delta?.text;
 
           if (text) {
-            // Envoie chaque chunk au frontend via SSE
             res.write(`data: ${JSON.stringify({ text })}\n\n`);
+          }
+
+          if (parsed.type === 'message_delta' && parsed.delta?.stop_reason === 'max_tokens') {
+            res.write(`data: ${JSON.stringify({ truncated: true })}\n\n`);
+          }
+
+          if (parsed.type === 'message_stop') {
+            res.write(`data: ${JSON.stringify({ stop: true })}\n\n`);
           }
         } catch (e) {
           // Ignorer les lignes JSON malformées
