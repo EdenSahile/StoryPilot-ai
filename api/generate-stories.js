@@ -12,6 +12,8 @@ function checkRateLimit(ip) {
   return true;
 }
 
+export const config = { maxDuration: 60 }; // Streaming 3-5 stories peut dépasser le défaut sans config explicite
+
 export default async function handler(req, res) {
   // Seulement POST
   if (req.method !== 'POST') {
@@ -60,7 +62,8 @@ if (!checkRateLimit(clientIp)) {
 
   try {
     const contextBlock = contextChunks && contextChunks.length > 0
-      ? `\n\nCONTEXTE DOCUMENTAIRE (extrait des documents du client) :\n${contextChunks.map((c, i) => `[Source ${i + 1} - ${c.filename}] ${c.text}`).join("\n\n")}\n\nUtilise ce contexte pour ancrer les user stories dans le vocabulaire et les contraintes réelles du client.`
+      ? `\n\n---\nCONTEXTE DOCUMENTAIRE OBLIGATOIRE (documents internes du client) :\n${contextChunks.map((c, i) => `[Source ${i + 1} — ${c.filename}]\n${c.text}`).join("\n\n")}\n---\n\nINSTRUCTIONS IMPÉRATIVES pour utiliser ce contexte :\n- Tu DOIS mentionner le nom de l'entreprise et ses spécificités trouvées dans les documents\n- Tu DOIS réutiliser le vocabulaire exact des documents (noms de produits, délais, processus, références)\n- Chaque user story DOIT contenir au moins un élément concret issu des documents ci-dessus\n- Les critères d'acceptation DOIVENT refléter les règles métier réelles du client\n- INTERDIT de générer des user stories génériques qui s'appliqueraient à n'importe quelle entreprise
+- Si une information n'est pas présente dans les sources fournies (délais exacts, noms de transporteurs, formats techniques, etc.), ne l'invente pas — utilise une formulation générique (ex: "le système envoie une confirmation" plutôt qu'un délai précis non vérifié)`
       : "";
 
     // Appel à Claude API avec streaming
@@ -73,7 +76,7 @@ if (!checkRateLimit(clientIp)) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5',
-        max_tokens: 4000,
+        max_tokens: 8000, // Augmenté : 3-5 stories avec Gherkin ≈ 5 000-7 000 tokens (CLAUDE.md: justification requise)
         stream: true, // On utilise le streaming!
         system: `Tu es un expert Product Owner Scrum.
 Génère des user stories détaillées et professionnelles.
@@ -91,16 +94,16 @@ Pour chaque user story, utilise EXACTEMENT ce format :
 - [critère précis et testable]
 - [critère précis et testable]
 
-**Scénarios Gherkin :**
+**Scénarios Gherkin :** (MAXIMUM 2 scénarios, 4 lignes chacun — ne pas dépasser)
 
 Scénario 1 : [nom du scénario principal]
 - Étant donné [contexte]
 - Quand [action]
-- Alors [résultat]
+- Alors [résultat attendu]
 - Et [condition complémentaire]
 
-Scénario 2 : [nom du cas alternatif ou d'erreur]
-- Étant donné [contexte]
+Scénario 2 : [cas alternatif ou d'erreur]
+- Étant donné [contexte différent]
 - Quand [action]
 - Alors [résultat]
 
@@ -174,8 +177,15 @@ Sépare chaque story par ---${contextBlock}`,
           const text = parsed.delta?.text;
 
           if (text) {
-            // Envoie chaque chunk au frontend via SSE
             res.write(`data: ${JSON.stringify({ text })}\n\n`);
+          }
+
+          if (parsed.type === 'message_delta' && parsed.delta?.stop_reason === 'max_tokens') {
+            res.write(`data: ${JSON.stringify({ truncated: true })}\n\n`);
+          }
+
+          if (parsed.type === 'message_stop') {
+            res.write(`data: ${JSON.stringify({ stop: true })}\n\n`);
           }
         } catch (e) {
           // Ignorer les lignes JSON malformées

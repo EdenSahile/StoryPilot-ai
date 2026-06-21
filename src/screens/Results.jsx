@@ -581,11 +581,33 @@ const MobileStickyBar = styled.div`
   }
 `;
 
+const TruncationWarning = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.sm};
+  padding: ${theme.spacing.sm} ${theme.spacing.md};
+  margin-bottom: ${theme.spacing.md};
+  background: rgba(234, 179, 8, 0.1);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: ${theme.radii.sm};
+  color: #ca8a04;
+  font-size: ${theme.fontSizes.sm};
+  font-weight: 500;
+`;
+
 // ─── Parser ───────────────────────────────────────────────
 function parseStories(rawText) {
   if (!rawText) return [];
 
-  const blocks = rawText.split(/---+/).filter(b => b.trim().length > 30);
+  const rawBlocks = rawText.split(/---+/).filter(b => b.trim().length > 30);
+
+  // Garde-fou contre les répétitions non déterministes du modèle :
+  // si deux blocs consécutifs démarrent de façon identique (100 premiers chars),
+  // on ne garde que le premier.
+  const blocks = rawBlocks.filter((block, i) => {
+    if (i === 0) return true;
+    return block.trim().substring(0, 100) !== rawBlocks[i - 1].trim().substring(0, 100);
+  });
 
   return blocks.map((block, index) => {
     // Titre et statement
@@ -650,6 +672,38 @@ function parseStories(rawText) {
   }).filter(s => s.fullStatement);
 }
 
+// ─── RAG Sources styled components ───────────────────────
+const SourcesList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const SourceItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.sm};
+  padding: 6px ${theme.spacing.sm};
+  border-radius: ${theme.radii.md};
+  background: rgba(99, 102, 241, 0.05);
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #4ade80;
+    flex-shrink: 0;
+  }
+
+  .name {
+    font-size: ${theme.fontSizes.xs};
+    color: ${theme.colors.onSurface};
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+`;
+
 // ─── Generic stories for comparison ──────────────────────
 const GENERIC_STORIES = `En tant qu'utilisateur, je veux me connecter afin d'accéder à mon compte.
 
@@ -664,7 +718,7 @@ const RECENT_GENERATIONS = [
 ];
 
 // ─── Component ────────────────────────────────────────────
-export default function Results({ stories, onNewGeneration }) {
+export default function Results({ stories, ragChunks = [], onNewGeneration, truncated = false }) {
   const [copied, setCopied] = useState(false);
   const [comparisonOpen, setComparisonOpen] = useState(false);
 
@@ -701,6 +755,12 @@ export default function Results({ stories, onNewGeneration }) {
             <h2>Backlog de Génération</h2>
             <p>Stories prêtes pour l'exportation vers Jira/Linear.</p>
           </PageHeader>
+
+          {truncated && (
+            <TruncationWarning>
+              ⚠️ Génération possiblement incomplète — la dernière user story est à vérifier.
+            </TruncationWarning>
+          )}
 
           {/* Action Bar */}
           <ActionBar>
@@ -871,6 +931,21 @@ export default function Results({ stories, onNewGeneration }) {
               Sauvegarder en Library
             </QuickActionBtn>
           </Panel>
+
+          {/* RAG Sources */}
+          {ragChunks.length > 0 && (
+            <Panel>
+              <PanelLabel>Sources utilisées</PanelLabel>
+              <SourcesList>
+                {[...new Set(ragChunks.map((c) => c.filename))].map((filename) => (
+                  <SourceItem key={filename}>
+                    <span className="dot" />
+                    <span className="name" title={filename}>{filename}</span>
+                  </SourceItem>
+                ))}
+              </SourcesList>
+            </Panel>
+          )}
 
           {/* Recent Library */}
           <Panel>

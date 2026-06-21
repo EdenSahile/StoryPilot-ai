@@ -39,7 +39,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ documents: [] });
     }
 
-    const fetchResult = await index.fetch(firstChunkIds);
+    const fetchResult = await index.fetch({ ids: firstChunkIds });
     const records = fetchResult.records || {};
 
     const documents = firstChunkIds

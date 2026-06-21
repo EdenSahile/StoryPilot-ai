@@ -1,5 +1,5 @@
-const TIMEOUT_MS = 30000; // 30 secondes timeout
-const MAX_OUTPUT_LENGTH = 4000; // Limiter output pour éviter freeze
+const TIMEOUT_MS = 90000; // 90s — le streaming de 3-5 stories peut dépasser 30s
+const MAX_OUTPUT_LENGTH = 40000; // Garde-fou client : ~25 % au-dessus du max API (8 000 tokens ≈ 32 000 chars en français)
 
 /**
  * Génère des user stories via l'API Claude avec streaming SSE.
@@ -8,7 +8,7 @@ const MAX_OUTPUT_LENGTH = 4000; // Limiter output pour éviter freeze
  * @param {(message: string) => void} onError - Appelé en cas d'erreur (validation, réseau, timeout)
  * @returns {Promise<void>} Se résout quand le stream est terminé ou interrompu
  */
-export async function generateStories(brief, onChunk, onError, contextChunks = []) {
+export async function generateStories(brief, onChunk, onError, contextChunks = [], onTruncated = null) {
   // Validation du brief
   if (!brief || brief.trim().length === 0) {
     onError('Veuillez entrer un brief métier.');
@@ -26,6 +26,7 @@ export async function generateStories(brief, onChunk, onError, contextChunks = [
   }
 
   let charCount = 0;
+  let receivedStop = false;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
@@ -93,10 +94,23 @@ export async function generateStories(brief, onChunk, onError, contextChunks = [
 
             onChunk(text);
           }
+
+          if (parsed.truncated) {
+            onTruncated?.();
+          }
+
+          if (parsed.stop) {
+            receivedStop = true;
+          }
         } catch (e) {
           // Ignorer les lignes JSON malformées
         }
       }
+    }
+
+    // Stream terminé — si contenu reçu mais pas de signal stop, coupure anormale
+    if (charCount > 0 && !receivedStop) {
+      onTruncated?.();
     }
 
     clearTimeout(timeoutId);
@@ -104,7 +118,12 @@ export async function generateStories(brief, onChunk, onError, contextChunks = [
     clearTimeout(timeoutId);
 
     if (error.name === 'AbortError') {
-      onError('Requête timeout (30s). Le serveur met trop de temps.');
+      if (charCount > 0) {
+        // Contenu partiel reçu avant le timeout — traiter comme troncature
+        onTruncated?.();
+      } else {
+        onError('Requête timeout (90s). Le serveur met trop de temps.');
+      }
     } else if (
       error instanceof TypeError ||
       error.message?.toLowerCase().includes('fetch') ||

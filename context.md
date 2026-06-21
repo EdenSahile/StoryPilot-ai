@@ -1,152 +1,84 @@
-# Audit StoryForge AI — Plan de corrections
-*Généré le 2026-05-08*
-
-## Statut sessions
-**Session 1 (2026-05-08) — TERMINÉE ✅** — 9/13 issues corrigées, commitées et pushées (`9123bdc`)
-**Session 2 (2026-05-09) — TERMINÉE ✅** — TECH-001 : Vitest configuré, 20 tests écrits et passants ; `onKeyPress` → `onKeyDown` dans BriefInput
-**Session 3 (2026-05-09) — TERMINÉE ✅** — SEC-003 : limitation rate limiting documentée (code + README) ; TECH-005 TypeScript différé
-**Session 4 (2026-05-09) — TERMINÉE ✅** — Responsive design complet (breakpoints 480/600/768px), police Plus Jakarta Sans, SVG icons, bouton pleine largeur mobile, fix `ol` padding Gherkin, prompt Gherkin sous-puces, Enter pour soumettre, validation brief vide
-**Session 5 (2026-05-09) — EN COURS 🔄** — Tests recruteur en cours (voir section dédiée)
-
-> **Note préalable :** Le fichier `.env` est correctement ignoré par git (`.gitignore`). La clé API n'est PAS exposée dans le repo. Bonne nouvelle !
+# StoryForge AI — Contexte actif
+*Mis à jour le 2026-06-20*
 
 ---
 
-## SÉCURITÉ
+## Session RAG-3 (2026-06-20) — Chunking avec outil professionnel
 
-### Critique / Haut
+**Objectif :** Remplacer le chunking regex maison par `RecursiveCharacterTextSplitter` de `@langchain/textsplitters`, standard industrie pour les pipelines RAG.
 
-- [x] **[SEC-001] Erreur interne exposée dans la réponse API**
-  - Fichier : `api/generate-stories.js` ligne 156
-  - Problème : `res.status(500).json({ error: \`Erreur serveur: ${error.message}\` })` — le message d'erreur interne (stack, chemins, détails techniques) est envoyé au client
-  - Correction : renvoyer un message générique au client, garder les détails dans les logs serveur uniquement
+### Étapes
 
-- [x] **[SEC-002] Taille du brief non validée côté serveur (prompt injection partielle)**
-  - Fichier : `api/generate-stories.js` ligne 47+
-  - Problème : aucune limite de longueur max sur le `brief` côté serveur — un client malveillant peut envoyer un brief de 100 000 caractères ou injecter des instructions pour tromper le modèle
-  - Correction : ajouter une limite (`brief.length > 2000`) et encadrer le brief dans le prompt avec des délimiteurs clairs (`"""`)
-
-### Moyen
-
-- [x] **[SEC-003] Rate limiting volatile (Map en mémoire)**
-  - Fichier : `api/generate-stories.js` lignes 1-11
-  - Problème : la Map est réinitialisée à chaque redéploiement Vercel (serverless = instances éphémères) → protection inefficace en production
-  - Correction : migrer vers un rate limiting persistant (Vercel KV, Upstash Redis) ou documenter la limitation clairement
-  - *Résolution : limitation documentée dans le code et le README — infrastructure upgrade différée*
-
-- [x] **[SEC-004] CORS origins hardcodées dans le code**
-  - Fichier : `api/generate-stories.js` ligne 22
-  - Problème : `['http://localhost:5173', 'https://storyforge-ai.vercel.app']` en dur — si le domaine change, il faut modifier et redéployer le code
-  - Correction : `process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173']`
-
-### Bas
-
-- [x] **[SEC-005] `console.error` exposé en production (côté client)**
-  - Fichier : `src/components/StoriesOutput.jsx` ligne 123
-  - Problème : les erreurs clipboard sont loggées en clair en production, créant du bruit dans les outils de monitoring
-  - Correction : supprimer ou conditionner au mode dev
-
-- [x] **[SEC-006] DOMPurify redondant avant ReactMarkdown**
-  - Fichier : `src/components/StoriesOutput.jsx` ligne 127
-  - Problème : DOMPurify est appliqué sur du texte markdown pur avant de le passer à `ReactMarkdown` — or `ReactMarkdown` échappe déjà le HTML par défaut, la sanitization ici est donc sans effet réel et crée une fausse confiance
-  - Correction : supprimer `DOMPurify.sanitize` (redondant), ou si on veut être strict, l'appliquer sur le HTML *rendu* via les `components` de `ReactMarkdown`
+- [x] **Étape 1 — Installer la dépendance** : `npm install @langchain/textsplitters`
+- [x] **Étape 2 — Remplacer `chunkText()` dans `api/upload-doc.js`** : utiliser `RecursiveCharacterTextSplitter` avec `chunkSize: 1600`, `chunkOverlap: 200`, séparateurs `["\n\n", "\n", ". ", " ", ""]`
+- [x] **Étape 3 — Nettoyer les debug logs** dans `api/upload-doc.js` (les `console.log("[debug]...")` laissés de la session RAG-2)
+- [ ] **Étape 4 — Re-indexer les documents** : supprimer + re-uploader les docs dans l'UI pour bénéficier du nouveau chunking
+- [ ] **Étape 5 — Vérifier les scores** : les scores de match doivent monter de 38-51% → 60-75%+
+- [ ] **Étape 6 — Commiter**
 
 ---
 
-## DETTE TECHNIQUE
+## Session RAG-4 (2026-06-20) — Affichage Sources professionnel
 
-### Haut
+**Objectif :** Remplacer le panel "X passages récupérés" (scores bruts en %) par un panel "Sources utilisées" minimaliste — les scores cosine sont un détail d'implémentation, pas une métrique utilisateur.
 
-- [x] **[TECH-001] Zéro tests dans le projet**
-  - Fichiers : tout le projet
-  - Problème : aucun fichier `*.test.js` / `*.spec.js`, aucun Vitest/Jest configuré — refactorisation et maintenance risquées
-  - Correction : configurer Vitest + @testing-library/react, ajouter au minimum des tests unitaires pour `claudeService.js` et un test de rendu pour les composants principaux
+### Étapes
 
-### Moyen
-
-- [x] **[TECH-002] Erreur clipboard silencieuse — pas de feedback utilisateur**
-  - Fichier : `src/components/StoriesOutput.jsx` lignes 117-125
-  - Problème : si `navigator.clipboard.writeText` échoue (HTTPS requis, permissions refusées), l'utilisateur ne voit rien et croit que ça a fonctionné
-  - Correction : afficher un message d'erreur à l'utilisateur + ajouter un fallback avec `document.execCommand('copy')`
-
-- [x] **[TECH-003] MAX_OUTPUT_LENGTH uniquement côté client**
-  - Fichier : `src/components/services/claudeService.js` lignes 2 et 77
-  - Problème : la limite de 4000 caractères est vérifiée côté client seulement — un client peut la contourner facilement
-  - Correction : ajouter côté serveur une limite sur la taille du brief ET utiliser `max_tokens` de l'API Claude pour borner la réponse (déjà à 1000, correct)
-
-- [x] **[TECH-004] Pas d'Error Boundary React**
-  - Fichier : `src/App.jsx`
-  - Problème : si `StoriesOutput` ou `BriefInput` crash en runtime, toute l'application plante sans message utile
-  - Correction : créer un composant `ErrorBoundary` et wrapper les composants sensibles
-
-### Bas
-
-- [ ] **[TECH-005] Pas de TypeScript**
-  - Fichiers : tous les `.js` / `.jsx`
-  - Problème : aucun typage statique — erreurs découvertes à runtime, refactorisation dangereuse, pas d'autocomplétion IDE
-  - Correction : migration progressive vers TypeScript (commencer par `claudeService.js`)
-
-- [x] **[TECH-006] Pas de JSDoc pour `generateStories`**
-  - Fichier : `src/components/services/claudeService.js` ligne 3
-  - Problème : la signature de la fonction (paramètres, callbacks, comportement timeout) n'est pas documentée
-  - Correction : ajouter un JSDoc avec `@param`, `@throws`, description des callbacks
-
-- [x] **[TECH-007] Pas de `.env.example` à la racine**
-  - Fichier : racine du projet (seul `src/.env.example` existe)
-  - Problème : un nouveau développeur ne sait pas quelles variables d'environnement configurer à la racine
-  - Correction : créer `.env.example` à la racine avec `ANTHROPIC_API_KEY=sk-ant-api03-YOUR_KEY_HERE`
+- [x] **Étape 1 — Remplacer le panel RAG dans `Results.jsx`** : supprimer `ChunkItem` avec % et barres de progression, le remplacer par une liste de noms de documents avec un indicateur visuel simple (point vert = contribué)
+- [x] **Étape 2 — Dédupliquer par filename** : si plusieurs chunks du même doc sont retournés, n'afficher le doc qu'une seule fois
+- [x] **Étape 3 — Supprimer les styled components inutilisés** : `ChunkList`, `ChunkItem`
+- [ ] **Étape 4 — Commiter**
 
 ---
 
+## Session RAG-5 (2026-06-20) — Guard duplicate upload
+
+**Objectif :** Empêcher le re-upload silencieux d'un fichier déjà indexé. Afficher une confirmation avant d'écraser.
+
+### Étapes
+
+- [x] **Étape 1 — Détecter le doublon dans `Forge.jsx`** : avant l'upload, vérifier si `documents` contient déjà un doc avec le même `name` que le fichier déposé
+- [x] **Étape 2 — Afficher une confirmation** : si doublon détecté, afficher un message inline "Ce document est déjà indexé. Remplacer ?" avec deux boutons (Remplacer / Annuler)
+- [x] **Étape 3 — Bloquer ou continuer** selon le choix utilisateur
+- [ ] **Étape 4 — Commiter**
+
 ---
 
-## Tests recruteur — Grille de validation (Session 5)
-
-### Inputs
-| Test | Statut | Résultat | Action |
-|---|---|---|---|
-| Brief > 2000 chars | ✅ OK | Alerte affichée | — |
-| Brief < 10 chars | ✅ OK | Alerte affichée | — |
-| Brief vide + clic bouton | ✅ OK | Alerte "Le brief ne peut pas être vide" | — |
-| Brief en anglais | ✅ OK | Génère en anglais sur Vercel, bouton adapté | — |
-| Brief espaces/retours à la ligne uniquement | ✅ OK | Alerte "brief vide" affichée | — |
-| Brief avec caractères spéciaux / XSS | ✅ OK | Pas d'exécution, Claude refuse poliment | — |
-| Brief exactement 10 chars (limite basse) | ✅ OK | Passe, Claude répond (brief trop vague) | — |
-| Brief exactement 2000 chars (limite haute) | ✅ OK | Passe, génération complète et bien formatée | — |
+## Tests recruteur — À valider
 
 ### Comportement réseau
-| Test | Statut | Résultat | Action |
-|---|---|---|---|
-| Couper WiFi pendant génération | ✅ OK (fixé) | Message brut "network error" → corrigé en message lisible | Fix claudeService catch |
-| Recharger page pendant génération | ⬜ À tester | — | — |
-| Clic rapide multiple sur "Générer" | ⬜ À tester | — | — |
-| Génération successive (2x) | ⬜ À tester | — | — |
+| Test | Statut |
+|---|---|
+| Recharger page pendant génération | ⬜ À tester |
+| Clic rapide multiple sur "Générer" | ⬜ À tester |
+| Génération successive (2x) | ⬜ À tester |
 
 ### UX / Interface
-| Test | Statut | Résultat | Action |
-|---|---|---|---|
-| Bouton "Copier" → coller dans éditeur | ⬜ À tester | — | — |
-| Test sur vrai mobile | ⬜ À tester | — | — |
-| Mode sombre système | ✅ OK | Dark mode complet implémenté sur tous les composants (body, BriefInput, StoriesOutput, Footer, ErrorMessage) | — |
-| Lien feedback Google Form | ⬜ À tester | — | — |
+| Test | Statut |
+|---|---|
+| Bouton "Copier" → coller dans éditeur | ⬜ À tester |
+| Test sur vrai mobile | ⬜ À tester |
+| Lien feedback Google Form | ⬜ À tester |
 
 ### Accessibilité
-| Test | Statut | Résultat | Action |
-|---|---|---|---|
-| Navigation clavier uniquement (Tab/Enter) | ⬜ À tester | — | — |
-| Zoom 200% navigateur | ⬜ À tester | — | — |
+| Test | Statut |
+|---|---|
+| Navigation clavier uniquement (Tab/Enter) | ⬜ À tester |
+| Zoom 200% navigateur | ⬜ À tester |
+
+---
+
+## Stack RAG — Référence
+
+- Index Pinecone : `storyforge`, dimension 512, cosine, serverless AWS us-east-1
+- Embedding : OpenAI `text-embedding-3-small` 512 dims
+- Env vars : `OPENAI_API_KEY`, `PINECONE_API_KEY`, `PINECONE_INDEX_URL`
+- URL index : `https://storyforge-g08tbyk.svc.aped-4627-b74a.pinecone.io`
+- ⚠️ Index partagé entre tous les visiteurs (pas d'isolation multi-tenant) — ne pas déployer avec de vrais docs sensibles
 
 ---
 
 ## Notes techniques
 
 - **404 en local** : attendu — `vite dev` ne sert pas `/api`. Utiliser `vercel dev` pour tester l'API localement.
-- **Langue de la réponse** : le prompt système est en français, Claude répond en français même si le brief est en anglais. À corriger.
-
----
-
-## Audit sécurité/dette terminé ✅
-
-Toutes les failles de sécurité et dettes techniques identifiées ont été corrigées ou documentées.
-
-**TECH-005 (TypeScript)** — optionnel, différé. Le projet fonctionne correctement en JS. À envisager si le projet grossit.
+- **Rate limiting** : Map en mémoire, non persistant entre cold starts Vercel. À migrer vers Upstash Redis si mis en prod réelle.
