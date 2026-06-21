@@ -1,6 +1,8 @@
 // screens/Dashboard.jsx
+import { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { theme } from "../theme";
+import { getGenerations, deleteGeneration } from "../utils/libraryStorage";
 
 // ─── Animations ───────────────────────────────────────────
 const fadeInUp = keyframes`
@@ -305,6 +307,29 @@ const GenerationCard = styled.div`
   }
 `;
 
+const DashDeleteBtn = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: ${theme.radii.sm};
+  color: ${theme.colors.outline};
+  font-family: "Material Symbols Outlined";
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+
+  ${GenerationCard}:hover & {
+    opacity: 1;
+  }
+
+  &:hover {
+    color: ${theme.colors.error};
+  }
+`;
+
 // ─── CTA Card ─────────────────────────────────────────────
 const CTACard = styled.div`
   height: 100%;
@@ -404,48 +429,67 @@ const GenerateBtn = styled.button`
   }
 `;
 
-// ─── Data ─────────────────────────────────────────────────
-const STATS = [
-  {
-    label: "Stories générées ce mois",
-    value: "47",
-    sub: "+12% vs last month",
-    color: theme.colors.primary,
-    icon: "description",
-  },
-  {
-    label: "Docs indexés",
-    value: "3",
-    sub: "Sources actives",
-    color: theme.colors.secondary,
-    icon: "folder_zip",
-  },
-  {
-    label: "Dernière génération",
-    value: "Il y a 2h",
-    sub: null,
-    color: "#4ade80",
-    icon: "schedule",
-  },
-];
-
-const RECENT = [
-  {
-    title: "Refonte du tunnel d'achat",
-    meta: "Il y a 2h · 8 stories · M complexity",
-  },
-  {
-    title: "Module de gestion de stock",
-    meta: "Hier · 12 stories · H complexity",
-  },
-  {
-    title: "Dashboard Analytique V2",
-    meta: "Il y a 3 jours · 5 stories · L complexity",
-  },
-];
+function formatRelativeDate(isoString) {
+  const diff = Date.now() - new Date(isoString).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 60) return `Il y a ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `Il y a ${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "Hier";
+  return `Il y a ${days} jours`;
+}
 
 // ─── Component ────────────────────────────────────────────
 export default function Dashboard({ onNavigate }) {
+  const [generations, setGenerations] = useState([]);
+
+  useEffect(() => {
+    setGenerations(getGenerations());
+  }, []);
+
+  const handleDelete = (e, id) => {
+    e.stopPropagation();
+    deleteGeneration(id);
+    setGenerations(getGenerations());
+  };
+
+  const thisMonth = new Date();
+  thisMonth.setDate(1);
+  thisMonth.setHours(0, 0, 0, 0);
+
+  const storiesThisMonth = generations
+    .filter((g) => new Date(g.createdAt) >= thisMonth)
+    .reduce((sum, g) => sum + (g.storiesCount || 0), 0);
+
+  const lastGen = generations[0];
+
+  const stats = [
+    {
+      label: "Stories sauvegardées ce mois",
+      value: storiesThisMonth || "—",
+      sub: `${generations.filter((g) => new Date(g.createdAt) >= thisMonth).length} génération(s)`,
+      color: theme.colors.primary,
+      icon: "description",
+    },
+    {
+      label: "Générations totales",
+      value: generations.length || "—",
+      sub: "Sauvegardées en local",
+      color: theme.colors.secondary,
+      icon: "folder_zip",
+    },
+    {
+      label: "Dernière génération",
+      value: lastGen ? formatRelativeDate(lastGen.createdAt) : "—",
+      sub: lastGen ? lastGen.title : null,
+      color: "#4ade80",
+      icon: "schedule",
+    },
+  ];
+
+  const recent = generations.slice(0, 3);
+
   return (
     <PageWrapper>
       <TopBar>
@@ -483,7 +527,7 @@ export default function Dashboard({ onNavigate }) {
 
         {/* Stats */}
         <StatsGrid>
-          {STATS.map((stat) => (
+          {stats.map((stat) => (
             <StatCard key={stat.label} $color={stat.color}>
               <span className="label">{stat.label}</span>
               <span className="value">{stat.value}</span>
@@ -501,18 +545,32 @@ export default function Dashboard({ onNavigate }) {
           <RecentSection>
             <h4>Générations récentes</h4>
             <GenerationList>
-              {RECENT.map((item) => (
-                <GenerationCard
-                  key={item.title}
-                  onClick={() => onNavigate?.("forge")}
-                >
-                  <div className="info">
-                    <span className="title">{item.title}</span>
-                    <span className="meta">{item.meta}</span>
-                  </div>
-                  <span className="chevron">chevron_right</span>
-                </GenerationCard>
-              ))}
+              {recent.length === 0 ? (
+                <span style={{ fontSize: theme.fontSizes.sm, color: theme.colors.onSurfaceVariant }}>
+                  Aucune génération sauvegardée pour l'instant.
+                </span>
+              ) : (
+                recent.map((item) => (
+                  <GenerationCard
+                    key={item.id}
+                    onClick={() => onNavigate?.("library")}
+                  >
+                    <div className="info">
+                      <span className="title">{item.title}</span>
+                      <span className="meta">
+                        {formatRelativeDate(item.createdAt)} · {item.storiesCount} stories
+                      </span>
+                    </div>
+                    <DashDeleteBtn
+                      title="Supprimer cette génération"
+                      onClick={(e) => handleDelete(e, item.id)}
+                    >
+                      delete
+                    </DashDeleteBtn>
+                    <span className="chevron">chevron_right</span>
+                  </GenerationCard>
+                ))
+              )}
             </GenerationList>
           </RecentSection>
 

@@ -175,7 +175,7 @@ const SecondaryLinks = styled.div`
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: "dashboard" },
   { id: "forge", label: "Forge", icon: "auto_awesome" },
-  { id: "library", label: "Library", icon: "library_books" },
+  { id: "library", label: "Historique", icon: "history" },
   { id: "settings", label: "Settings", icon: "settings" },
 ];
 
@@ -184,7 +184,7 @@ export default function Sidebar({ activeItem = "dashboard", onNavigate }) {
     <SidebarWrapper>
       <Logo>
         <h1>StoryForge</h1>
-        <p>AI PRODUCT OWNER</p>
+        <p>Docs métier → stories</p>
       </Logo>
 
       <Nav>

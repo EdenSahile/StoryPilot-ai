@@ -929,8 +929,7 @@ const DEMO_BRIEFS = [
 ];
 
 // ─── Component ────────────────────────────────────────────
-export default function Forge({ onNavigate, stories, setStories, ragChunks, setRagChunks, documents, setDocuments, setTruncated }) {
-  const [brief, setBrief] = useState("");
+export default function Forge({ onNavigate, brief, setBrief, stories, setStories, ragChunks, setRagChunks, documents, setDocuments, setTruncated }) {
   const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
   const [error, setError] = useState(null);
   const [ragOpen, setRagOpen] = useState(true);

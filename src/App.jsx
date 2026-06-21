@@ -1,7 +1,8 @@
 // App.jsx — StoryForge AI v2
 // Remplace l'App.jsx existant
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { saveGeneration } from "./utils/libraryStorage";
 import { listDocuments } from "./components/services/ragService";
 import styled, { createGlobalStyle } from "styled-components";
 import { theme } from "./theme";
@@ -12,7 +13,7 @@ import Forge from "./screens/Forge";
 import Results from "./screens/Results";
 import ErrorBoundary from "./components/ErrorBoundary";
 
-// import Library from "./screens/Library";
+import Library from "./screens/Library";
 
 const GlobalStyle = createGlobalStyle`
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -87,10 +88,24 @@ const PlaceholderScreen = styled.div`
 
 function App() {
   const [currentScreen, setCurrentScreen] = useState("dashboard");
+  const [brief, setBrief] = useState("");
   const [stories, setStories] = useState("");
   const [ragChunks, setRagChunks] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [truncated, setTruncated] = useState(false);
+  const [autoSaved, setAutoSaved] = useState(false);
+  const savedFingerprintRef = useRef(null);
+
+  useEffect(() => {
+    if (currentScreen === "results" && stories && !truncated) {
+      if (savedFingerprintRef.current === stories) return;
+      savedFingerprintRef.current = stories;
+      const sources = [...new Set(ragChunks.map((c) => c.filename))];
+      const storiesCount = (stories.match(/\*\*User Story \d+\*\*/g) || []).length;
+      saveGeneration({ brief, stories, sourcesUsed: sources, storiesCount });
+      setAutoSaved(true);
+    }
+  }, [currentScreen, stories, truncated]);
 
   useEffect(() => {
     listDocuments()
@@ -108,28 +123,38 @@ function App() {
       .catch((err) => console.warn("[list-docs] Failed to load documents:", err));
   }, []);
 
+  const handleNavigate = (screen) => {
+    if (screen === "forge" && autoSaved) {
+      setBrief("");
+      setStories("");
+      setRagChunks([]);
+      setTruncated(false);
+      setAutoSaved(false);
+      savedFingerprintRef.current = null;
+    }
+    setCurrentScreen(screen);
+  };
+
   const renderScreen = () => {
     switch (currentScreen) {
       case "dashboard":
-        return <Dashboard onNavigate={setCurrentScreen} />;
+        return <Dashboard onNavigate={handleNavigate} />;
       case "forge":
-        return <Forge onNavigate={setCurrentScreen} stories={stories} setStories={setStories} ragChunks={ragChunks} setRagChunks={setRagChunks} documents={documents} setDocuments={setDocuments} setTruncated={setTruncated} />;
+        return <Forge onNavigate={setCurrentScreen} brief={brief} setBrief={setBrief} stories={stories} setStories={setStories} ragChunks={ragChunks} setRagChunks={setRagChunks} documents={documents} setDocuments={setDocuments} setTruncated={setTruncated} />;
       case "results":
         return (
           <Results
+            brief={brief}
             stories={stories}
             ragChunks={ragChunks}
             truncated={truncated}
-            onNewGeneration={() => { setStories(""); setRagChunks([]); setTruncated(false); setCurrentScreen("forge"); }}
+            autoSaved={autoSaved}
+            onNewGeneration={() => { setBrief(""); setStories(""); setRagChunks([]); setTruncated(false); setAutoSaved(false); savedFingerprintRef.current = null; setCurrentScreen("forge"); }}
+            onNavigate={setCurrentScreen}
           />
         );
       case "library":
-        return (
-          <PlaceholderScreen>
-            <span className="icon">library_books</span>
-            <p>Library — en cours de construction</p>
-          </PlaceholderScreen>
-        );
+        return <Library onNavigate={handleNavigate} />;
       case "settings":
         return (
           <PlaceholderScreen>
@@ -145,7 +170,7 @@ function App() {
   return (
     <ErrorBoundary>
       <GlobalStyle />
-      <Sidebar activeItem={currentScreen} onNavigate={setCurrentScreen} />
+      <Sidebar activeItem={currentScreen} onNavigate={handleNavigate} />
       {renderScreen()}
       <BottomNav activeItem={currentScreen} onNavigate={setCurrentScreen} />
     </ErrorBoundary>

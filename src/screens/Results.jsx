@@ -1,5 +1,6 @@
 // src/screens/Results.jsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getGenerations } from "../utils/libraryStorage";
 import styled, { keyframes } from "styled-components";
 import { theme } from "../theme";
 
@@ -711,18 +712,23 @@ En tant qu'administrateur, je veux gérer les accès afin de contrôler les util
 
 En tant qu'utilisateur, je veux recevoir une facture afin de justifier mon achat.`;
 
-const RECENT_GENERATIONS = [
-  { title: "E-commerce Checkout Refactor", date: "12 Oct 2023", count: 12 },
-  { title: "Mobile Onboarding V2", date: "10 Oct 2023", count: 8 },
-  { title: "Admin Logs API", date: "08 Oct 2023", count: 15 },
-];
-
 // ─── Component ────────────────────────────────────────────
-export default function Results({ stories, ragChunks = [], onNewGeneration, truncated = false }) {
+export default function Results({ brief = "", stories, ragChunks = [], onNewGeneration, onNavigate, truncated = false, autoSaved = false }) {
   const [copied, setCopied] = useState(false);
+  const [showTrelloMsg, setShowTrelloMsg] = useState(false);
   const [comparisonOpen, setComparisonOpen] = useState(false);
+  const [recentGenerations, setRecentGenerations] = useState([]);
+
+  const handleTrelloExport = () => {
+    setShowTrelloMsg(true);
+    setTimeout(() => setShowTrelloMsg(false), 4000);
+  };
 
   const parsedStories = parseStories(stories);
+
+  useEffect(() => {
+    setRecentGenerations(getGenerations().slice(0, 3));
+  }, [autoSaved]);
 
   const handleCopy = async () => {
     try {
@@ -753,7 +759,7 @@ export default function Results({ stories, ragChunks = [], onNewGeneration, trun
         <LeftColumn>
           <PageHeader>
             <h2>Backlog de Génération</h2>
-            <p>Stories prêtes pour l'exportation vers Jira/Linear.</p>
+            <p>Stories prêtes pour l'exportation vers Trello ou Jira.</p>
           </PageHeader>
 
           {truncated && (
@@ -773,9 +779,9 @@ export default function Results({ stories, ragChunks = [], onNewGeneration, trun
                 <span className="icon">{copied ? "done" : "content_copy"}</span>
                 {copied ? "Copié !" : "Copier"}
               </OutlineBtn>
-              <ExportBtn>
-                <span className="icon">rocket_launch</span>
-                Exporter vers Jira
+              <ExportBtn onClick={handleTrelloExport}>
+                <span className="icon">view_kanban</span>
+                Exporter vers Trello
               </ExportBtn>
             </ActionBtns>
           </ActionBar>
@@ -922,13 +928,18 @@ export default function Results({ stories, ragChunks = [], onNewGeneration, trun
               <span className="icon">restart_alt</span>
               Nouvelle génération
             </QuickActionBtn>
-            <QuickActionBtn $variant="primary">
-              <span className="icon">rocket_launch</span>
-              Exporter vers Jira
+            <QuickActionBtn $variant="primary" onClick={handleTrelloExport}>
+              <span className="icon">view_kanban</span>
+              Exporter vers Trello
             </QuickActionBtn>
-            <QuickActionBtn>
-              <span className="icon">bookmark</span>
-              Sauvegarder en Library
+            {showTrelloMsg && (
+              <span style={{ fontSize: theme.fontSizes.sm, color: theme.colors.onSurfaceVariant, lineHeight: 1.6 }}>
+                Export direct vers Trello bientôt disponible — utilise "Copier" pour récupérer le texte formaté.
+              </span>
+            )}
+            <QuickActionBtn disabled style={{ opacity: autoSaved ? 1 : 0.5, cursor: "default" }}>
+              <span className="icon">{autoSaved ? "check_circle" : "bookmark"}</span>
+              {autoSaved ? "✓ Sauvegardé automatiquement" : "Sauvegarde en cours..."}
             </QuickActionBtn>
           </Panel>
 
@@ -947,31 +958,25 @@ export default function Results({ stories, ragChunks = [], onNewGeneration, trun
             </Panel>
           )}
 
-          {/* Recent Library */}
+          {/* Recent Historique */}
           <Panel>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <PanelLabel>Générations Récentes</PanelLabel>
-                <span style={{ fontSize: "11px", color: "#64748b", fontStyle: "italic" }}>Données de démonstration</span>
-              </div>
-              <span style={{
-                fontSize: "10px", fontWeight: 700,
-                background: theme.colors.surfaceContainerHighest,
-                color: theme.colors.primary,
-                padding: "3px 8px", borderRadius: "6px",
-                textTransform: "uppercase", letterSpacing: "0.05em"
-              }}>Recent</span>
-            </div>
-            {RECENT_GENERATIONS.map((item) => (
-              <RecentItem key={item.title}>
-                <div className="title">{item.title}</div>
-                <div className="meta">
-                  <span className="date">{item.date}</span>
-                  <span className="count">{item.count} Stories</span>
-                </div>
-              </RecentItem>
-            ))}
-            <SeeAllLink>Voir toute la Library →</SeeAllLink>
+            <PanelLabel>Générations Récentes</PanelLabel>
+            {recentGenerations.length === 0 ? (
+              <span style={{ fontSize: theme.fontSizes.sm, color: theme.colors.onSurfaceVariant }}>
+                Aucune génération sauvegardée pour l'instant.
+              </span>
+            ) : (
+              recentGenerations.map((item) => (
+                <RecentItem key={item.id} onClick={() => onNavigate?.("library")}>
+                  <div className="title">{item.title}</div>
+                  <div className="meta">
+                    <span className="date">{new Date(item.createdAt).toLocaleDateString("fr-FR")}</span>
+                    <span className="count">{item.storiesCount} Stories</span>
+                  </div>
+                </RecentItem>
+              ))
+            )}
+            <SeeAllLink onClick={() => onNavigate?.("library")}>Voir tout l'historique →</SeeAllLink>
           </Panel>
         </RightColumn>
       </Content>
@@ -982,9 +987,9 @@ export default function Results({ stories, ragChunks = [], onNewGeneration, trun
           <span className="icon">{copied ? "done" : "content_copy"}</span>
           {copied ? "Copié !" : "Copier"}
         </OutlineBtn>
-        <ExportBtn style={{ flex: 2 }}>
-          <span className="icon">rocket_launch</span>
-          Exporter vers Jira
+        <ExportBtn style={{ flex: 2 }} onClick={handleTrelloExport}>
+          <span className="icon">view_kanban</span>
+          Exporter vers Trello
         </ExportBtn>
       </MobileStickyBar>
     </PageWrapper>
