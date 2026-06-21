@@ -78,6 +78,10 @@ const TopBarLeft = styled.div`
     font-size: ${theme.fontSizes.md};
     color: ${theme.colors.onSurfaceVariant};
   }
+
+  @media (max-width: ${theme.breakpoints.mobile}) {
+    .sep, .sub { display: none; }
+  }
 `;
 
 const TopBarRight = styled.div`
@@ -520,6 +524,10 @@ const KBPanel = styled.div`
   gap: ${theme.spacing.lg};
   position: sticky;
   top: 80px;
+
+  @media (max-width: 1024px) {
+    position: static;
+  }
 `;
 
 const KBHeader = styled.div`
@@ -615,6 +623,12 @@ const DocCard = styled.div`
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+
+      a {
+        color: inherit;
+        text-decoration: none;
+        &:hover { text-decoration: underline; }
+      }
     }
 
     .status {
@@ -929,8 +943,7 @@ const DEMO_BRIEFS = [
 ];
 
 // ─── Component ────────────────────────────────────────────
-export default function Forge({ onNavigate, stories, setStories, ragChunks, setRagChunks, documents, setDocuments, setTruncated }) {
-  const [brief, setBrief] = useState("");
+export default function Forge({ onNavigate, brief, setBrief, stories, setStories, ragChunks, setRagChunks, documents, setDocuments, setTruncated }) {
   const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
   const [error, setError] = useState(null);
   const [ragOpen, setRagOpen] = useState(true);
@@ -1242,7 +1255,13 @@ export default function Forge({ onNavigate, stories, setStories, ragChunks, setR
                     {doc.status === "indexed" ? "description" : doc.status === "loading" ? "picture_as_pdf" : "article"}
                   </span>
                   <div className="doc-info">
-                    <p className="name">{doc.name}</p>
+                    <p className="name">
+                      {doc.status === "indexed" ? (
+                        <a href={`/docs/${doc.name}`} target="_blank" rel="noopener noreferrer">{doc.name}</a>
+                      ) : (
+                        doc.name
+                      )}
+                    </p>
                     <p className="status">
                       {doc.status === "indexed"
                         ? `✓ ${doc.chunks} chunks`
