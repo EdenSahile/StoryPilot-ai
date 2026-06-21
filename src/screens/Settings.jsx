@@ -14,6 +14,7 @@ const PageWrapper = styled.div`
   min-height: 100vh;
   background: ${theme.colors.background};
   animation: ${fadeInUp} 0.4s ease;
+  overflow-x: clip;
 
   @media (max-width: ${theme.breakpoints.mobile}) {
     margin-left: 0;
@@ -48,6 +49,11 @@ const Content = styled.main`
   display: flex;
   flex-direction: column;
   gap: 32px;
+
+  @media (max-width: ${theme.breakpoints.mobile}) {
+    padding: ${theme.spacing.lg} ${theme.spacing.md};
+    gap: ${theme.spacing.lg};
+  }
 `;
 
 const Section = styled.section`
