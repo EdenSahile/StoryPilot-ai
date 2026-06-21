@@ -16,6 +16,7 @@ const PageWrapper = styled.div`
   min-height: 100vh;
   background: ${theme.colors.background};
   animation: ${fadeInUp} 0.4s ease;
+  overflow-x: clip;
 
   @media (max-width: ${theme.breakpoints.mobile}) {
     margin-left: 0;

@@ -15,6 +15,7 @@ const PageWrapper = styled.div`
   min-height: 100vh;
   background: ${theme.colors.background};
   animation: ${fadeInUp} 0.4s ease;
+  overflow-x: clip;
 
   @media (max-width: ${theme.breakpoints.mobile}) {
     margin-left: 0;
@@ -41,18 +42,31 @@ const TopBarLeft = styled.div`
   align-items: center;
   gap: ${theme.spacing.sm};
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 
   .title {
     font-size: ${theme.fontSizes.xl};
     font-weight: 800;
     color: ${theme.colors.onSurface};
+    white-space: nowrap;
   }
 
-  .sep { color: ${theme.colors.outline}; }
+  .sep {
+    color: ${theme.colors.outline};
+    flex-shrink: 0;
+  }
 
   .sub {
     font-size: ${theme.fontSizes.md};
     color: ${theme.colors.onSurfaceVariant};
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  @media (max-width: ${theme.breakpoints.mobile}) {
+    .sep, .sub { display: none; }
   }
 `;
 
