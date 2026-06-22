@@ -172,6 +172,16 @@ const StatCard = styled.div`
     letter-spacing: 0.05em;
   }
 
+  .value-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    @media (max-width: ${theme.breakpoints.mobile}) {
+      align-items: flex-end;
+    }
+  }
+
   .value {
     font-size: ${theme.fontSizes["4xl"]};
     font-weight: 700;
@@ -179,7 +189,7 @@ const StatCard = styled.div`
     color: ${({ $color }) => $color || theme.colors.primary};
 
     @media (max-width: ${theme.breakpoints.mobile}) {
-      font-size: ${theme.fontSizes["2xl"]};
+      font-size: ${theme.fontSizes.lg};
     }
   }
 
@@ -531,8 +541,10 @@ export default function Dashboard({ onNavigate }) {
           {stats.map((stat) => (
             <StatCard key={stat.label} $color={stat.color}>
               <span className="label">{stat.label}</span>
-              <span className="value">{stat.value}</span>
-              {stat.sub && <span className="sub">{stat.sub}</span>}
+              <div className="value-group">
+                <span className="value">{stat.value}</span>
+                {stat.sub && <span className="sub">{stat.sub}</span>}
+              </div>
               <div className="mobile-icon">
                 <span className="icon">{stat.icon}</span>
               </div>
