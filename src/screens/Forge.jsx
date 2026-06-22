@@ -537,6 +537,8 @@ const EmptyState = styled.div`
 
 // ─── Right Column — Knowledge Base ────────────────────────
 const RightColumn = styled.div`
+  min-width: 0;
+
   @media (max-width: 1024px) {
     order: -1;
   }
