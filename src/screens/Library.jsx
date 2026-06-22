@@ -579,7 +579,23 @@ export default function Library({ onNavigate }) {
               )}
             </PageHeader>
 
-            <BriefBlock>{selected.brief}</BriefBlock>
+            <div>
+              <p style={{
+                fontSize: theme.fontSizes.xs,
+                fontWeight: 700,
+                color: theme.colors.primary,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                marginBottom: "8px",
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+              }}>
+                <span style={{ fontFamily: "Material Symbols Outlined", fontSize: "14px" }}>edit_note</span>
+                Besoin métier
+              </p>
+              <BriefBlock>{selected.brief}</BriefBlock>
+            </div>
 
             <div style={{ display: "flex", gap: theme.spacing.sm, flexWrap: "wrap" }}>
               <CopyBtn $copied={copied} onClick={handleCopy}>
