@@ -212,7 +212,7 @@ const Pills = styled.div`
   margin-top: 6px;
 `;
 
-const Pill = styled.span`
+const Pill = styled.a`
   font-size: 10px;
   font-weight: 600;
   padding: 2px 8px;
@@ -224,6 +224,15 @@ const Pill = styled.span`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.16);
+    border-color: rgba(99, 102, 241, 0.35);
+    color: ${theme.colors.primary};
+  }
 `;
 
 const DeleteBtn = styled.button`
@@ -242,6 +251,36 @@ const DeleteBtn = styled.button`
   &:hover {
     color: ${theme.colors.error};
     background: rgba(255, 180, 171, 0.1);
+  }
+
+  @media (max-width: ${theme.breakpoints.mobile}) {
+    display: none;
+  }
+`;
+
+const DetailDeleteBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: ${theme.radii.md};
+  border: 1px solid rgba(255, 180, 171, 0.3);
+  background: transparent;
+  color: ${theme.colors.error};
+  font-size: ${theme.fontSizes.sm};
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  align-self: flex-start;
+
+  .icon {
+    font-family: "Material Symbols Outlined";
+    font-size: 16px;
+  }
+
+  &:hover {
+    background: rgba(255, 180, 171, 0.1);
+    border-color: ${theme.colors.error};
   }
 `;
 
@@ -482,16 +521,33 @@ export default function Library({ onNavigate }) {
               <DetailMeta>
                 <MetaBadge>{formatDate(selected.createdAt)}</MetaBadge>
                 <MetaBadge>{selected.storiesCount} stories</MetaBadge>
-                {selected.sourcesUsed?.map((s) => <MetaBadge key={s}>{s}</MetaBadge>)}
+                {selected.sourcesUsed?.map((s) => (
+                  <MetaBadge
+                    key={s}
+                    as="a"
+                    href={`/docs/${s}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ textDecoration: "none", cursor: "pointer" }}
+                  >
+                    {s}
+                  </MetaBadge>
+                ))}
               </DetailMeta>
             </PageHeader>
 
             <BriefBlock>{selected.brief}</BriefBlock>
 
-            <CopyBtn $copied={copied} onClick={handleCopy}>
-              <span className="icon">{copied ? "done" : "content_copy"}</span>
-              {copied ? "Copié ✓" : "Copier le texte"}
-            </CopyBtn>
+            <div style={{ display: "flex", gap: theme.spacing.sm, flexWrap: "wrap" }}>
+              <CopyBtn $copied={copied} onClick={handleCopy}>
+                <span className="icon">{copied ? "done" : "content_copy"}</span>
+                {copied ? "Copié ✓" : "Copier le texte"}
+              </CopyBtn>
+              <DetailDeleteBtn onClick={(e) => handleDelete(e, selected.id)}>
+                <span className="icon">delete</span>
+                Supprimer
+              </DetailDeleteBtn>
+            </div>
 
             <StoriesBlock>{selected.stories}</StoriesBlock>
           </>
@@ -524,7 +580,17 @@ export default function Library({ onNavigate }) {
                       </div>
                       {gen.sourcesUsed?.length > 0 && (
                         <Pills>
-                          {gen.sourcesUsed.map((s) => <Pill key={s}>{s}</Pill>)}
+                          {gen.sourcesUsed.map((s) => (
+                            <Pill
+                              key={s}
+                              href={`/docs/${s}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {s}
+                            </Pill>
+                          ))}
                         </Pills>
                       )}
                     </div>
