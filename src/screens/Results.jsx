@@ -851,6 +851,20 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
             </ActionBtns>
           </ActionBar>
 
+          {showTrelloMsg && (
+            <div style={{
+              fontSize: theme.fontSizes.sm,
+              color: theme.colors.onSurfaceVariant,
+              padding: `${theme.spacing.sm} ${theme.spacing.md}`,
+              background: theme.colors.surfaceContainer,
+              border: `1px solid ${theme.colors.outlineVariant}`,
+              borderRadius: theme.radii.md,
+              lineHeight: 1.6,
+            }}>
+              Export direct vers Trello bientôt disponible — utilise "Copier" pour récupérer le texte formaté.
+            </div>
+          )}
+
           {/* Story Cards */}
           <StoryList>
             {parsedStories.length > 0 ? (
@@ -1006,11 +1020,6 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
               <span className="icon">view_kanban</span>
               Exporter vers Trello
             </QuickActionBtn>
-            {showTrelloMsg && (
-              <span style={{ fontSize: theme.fontSizes.sm, color: theme.colors.onSurfaceVariant, lineHeight: 1.6 }}>
-                Export direct vers Trello bientôt disponible — utilise "Copier" pour récupérer le texte formaté.
-              </span>
-            )}
             <QuickActionBtn disabled style={{ opacity: autoSaved ? 1 : 0.5, cursor: "default" }}>
               <span className="icon">{autoSaved ? "check_circle" : "bookmark"}</span>
               {autoSaved ? "✓ Sauvegardé automatiquement" : "Sauvegarde en cours..."}
