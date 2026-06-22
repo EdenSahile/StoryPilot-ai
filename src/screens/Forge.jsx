@@ -37,7 +37,7 @@ const PageWrapper = styled.div`
   min-height: 100vh;
   background: ${theme.colors.background};
   animation: ${fadeInUp} 0.4s ease;
-  overflow-x: clip;
+  overflow-x: hidden;
 
   @media (max-width: ${theme.breakpoints.mobile}) {
     margin-left: 0;
@@ -177,6 +177,7 @@ const LeftColumn = styled.div`
   display: flex;
   flex-direction: column;
   gap: ${theme.spacing.lg};
+  min-width: 0;
 `;
 
 const PromptSection = styled.div`
@@ -846,6 +847,9 @@ const Chip = styled.button`
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s;
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
 
   &:hover {
     border-color: ${theme.colors.primary};
