@@ -34,6 +34,7 @@ const GlobalStyle = createGlobalStyle`
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
     overflow-x: hidden;
+    max-width: 100vw;
   }
 
   /* Scrollbar */
