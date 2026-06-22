@@ -252,9 +252,49 @@ const DeleteBtn = styled.button`
     color: ${theme.colors.error};
     background: rgba(255, 180, 171, 0.1);
   }
+`;
+
+const DocChipsRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${theme.spacing.sm};
+`;
+
+const DocChip = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: ${theme.radii.md};
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  color: ${theme.colors.primary};
+  font-size: ${theme.fontSizes.sm};
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 40px;
+
+  .doc-icon {
+    font-family: "Material Symbols Outlined";
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.16);
+    border-color: rgba(99, 102, 241, 0.45);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
 
   @media (max-width: ${theme.breakpoints.mobile}) {
-    display: none;
+    font-size: ${theme.fontSizes.xs};
+    padding: 10px 14px;
+    min-height: 44px;
   }
 `;
 
@@ -521,19 +561,22 @@ export default function Library({ onNavigate }) {
               <DetailMeta>
                 <MetaBadge>{formatDate(selected.createdAt)}</MetaBadge>
                 <MetaBadge>{selected.storiesCount} stories</MetaBadge>
-                {selected.sourcesUsed?.map((s) => (
-                  <MetaBadge
-                    key={s}
-                    as="a"
-                    href={`/docs/${s}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ textDecoration: "none", cursor: "pointer" }}
-                  >
-                    {s}
-                  </MetaBadge>
-                ))}
               </DetailMeta>
+              {selected.sourcesUsed?.length > 0 && (
+                <DocChipsRow>
+                  {selected.sourcesUsed.map((s) => (
+                    <DocChip
+                      key={s}
+                      href={`/docs/${s}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <span className="doc-icon">picture_as_pdf</span>
+                      {s}
+                    </DocChip>
+                  ))}
+                </DocChipsRow>
+              )}
             </PageHeader>
 
             <BriefBlock>{selected.brief}</BriefBlock>
