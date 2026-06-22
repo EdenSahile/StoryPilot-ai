@@ -339,6 +339,10 @@ const DashDeleteBtn = styled.button`
   &:hover {
     color: ${theme.colors.error};
   }
+
+  @media (max-width: ${theme.breakpoints.mobile}) {
+    display: none;
+  }
 `;
 
 // ─── CTA Card ─────────────────────────────────────────────
@@ -479,7 +483,7 @@ export default function Dashboard({ onNavigate }) {
     {
       label: "Stories sauvegardées ce mois",
       value: storiesThisMonth || "—",
-      sub: `${generations.filter((g) => new Date(g.createdAt) >= thisMonth).length} génération(s)`,
+      sub: `via ${generations.filter((g) => new Date(g.createdAt) >= thisMonth).length} génération(s)`,
       color: theme.colors.primary,
       icon: "description",
     },
