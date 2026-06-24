@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
+import { theme } from "../theme";
 
 const Container = styled.div`
   display: flex;
@@ -22,7 +23,7 @@ const CopyError = styled.p`
   margin: 0;
   max-width: calc(100% - 32px);
 
-  @media (max-width: 480px) {
+  @media (max-width: ${theme.breakpoints.xs}) {
     top: 48px;
     right: 12px;
     font-size: 0.72rem;
@@ -61,7 +62,7 @@ const CopyButton = styled.button`
     color: var(--copy-copied-text);
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: ${theme.breakpoints.xs}) {
     padding: 6px 10px;
     font-size: 0.78rem;
     top: 12px;
@@ -78,12 +79,12 @@ const StoryCard = styled.div`
   line-height: 1.7;
   transition: background 0.2s, border-color 0.2s;
 
-  @media (max-width: 768px) {
+  @media (max-width: ${theme.breakpoints.mobile}) {
     padding: 60px 20px 24px;
     border-radius: 12px;
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: ${theme.breakpoints.xs}) {
     padding: 56px 16px 20px;
   }
 
@@ -155,7 +156,7 @@ const StoryCard = styled.div`
     font-family: "Monaco", "Courier New", monospace;
     overflow-x: auto;
 
-    @media (max-width: 480px) {
+    @media (max-width: ${theme.breakpoints.xs}) {
       font-size: 0.78rem;
       padding: 10px 12px;
     }
