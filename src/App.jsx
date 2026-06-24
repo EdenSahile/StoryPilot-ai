@@ -71,6 +71,7 @@ function App() {
   const [documents, setDocuments] = useState([]);
   const [truncated, setTruncated] = useState(false);
   const [autoSaved, setAutoSaved] = useState(false);
+  const [keepBrief, setKeepBrief] = useState(false);
   const savedFingerprintRef = useRef(null);
 
   useEffect(() => {
@@ -117,7 +118,7 @@ function App() {
       case "dashboard":
         return <Dashboard onNavigate={handleNavigate} />;
       case "forge":
-        return <Forge onNavigate={setCurrentScreen} brief={brief} setBrief={setBrief} stories={stories} setStories={setStories} ragChunks={ragChunks} setRagChunks={setRagChunks} documents={documents} setDocuments={setDocuments} setTruncated={setTruncated} />;
+        return <Forge onNavigate={setCurrentScreen} brief={brief} setBrief={setBrief} stories={stories} setStories={setStories} ragChunks={ragChunks} setRagChunks={setRagChunks} documents={documents} setDocuments={setDocuments} setTruncated={setTruncated} keepBrief={keepBrief} onClearKeepBrief={() => setKeepBrief(false)} />;
       case "results":
         return (
           <Results
@@ -126,7 +127,8 @@ function App() {
             ragChunks={ragChunks}
             truncated={truncated}
             autoSaved={autoSaved}
-            onNewGeneration={() => { setBrief(""); setStories(""); setRagChunks([]); setTruncated(false); setAutoSaved(false); savedFingerprintRef.current = null; setCurrentScreen("forge"); }}
+            onNewGeneration={() => { setBrief(""); setStories(""); setRagChunks([]); setTruncated(false); setAutoSaved(false); setKeepBrief(false); savedFingerprintRef.current = null; setCurrentScreen("forge"); }}
+            onRegenerate={() => { setStories(""); setRagChunks([]); setTruncated(false); setAutoSaved(false); setKeepBrief(true); savedFingerprintRef.current = null; setCurrentScreen("forge"); }}
             onNavigate={setCurrentScreen}
           />
         );
