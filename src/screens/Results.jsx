@@ -645,6 +645,7 @@ const MobileStickyBar = styled.div`
 const TruncationWarning = styled.div`
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: ${theme.spacing.sm};
   padding: ${theme.spacing.sm} ${theme.spacing.md};
   margin-bottom: ${theme.spacing.md};
@@ -654,6 +655,20 @@ const TruncationWarning = styled.div`
   color: #ca8a04;
   font-size: ${theme.fontSizes.sm};
   font-weight: 500;
+`;
+
+const RegenerateBtn = styled.button`
+  background: rgba(234, 179, 8, 0.15);
+  border: 1px solid rgba(234, 179, 8, 0.4);
+  border-radius: ${theme.radii.sm};
+  color: #ca8a04;
+  font-size: ${theme.fontSizes.sm};
+  font-weight: 600;
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  &:hover { background: rgba(234, 179, 8, 0.25); }
 `;
 
 // ─── Parser ───────────────────────────────────────────────
@@ -778,7 +793,7 @@ En tant qu'administrateur, je veux gérer les accès afin de contrôler les util
 En tant qu'utilisateur, je veux recevoir une facture afin de justifier mon achat.`;
 
 // ─── Component ────────────────────────────────────────────
-export default function Results({ brief = "", stories, ragChunks = [], onNewGeneration, onNavigate, truncated = false, autoSaved = false }) {
+export default function Results({ brief = "", stories, ragChunks = [], onNewGeneration, onRegenerate, onNavigate, truncated = false, autoSaved = false }) {
   const [copied, setCopied] = useState(false);
   const [showTrelloMsg, setShowTrelloMsg] = useState(false);
   const [comparisonOpen, setComparisonOpen] = useState(false);
@@ -829,7 +844,10 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
 
           {truncated && (
             <TruncationWarning>
-              ⚠️ Génération possiblement incomplète — la dernière user story est à vérifier.
+              <span>⚠️ Génération possiblement incomplète — la dernière user story est à vérifier.</span>
+              {onRegenerate && (
+                <RegenerateBtn onClick={onRegenerate}>🔄 Régénérer</RegenerateBtn>
+              )}
             </TruncationWarning>
           )}
 

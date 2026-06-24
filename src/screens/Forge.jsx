@@ -280,6 +280,20 @@ const CharCount = styled.span`
   border-radius: 6px;
 `;
 
+const RestoreHint = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  margin-bottom: ${theme.spacing.sm};
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: ${theme.radii.sm};
+  color: ${theme.colors.primary};
+  font-size: ${theme.fontSizes.xs};
+  .material-symbols-outlined { font-size: 16px; }
+`;
+
 const GenerateBtn = styled.button`
   display: flex;
   align-items: center;
@@ -980,7 +994,7 @@ const DEMO_BRIEFS = [
 ];
 
 // ─── Component ────────────────────────────────────────────
-export default function Forge({ onNavigate, brief, setBrief, stories, setStories, ragChunks, setRagChunks, documents, setDocuments, setTruncated }) {
+export default function Forge({ onNavigate, brief, setBrief, stories, setStories, ragChunks, setRagChunks, documents, setDocuments, setTruncated, keepBrief = false, onClearKeepBrief }) {
   const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
   const [error, setError] = useState(null);
   const [ragOpen, setRagOpen] = useState(true);
@@ -1004,6 +1018,7 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
 
   const handleSubmit = async () => {
     if (!brief.trim() || status === 'loading') return;
+    onClearKeepBrief?.();
     setStories("");
     setError(null);
     setStatus('loading');
@@ -1186,6 +1201,13 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
                 </CharCount>
               </TextareaFooter>
             </TextareaWrapper>
+
+            {keepBrief && status === 'idle' && (
+              <RestoreHint>
+                <span className="material-symbols-outlined">info</span>
+                Brief précédent restauré — cliquez sur Générer pour relancer.
+              </RestoreHint>
+            )}
 
             <GenerateBtn
               onClick={handleSubmit}
