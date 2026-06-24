@@ -162,7 +162,7 @@ const Content = styled.div`
   grid-template-columns: 1fr 380px;
   gap: ${theme.spacing.xl};
 
-  @media (max-width: 1024px) {
+  @media (max-width: ${theme.breakpoints.tablet}) {
     grid-template-columns: 1fr;
   }
 
@@ -539,7 +539,7 @@ const EmptyState = styled.div`
 const RightColumn = styled.div`
   min-width: 0;
 
-  @media (max-width: 1024px) {
+  @media (max-width: ${theme.breakpoints.tablet}) {
     order: -1;
   }
 
@@ -559,7 +559,7 @@ const KBPanel = styled.div`
   position: sticky;
   top: 80px;
 
-  @media (max-width: 1024px) {
+  @media (max-width: ${theme.breakpoints.tablet}) {
     position: static;
   }
 `;
