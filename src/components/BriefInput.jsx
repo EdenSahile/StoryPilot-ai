@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styled from "styled-components";
+import { theme } from "../theme";
 
 const Container = styled.div`
   display: flex;
@@ -28,7 +29,7 @@ const InfoBanner = styled.div`
   align-items: flex-start;
   gap: 8px;
 
-  @media (max-width: 480px) {
+  @media (max-width: ${theme.breakpoints.xs}) {
     font-size: 0.8rem;
     padding: 10px 12px;
   }
@@ -83,7 +84,7 @@ const TextArea = styled.textarea`
     cursor: not-allowed;
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: ${theme.breakpoints.xs}) {
     font-size: 16px;
     min-height: 100px;
   }

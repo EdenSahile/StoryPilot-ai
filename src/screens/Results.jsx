@@ -117,7 +117,7 @@ const Content = styled.div`
   grid-template-columns: 1fr 320px;
   gap: ${theme.spacing.xl};
 
-  @media (max-width: 1024px) {
+  @media (max-width: ${theme.breakpoints.tablet}) {
     grid-template-columns: 1fr;
   }
 
@@ -191,7 +191,7 @@ const ActionBtns = styled.div`
   align-items: center;
   gap: ${theme.spacing.sm};
 
-  @media (max-width: 480px) {
+  @media (max-width: ${theme.breakpoints.xs}) {
     width: 100%;
 
     button {
@@ -503,7 +503,7 @@ const RightColumn = styled.aside`
   flex-direction: column;
   gap: ${theme.spacing.lg};
 
-  @media (max-width: 1024px) {
+  @media (max-width: ${theme.breakpoints.tablet}) {
     display: none;
   }
 `;
