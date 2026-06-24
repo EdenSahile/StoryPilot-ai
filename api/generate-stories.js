@@ -61,6 +61,13 @@ if (!checkRateLimit(clientIp)) {
   }
 
   try {
+    const briefLength = brief.trim().length;
+    const storyInstruction = briefLength < 300
+      ? "Génère 3 user stories maximum."
+      : briefLength <= 800
+      ? "Génère 4 user stories maximum."
+      : "Génère 3 user stories maximum — le brief est dense, sois sélectif et concis.";
+
     const contextBlock = contextChunks && contextChunks.length > 0
       ? `\n\n---\nCONTEXTE DOCUMENTAIRE OBLIGATOIRE (documents internes du client) :\n${contextChunks.map((c, i) => `[Source ${i + 1} — ${c.filename}]\n${c.text}`).join("\n\n")}\n---\n\nINSTRUCTIONS IMPÉRATIVES pour utiliser ce contexte :\n- Tu DOIS mentionner le nom de l'entreprise et ses spécificités trouvées dans les documents\n- Tu DOIS réutiliser le vocabulaire exact des documents (noms de produits, délais, processus, références)\n- Chaque user story DOIT contenir au moins un élément concret issu des documents ci-dessus\n- Les critères d'acceptation DOIVENT refléter les règles métier réelles du client\n- INTERDIT de générer des user stories génériques qui s'appliqueraient à n'importe quelle entreprise
 - Si une information n'est pas présente dans les sources fournies (délais exacts, noms de transporteurs, formats techniques, etc.), ne l'invente pas — utilise une formulation générique (ex: "le système envoie une confirmation" plutôt qu'un délai précis non vérifié)`
@@ -111,7 +118,7 @@ Scénario 2 : [cas alternatif ou d'erreur]
 
 ---
 
-Génère 3 à 5 user stories. Sois précis, professionnel et détaillé.
+${storyInstruction} Sois précis, professionnel et détaillé.
 Sépare chaque story par ---${contextBlock}`,
 
         messages: [
