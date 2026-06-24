@@ -20,19 +20,19 @@ describe('StoriesOutput', () => {
 
   it('affiche le bouton Copier', () => {
     render(<StoriesOutput stories="Une user story" />);
-    expect(screen.getByText('📋 Copier')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Copier le contenu' })).toBeInTheDocument();
   });
 
-  it('affiche "✓ Copié!" après un clic réussi', async () => {
+  it('affiche "Copié!" après un clic réussi', async () => {
     Object.assign(navigator, {
       clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
     });
 
     render(<StoriesOutput stories="Une user story" />);
-    fireEvent.click(screen.getByText('📋 Copier'));
+    fireEvent.click(screen.getByRole('button', { name: 'Copier le contenu' }));
 
     await waitFor(() => {
-      expect(screen.getByText('✓ Copié!')).toBeInTheDocument();
+      expect(screen.getByText('Copié!')).toBeInTheDocument();
     });
   });
 
@@ -42,7 +42,7 @@ describe('StoriesOutput', () => {
     });
 
     render(<StoriesOutput stories="Une user story" />);
-    fireEvent.click(screen.getByText('📋 Copier'));
+    fireEvent.click(screen.getByRole('button', { name: 'Copier le contenu' }));
 
     await waitFor(() => {
       expect(screen.getByText('Copie impossible — essayez manuellement')).toBeInTheDocument();
