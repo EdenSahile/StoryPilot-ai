@@ -1187,7 +1187,9 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
             <ModeHint>
               <strong>Sans documents :</strong> saisissez votre brief et générez directement des user stories génériques.
               <br /><br />
-              <strong>Avec documents :</strong> cette démo dispose d'une base de connaissance pré-chargée — <strong>Lumeo Boutique</strong>, e-commerce fictif de déco / luminaires (commandes, retours, livraison, SAV). Consultez les documents dans le panneau à droite pour rédiger un brief adapté, ils seront utilisés automatiquement lors de la génération.
+              <strong>Avec documents :</strong> démo avec base de connaissance pré-chargée : <strong>Lumeo Boutique</strong>, e-commerce fictif de déco / luminaires.<br /><br />
+              Utilisez les suggestions ci-dessous ou décrivez un besoin lié aux commandes, retours, livraison ou SAV — les documents seront utilisés automatiquement.<br />
+              En production, chaque entreprise importe ses propres documents (politiques internes, catalogues, process métier) pour générer des user stories ancrées dans son contexte réel.
             </ModeHint>
 
             <ChipRow>
