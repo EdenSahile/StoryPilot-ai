@@ -847,6 +847,22 @@ const DemoContext = styled.p`
   }
 `;
 
+const ModeHint = styled.p`
+  font-size: ${theme.fontSizes.xs};
+  color: ${theme.colors.onSurfaceVariant};
+  line-height: 1.6;
+  margin: 0;
+  padding: ${theme.spacing.sm} ${theme.spacing.md};
+  background: rgba(99, 102, 241, 0.06);
+  border-left: 2px solid rgba(99, 102, 241, 0.3);
+  border-radius: 0 ${theme.radii.sm} ${theme.radii.sm} 0;
+
+  strong {
+    color: ${theme.colors.onSurface};
+    font-weight: 600;
+  }
+`;
+
 const ChipRow = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -1172,6 +1188,11 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
               <strong>Lumeo Boutique</strong> — e-commerce fictif de déco / luminaires.
               Testez un besoin lié aux commandes, retours, livraison ou SAV.
             </DemoContext>
+
+            <ModeHint>
+              <strong>Sans documents :</strong> saisissez votre brief et générez directement des user stories.{" "}
+              <strong>Avec documents :</strong> uploadez vos fichiers (PDF, DOCX, TXT) dans la base de connaissance — les stories seront ancrées dans votre contexte métier réel.
+            </ModeHint>
 
             <ChipRow>
               {DEMO_BRIEFS.map((b) => (
