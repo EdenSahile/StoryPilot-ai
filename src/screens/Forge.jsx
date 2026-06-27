@@ -1190,7 +1190,8 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
             </DemoContext>
 
             <ModeHint>
-              <strong>Sans documents :</strong> saisissez votre brief et générez directement des user stories génériques.{" "}
+              <strong>Sans documents :</strong> saisissez votre brief et générez directement des user stories génériques.
+              <br /><br />
               <strong>Avec documents :</strong> cette démo dispose d'une base de connaissance pré-chargée (8 documents fictifs Lumeo Boutique) — consultez-les dans le panneau à droite pour rédiger un brief adapté, ils seront utilisés automatiquement lors de la génération.
             </ModeHint>
 
