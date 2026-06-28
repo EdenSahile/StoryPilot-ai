@@ -3,7 +3,11 @@ import { useState, useRef, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { theme } from "../theme";
 import { generateStories } from "../components/services/claudeService";
-import { uploadDocument, retrieveContext, deleteDocument } from "../components/services/ragService";
+import {
+  uploadDocument,
+  retrieveContext,
+  deleteDocument,
+} from "../components/services/ragService";
 
 // ─── Animations ───────────────────────────────────────────
 const fadeInUp = keyframes`
@@ -88,7 +92,10 @@ const TopBarLeft = styled.div`
   }
 
   @media (max-width: ${theme.breakpoints.mobile}) {
-    .sep, .sub { display: none; }
+    .sep,
+    .sub {
+      display: none;
+    }
   }
 `;
 
@@ -199,7 +206,11 @@ const SectionLabel = styled.label`
   .icon {
     font-family: "Material Symbols Outlined";
     font-size: 16px;
-    font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+    font-variation-settings:
+      "FILL" 1,
+      "wght" 400,
+      "GRAD" 0,
+      "opsz" 24;
   }
 
   .version {
@@ -222,8 +233,9 @@ const StyledTextarea = styled.textarea`
   padding: ${theme.spacing.lg};
   padding-bottom: 48px;
   background: ${theme.colors.surfaceContainerHigh};
-  border: 2px solid ${({ $disabled }) =>
-    $disabled ? theme.colors.outlineVariant : theme.colors.outlineVariant};
+  border: 2px solid
+    ${({ $disabled }) =>
+      $disabled ? theme.colors.outlineVariant : theme.colors.outlineVariant};
   border-radius: ${theme.radii.xl};
   font-size: ${theme.fontSizes.lg};
   font-family: ${theme.fonts.sans};
@@ -274,7 +286,8 @@ const KbdHint = styled.span`
 
 const CharCount = styled.span`
   font-size: ${theme.fontSizes.xs};
-  color: ${({ $over }) => ($over ? theme.colors.error : theme.colors.onSurfaceVariant)};
+  color: ${({ $over }) =>
+    $over ? theme.colors.error : theme.colors.onSurfaceVariant};
   background: rgba(38, 54, 74, 0.8);
   padding: 3px 8px;
   border-radius: 6px;
@@ -291,7 +304,9 @@ const RestoreHint = styled.div`
   border-radius: ${theme.radii.sm};
   color: ${theme.colors.primary};
   font-size: ${theme.fontSizes.xs};
-  .material-symbols-outlined { font-size: 16px; }
+  .material-symbols-outlined {
+    font-size: 16px;
+  }
 `;
 
 const GenerateBtn = styled.button`
@@ -328,7 +343,8 @@ const GenerateBtn = styled.button`
   .icon {
     font-family: "Material Symbols Outlined";
     font-size: 20px;
-    animation: ${({ $loading }) => ($loading ? spin : "none")} 1.5s linear infinite;
+    animation: ${({ $loading }) => ($loading ? spin : "none")} 1.5s linear
+      infinite;
   }
 `;
 
@@ -488,7 +504,8 @@ const StreamingText = styled.div`
   word-break: break-word;
   font-family: ${theme.fonts.sans};
 
-  h2, h3 {
+  h2,
+  h3 {
     color: ${theme.colors.primary};
     margin: 16px 0 8px;
     font-size: ${theme.fontSizes.md};
@@ -625,8 +642,12 @@ const DocList = styled.div`
   max-height: 280px;
   overflow-y: auto;
 
-  &::-webkit-scrollbar { width: 4px; }
-  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
   &::-webkit-scrollbar-thumb {
     background: ${theme.colors.surfaceContainerHighest};
     border-radius: 999px;
@@ -654,8 +675,8 @@ const DocCard = styled.div`
       $status === "indexed"
         ? theme.colors.primary
         : $status === "loading"
-        ? theme.colors.tertiary
-        : theme.colors.outline};
+          ? theme.colors.tertiary
+          : theme.colors.outline};
     flex-shrink: 0;
     margin-top: 2px;
   }
@@ -675,7 +696,9 @@ const DocCard = styled.div`
       a {
         color: inherit;
         text-decoration: none;
-        &:hover { text-decoration: underline; }
+        &:hover {
+          text-decoration: underline;
+        }
       }
     }
 
@@ -689,8 +712,8 @@ const DocCard = styled.div`
         $status === "indexed"
           ? "#4ade80"
           : $status === "loading"
-          ? theme.colors.primary
-          : theme.colors.error};
+            ? theme.colors.primary
+            : theme.colors.error};
     }
   }
 
@@ -747,7 +770,9 @@ const UploadZone = styled.div`
   border-color: ${({ $dragOver }) =>
     $dragOver ? theme.colors.primary : theme.colors.outlineVariant};
 
-  ${({ $disabled }) => $disabled && `
+  ${({ $disabled }) =>
+    $disabled &&
+    `
     opacity: 0.45;
     cursor: not-allowed;
     pointer-events: none;
@@ -808,7 +833,9 @@ const DeleteDocBtn = styled.button`
   font-size: 18px;
   line-height: 1;
   flex-shrink: 0;
-  transition: color 0.2s, background 0.2s;
+  transition:
+    color 0.2s,
+    background 0.2s;
 
   &:hover {
     color: ${theme.colors.error};
@@ -844,6 +871,22 @@ const DemoContext = styled.p`
 
   strong {
     color: ${theme.colors.onSurface};
+  }
+`;
+
+const ModeHint = styled.p`
+  font-size: ${theme.fontSizes.sm};
+  color: ${theme.colors.onSurfaceVariant};
+  line-height: 1.6;
+  margin: 0;
+  padding: ${theme.spacing.sm} ${theme.spacing.md};
+  background: rgba(99, 102, 241, 0.06);
+  border-left: 2px solid rgba(99, 102, 241, 0.3);
+  border-radius: 0 ${theme.radii.sm} ${theme.radii.sm} 0;
+
+  strong {
+    color: ${theme.colors.onSurface};
+    font-weight: 600;
   }
 `;
 
@@ -956,7 +999,8 @@ const CopyBtn = styled.button`
   background: white;
   color: ${({ $copied }) => ($copied ? "#0284c7" : theme.colors.primary)};
   background: ${({ $copied }) => ($copied ? "#dbeafe" : "white")};
-  border-color: ${({ $copied }) => ($copied ? "#0284c7" : theme.colors.outlineVariant)};
+  border-color: ${({ $copied }) =>
+    $copied ? "#0284c7" : theme.colors.outlineVariant};
   font-size: ${theme.fontSizes.sm};
   font-weight: 600;
   cursor: pointer;
@@ -971,7 +1015,6 @@ const CopyBtn = styled.button`
     border-color: ${theme.colors.primary};
   }
 `;
-
 
 // ─── Demo briefs ──────────────────────────────────────────
 const DEMO_BRIEFS = [
@@ -994,8 +1037,21 @@ const DEMO_BRIEFS = [
 ];
 
 // ─── Component ────────────────────────────────────────────
-export default function Forge({ onNavigate, brief, setBrief, stories, setStories, ragChunks, setRagChunks, documents, setDocuments, setTruncated, keepBrief = false, onClearKeepBrief }) {
-  const [status, setStatus] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
+export default function Forge({
+  onNavigate,
+  brief,
+  setBrief,
+  stories,
+  setStories,
+  ragChunks,
+  setRagChunks,
+  documents,
+  setDocuments,
+  setTruncated,
+  keepBrief = false,
+  onClearKeepBrief,
+}) {
+  const [status, setStatus] = useState("idle"); // 'idle' | 'loading' | 'success' | 'error'
   const [error, setError] = useState(null);
   const [ragOpen, setRagOpen] = useState(true);
   const [dragOver, setDragOver] = useState(false);
@@ -1005,23 +1061,25 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
   const [pendingReplaceFile, setPendingReplaceFile] = useState(null);
   const fileInputRef = useRef(null);
   const documentsRef = useRef(documents);
-  useEffect(() => { documentsRef.current = documents; }, [documents]);
+  useEffect(() => {
+    documentsRef.current = documents;
+  }, [documents]);
 
   const charCount = brief.length;
   const MAX = 2000;
 
   useEffect(() => {
-    if (status === 'success' && stories) {
+    if (status === "success" && stories) {
       onNavigate("results");
     }
   }, [status, stories]);
 
   const handleSubmit = async () => {
-    if (!brief.trim() || status === 'loading') return;
+    if (!brief.trim() || status === "loading") return;
     onClearKeepBrief?.();
     setStories("");
     setError(null);
-    setStatus('loading');
+    setStatus("loading");
     setRagChunks([]);
     setTruncated?.(false);
 
@@ -1043,13 +1101,13 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
       (errMsg) => {
         hasError = true;
         setError(errMsg);
-        setStatus('error');
+        setStatus("error");
       },
       contextChunks,
-      () => setTruncated?.(true)
+      () => setTruncated?.(true),
     );
 
-    if (!hasError) setStatus('success');
+    if (!hasError) setStatus("success");
   };
 
   const handleKeyDown = (e) => {
@@ -1058,7 +1116,9 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
 
   const handleFileUpload = async (files) => {
     for (const file of files) {
-      const alreadyIndexed = documentsRef.current.some((d) => d.name === file.name && d.status === "indexed");
+      const alreadyIndexed = documentsRef.current.some(
+        (d) => d.name === file.name && d.status === "indexed",
+      );
       if (alreadyIndexed) {
         setPendingReplaceFile(file);
         return;
@@ -1069,47 +1129,41 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
 
   const uploadSingleFile = async (file) => {
     try {
-        setUploadError(null);
-        const newDoc = {
-          id: Date.now(),
-          name: file.name,
-          size: file.size,
-          status: "loading",
-          pct: 0,
-          chunks: 0,
-        };
-        setDocuments(prev => [...prev, newDoc]);
-        setUploadingFile(file.name);
+      setUploadError(null);
+      const newDoc = {
+        id: Date.now(),
+        name: file.name,
+        size: file.size,
+        status: "loading",
+        pct: 0,
+        chunks: 0,
+      };
+      setDocuments((prev) => [...prev, newDoc]);
+      setUploadingFile(file.name);
 
-        const result = await uploadDocument(file, (pct) => {
-          setUploadProgress(pct);
-          setDocuments(prev =>
-            prev.map(d =>
-              d.name === file.name ? { ...d, pct } : d
-            )
-          );
-        });
+      const result = await uploadDocument(file, (pct) => {
+        setUploadProgress(pct);
+        setDocuments((prev) =>
+          prev.map((d) => (d.name === file.name ? { ...d, pct } : d)),
+        );
+      });
 
-        setDocuments(prev =>
-          prev.map(d =>
-            d.name === file.name
-              ? { ...d, status: "indexed", chunks: result.chunks, pct: 100 }
-              : d
-          )
-        );
-        setUploadingFile(null);
-      } catch (err) {
-        console.error("uploadDocument failed:", err);
-        setDocuments(prev =>
-          prev.map(d =>
-            d.name === file.name
-              ? { ...d, status: "error" }
-              : d
-          )
-        );
-        setUploadError(err.message);
-        setUploadingFile(null);
-      }
+      setDocuments((prev) =>
+        prev.map((d) =>
+          d.name === file.name
+            ? { ...d, status: "indexed", chunks: result.chunks, pct: 100 }
+            : d,
+        ),
+      );
+      setUploadingFile(null);
+    } catch (err) {
+      console.error("uploadDocument failed:", err);
+      setDocuments((prev) =>
+        prev.map((d) => (d.name === file.name ? { ...d, status: "error" } : d)),
+      );
+      setUploadError(err.message);
+      setUploadingFile(null);
+    }
   };
 
   const handleConfirmReplace = async () => {
@@ -1122,7 +1176,8 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
   const handleCancelReplace = () => setPendingReplaceFile(null);
 
   const handleDeleteDoc = async (doc) => {
-    if (!confirm(`Supprimer "${doc.name}" et ses ${doc.chunks || 0} chunks ?`)) return;
+    if (!confirm(`Supprimer "${doc.name}" et ses ${doc.chunks || 0} chunks ?`))
+      return;
     try {
       await deleteDocument(doc.name);
       setDocuments((prev) => prev.filter((d) => d.id !== doc.id));
@@ -1147,14 +1202,18 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
           <span className="sub">Drafting User Stories</span>
         </TopBarLeft>
         <TopBarRight>
-          {status === 'loading' && (
+          {status === "loading" && (
             <GeneratingBadge>
               <span className="dot" />
               <span className="badge-text">Génération en cours...</span>
             </GeneratingBadge>
           )}
-          <IconBtn><span className="icon">dark_mode</span></IconBtn>
-          <IconBtn><span className="icon">notifications</span></IconBtn>
+          <IconBtn>
+            <span className="icon">dark_mode</span>
+          </IconBtn>
+          <IconBtn>
+            <span className="icon">notifications</span>
+          </IconBtn>
         </TopBarRight>
       </TopBar>
 
@@ -1162,16 +1221,14 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
         {/* ── Left Column ── */}
         <LeftColumn>
           <PromptSection>
-            <SectionLabel>
-              <span className="icon">edit_note</span>
-              Current Prompt
-              <span className="version">Version 2.4</span>
-            </SectionLabel>
-
-            <DemoContext>
-              <strong>Lumeo Boutique</strong> — e-commerce fictif de déco / luminaires.
-              Testez un besoin lié aux commandes, retours, livraison ou SAV.
-            </DemoContext>
+            <ModeHint>
+              <strong>Démo Lumeo Boutique</strong> — e-commerce fictif de déco / luminaires.<br />
+              Les documents sont pré-chargés et utilisés automatiquement. Utilisez les suggestions ci-dessous ou décrivez un besoin lié aux commandes, retours, livraison ou SAV.
+              <br /><br />
+              <em>En production, chaque entreprise importe ses propres documents (politiques internes, catalogues, process métier) pour des stories ancrées dans son contexte réel.</em>
+              <br /><br />
+              <em>Brief hors-sujet ? Les stories générées seront génériques, sans les données spécifiques de Lumeo Boutique.</em>
+            </ModeHint>
 
             <ChipRow>
               {DEMO_BRIEFS.map((b) => (
@@ -1191,8 +1248,8 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
                 value={brief}
                 onChange={(e) => setBrief(e.target.value)}
                 onKeyDown={handleKeyDown}
-                $disabled={status === 'loading'}
-                disabled={status === 'loading'}
+                $disabled={status === "loading"}
+                disabled={status === "loading"}
               />
               <TextareaFooter>
                 <KbdHint>⌘ + Enter</KbdHint>
@@ -1202,7 +1259,7 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
               </TextareaFooter>
             </TextareaWrapper>
 
-            {keepBrief && status === 'idle' && (
+            {keepBrief && status === "idle" && (
               <RestoreHint>
                 <span className="material-symbols-outlined">info</span>
                 Brief précédent restauré — cliquez sur Générer pour relancer.
@@ -1211,21 +1268,27 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
 
             <GenerateBtn
               onClick={handleSubmit}
-              $disabled={!brief.trim() || status === 'loading' || charCount > MAX}
-              $loading={status === 'loading'}
-              disabled={!brief.trim() || status === 'loading' || charCount > MAX}
+              $disabled={
+                !brief.trim() || status === "loading" || charCount > MAX
+              }
+              $loading={status === "loading"}
+              disabled={
+                !brief.trim() || status === "loading" || charCount > MAX
+              }
             >
               <span className="icon">
-                {status === 'loading' ? "sync" : "auto_awesome"}
+                {status === "loading" ? "sync" : "auto_awesome"}
               </span>
-              {status === 'loading' ? "Génération en cours..." : "Générer les user stories"}
+              {status === "loading"
+                ? "Génération en cours..."
+                : "Générer les user stories"}
             </GenerateBtn>
 
             <InfoBanner>
               <span className="icon">info</span>
               <span>
-                <strong>Budget limité :</strong> démo $5/mois (~660 générations).
-                Si la limite est atteinte, une erreur s'affichera.
+                <strong>Budget limité :</strong> démo $5/mois (~660
+                générations). Si la limite est atteinte, une erreur s'affichera.
               </span>
             </InfoBanner>
           </PromptSection>
@@ -1239,7 +1302,7 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
           )}
 
           {/* RAG Sources Panel — visible pendant génération */}
-          {status === 'loading' && ragChunks.length > 0 && (
+          {status === "loading" && ragChunks.length > 0 && (
             <RAGPanel>
               <RAGHeader $open={ragOpen}>
                 <div className="left">
@@ -1252,21 +1315,31 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
               </RAGHeader>
               {ragOpen && (
                 <SourcePills>
-                  {[...new Set(ragChunks.map((c) => c.filename))].map((filename) => (
-                    <SourcePill key={filename}>
-                      <span className="dot" />
-                      <span className="name" title={filename}>{filename}</span>
-                    </SourcePill>
-                  ))}
+                  {[...new Set(ragChunks.map((c) => c.filename))].map(
+                    (filename) => (
+                      <SourcePill key={filename}>
+                        <span className="dot" />
+                        <span className="name" title={filename}>
+                          {filename}
+                        </span>
+                      </SourcePill>
+                    ),
+                  )}
                 </SourcePills>
               )}
             </RAGPanel>
           )}
 
           {/* Streaming Result */}
-          {status === 'loading' && stories && (
+          {status === "loading" && stories && (
             <StreamingCard>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <StreamingBadge>
                   <span className="spin-icon">sync_saved_locally</span>
                   Streaming Result
@@ -1280,10 +1353,14 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
           )}
 
           {/* Empty state */}
-          {status !== 'loading' && !stories && (
+          {status !== "loading" && !stories && (
             <EmptyState>
               <span className="icon">description</span>
-              <p>Les user stories générées apparaîtront ici.<br />Commencez par décrire votre projet.</p>
+              <p>
+                Les user stories générées apparaîtront ici.
+                <br />
+                Commencez par décrire votre projet.
+              </p>
             </EmptyState>
           )}
         </LeftColumn>
@@ -1295,28 +1372,43 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
               <div className="left">
                 <span>🗂️ Base de connaissance</span>
               </div>
-              {documents.filter(d => d.status === "indexed").length > 0 && (
+              {documents.filter((d) => d.status === "indexed").length > 0 && (
                 <span className="indexed-badge">
                   <span className="icon">check_circle</span>
-                  {documents.filter(d => d.status === "indexed").length} indexé{documents.filter(d => d.status === "indexed").length > 1 ? "s" : ""}
+                  {documents.filter((d) => d.status === "indexed").length}{" "}
+                  indexé
+                  {documents.filter((d) => d.status === "indexed").length > 1
+                    ? "s"
+                    : ""}
                 </span>
               )}
             </KBHeader>
 
             <KBSubtitle>
-              Les passages pertinents sont récupérés automatiquement à la génération.
+              Les passages pertinents sont récupérés automatiquement à la
+              génération.
             </KBSubtitle>
 
             <DocList>
               {documents.map((doc) => (
                 <DocCard key={doc.id} $status={doc.status}>
                   <span className="doc-icon">
-                    {doc.status === "indexed" ? "description" : doc.status === "loading" ? "picture_as_pdf" : "article"}
+                    {doc.status === "indexed"
+                      ? "description"
+                      : doc.status === "loading"
+                        ? "picture_as_pdf"
+                        : "article"}
                   </span>
                   <div className="doc-info">
                     <p className="name">
                       {doc.status === "indexed" ? (
-                        <a href={`/docs/${doc.name}`} target="_blank" rel="noopener noreferrer">{doc.name}</a>
+                        <a
+                          href={`/docs/${doc.name}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {doc.name}
+                        </a>
                       ) : (
                         doc.name
                       )}
@@ -1325,8 +1417,8 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
                       {doc.status === "indexed"
                         ? `✓ ${doc.chunks} chunks`
                         : doc.status === "loading"
-                        ? "Chunking en cours..."
-                        : "NON INDEXÉ"}
+                          ? "Chunking en cours..."
+                          : "NON INDEXÉ"}
                     </p>
                     {doc.status === "loading" && (
                       <ProgressBar $pct={doc.pct}>
@@ -1356,11 +1448,19 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
             {pendingReplaceFile && (
               <ConfirmBanner>
                 <p className="message">
-                  <span className="filename">{pendingReplaceFile.name}</span> est déjà indexé. Remplacer ?
+                  <span className="filename">{pendingReplaceFile.name}</span>{" "}
+                  est déjà indexé. Remplacer ?
                 </p>
                 <div className="actions">
-                  <button className="btn-replace" onClick={handleConfirmReplace}>Remplacer</button>
-                  <button className="btn-cancel" onClick={handleCancelReplace}>Annuler</button>
+                  <button
+                    className="btn-replace"
+                    onClick={handleConfirmReplace}
+                  >
+                    Remplacer
+                  </button>
+                  <button className="btn-cancel" onClick={handleCancelReplace}>
+                    Annuler
+                  </button>
                 </div>
               </ConfirmBanner>
             )}
@@ -1374,7 +1474,9 @@ export default function Forge({ onNavigate, brief, setBrief, stories, setStories
 
             <UploadZone $disabled>
               <span className="upload-icon">cloud_upload</span>
-              <p className="upload-title">Upload désactivé en mode démo publique</p>
+              <p className="upload-title">
+                Upload désactivé en mode démo publique
+              </p>
               <p className="upload-sub">
                 La base de connaissance (8 documents fictifs sur Lumeo Boutique)
                 est pré-configurée pour cette démo.
