@@ -1228,13 +1228,12 @@ export default function Forge({
             </SectionLabel>
 
             <ModeHint>
-              <strong>Sans documents :</strong> saisissez votre brief et générez directement des user stories génériques.
-              <br /><br />
-              <strong>Avec documents :</strong> Démo Lumeo Boutique — e-commerce fictif de déco / luminaires
-              <br /><br />
+              <strong>Démo Lumeo Boutique</strong> — e-commerce fictif de déco / luminaires.<br />
               Les documents sont pré-chargés et utilisés automatiquement. Utilisez les suggestions ci-dessous ou décrivez un besoin lié aux commandes, retours, livraison ou SAV.
-              <br />
-              En production, chaque entreprise importe ses propres documents pour des stories ancrées dans son contexte réel. Un brief sans rapport avec Lumeo Boutique générera des stories génériques.
+              <br /><br />
+              <em>En production, chaque entreprise importe ses propres documents (politiques internes, catalogues, process métier) pour des stories ancrées dans son contexte réel.</em>
+              <br /><br />
+              <em>Brief hors-sujet ? Les stories générées seront génériques, sans les données spécifiques de Lumeo Boutique.</em>
             </ModeHint>
 
             <ChipRow>
