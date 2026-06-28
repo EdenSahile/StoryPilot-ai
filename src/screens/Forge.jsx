@@ -1221,12 +1221,6 @@ export default function Forge({
         {/* ── Left Column ── */}
         <LeftColumn>
           <PromptSection>
-            <SectionLabel>
-              <span className="icon">edit_note</span>
-              Current Prompt
-              <span className="version">Version 2.4</span>
-            </SectionLabel>
-
             <ModeHint>
               <strong>Démo Lumeo Boutique</strong> — e-commerce fictif de déco / luminaires.<br />
               Les documents sont pré-chargés et utilisés automatiquement. Utilisez les suggestions ci-dessous ou décrivez un besoin lié aux commandes, retours, livraison ou SAV.
