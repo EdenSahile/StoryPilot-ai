@@ -186,6 +186,23 @@ const StatusBadge = styled.div`
   }
 `;
 
+const RagBadge = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.sm};
+  font-size: ${theme.fontSizes.sm};
+  font-weight: 700;
+  color: ${({ $active }) => ($active ? "#4ade80" : theme.colors.onSurfaceVariant)};
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: ${({ $active }) => ($active ? "#4ade80" : theme.colors.onSurfaceVariant)};
+    box-shadow: ${({ $active }) => ($active ? "0 0 8px rgba(74, 222, 128, 0.6)" : "none")};
+  }
+`;
+
 const ActionBtns = styled.div`
   display: flex;
   align-items: center;
@@ -324,6 +341,15 @@ const ComplexityBadge = styled.span`
       : $level === "M"
       ? "rgba(251, 191, 36, 0.2)"
       : "rgba(239, 68, 68, 0.2)"};
+`;
+
+const StoryCopyBtn = styled(IconBtn)`
+  color: ${({ $copied }) => ($copied ? "#0284c7" : theme.colors.onSurfaceVariant)};
+  background: ${({ $copied }) => ($copied ? "#dbeafe22" : "transparent")};
+
+  .icon {
+    font-size: 18px;
+  }
 `;
 
 const IncompleteTag = styled.span`
@@ -736,6 +762,7 @@ function parseStories(rawText) {
     return {
       id: index + 1,
       title: `User Story ${index + 1}`,
+      rawBlock: block.trim(),
       fullStatement,
       incomplete: hasValidTitle && !fullStatement,
       hasValidTitle,
@@ -782,6 +809,14 @@ const SourceItem = styled.div`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 1;
+  }
+
+  .score {
+    font-size: ${theme.fontSizes.xs};
+    font-weight: 700;
+    color: #4ade80;
+    flex-shrink: 0;
   }
 `;
 
@@ -795,6 +830,7 @@ En tant qu'utilisateur, je veux recevoir une facture afin de justifier mon achat
 // ─── Component ────────────────────────────────────────────
 export default function Results({ brief = "", stories, ragChunks = [], onNewGeneration, onRegenerate, onNavigate, truncated = false, autoSaved = false }) {
   const [copied, setCopied] = useState(false);
+  const [copiedStoryId, setCopiedStoryId] = useState(null);
   const [showTrelloMsg, setShowTrelloMsg] = useState(false);
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const [recentGenerations, setRecentGenerations] = useState([]);
@@ -815,6 +851,16 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
       await navigator.clipboard.writeText(stories);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // silent
+    }
+  };
+
+  const handleCopyStory = async (story) => {
+    try {
+      await navigator.clipboard.writeText(story.rawBlock);
+      setCopiedStoryId(story.id);
+      setTimeout(() => setCopiedStoryId(null), 2000);
     } catch {
       // silent
     }
@@ -853,14 +899,20 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
 
           {/* Action Bar */}
           <ActionBar>
-            <StatusBadge>
-              <span className="dot" />
-              ✦ Génération par IA terminée
-            </StatusBadge>
+            <div style={{ display: "flex", alignItems: "center", gap: theme.spacing.md, flexWrap: "wrap" }}>
+              <StatusBadge>
+                <span className="dot" />
+                ✦ Génération par IA terminée
+              </StatusBadge>
+              <RagBadge $active={ragChunks.length > 0}>
+                <span className="dot" />
+                {ragChunks.length > 0 ? "RAG actif" : "RAG non utilisé — US Générique"}
+              </RagBadge>
+            </div>
             <ActionBtns>
               <OutlineBtn onClick={handleCopy} $copied={copied}>
                 <span className="icon">{copied ? "done" : "content_copy"}</span>
-                {copied ? "Copié !" : "Copier"}
+                {copied ? "Copié !" : "Copier tout"}
               </OutlineBtn>
               <ExportBtn onClick={handleTrelloExport}>
                 <span className="icon">view_kanban</span>
@@ -897,6 +949,14 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
                       <ComplexityBadge $level={story.complexity}>
                         {story.complexity}
                       </ComplexityBadge>
+                      <StoryCopyBtn
+                        onClick={() => handleCopyStory(story)}
+                        $copied={copiedStoryId === story.id}
+                        title={copiedStoryId === story.id ? "Copié !" : "Copier cette user story"}
+                        aria-label={copiedStoryId === story.id ? "Copié" : "Copier cette user story"}
+                      >
+                        <span className="icon">{copiedStoryId === story.id ? "done" : "content_copy"}</span>
+                      </StoryCopyBtn>
                     </div>
                   </CardHeader>
 
@@ -1049,12 +1109,22 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
             <Panel>
               <PanelLabel>Sources utilisées</PanelLabel>
               <SourcesList>
-                {[...new Set(ragChunks.map((c) => c.filename))].map((filename) => (
-                  <SourceItem key={filename}>
-                    <span className="dot" />
-                    <span className="name" title={filename}>{filename}</span>
-                  </SourceItem>
-                ))}
+                {Object.values(
+                  ragChunks.reduce((acc, c) => {
+                    if (!acc[c.filename] || c.score > acc[c.filename].score) {
+                      acc[c.filename] = { filename: c.filename, score: c.score };
+                    }
+                    return acc;
+                  }, {})
+                )
+                  .sort((a, b) => b.score - a.score)
+                  .map(({ filename, score }) => (
+                    <SourceItem key={filename}>
+                      <span className="dot" />
+                      <span className="name" title={filename}>{filename}</span>
+                      <span className="score">{score}%</span>
+                    </SourceItem>
+                  ))}
               </SourcesList>
             </Panel>
           )}
