@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { theme } from "../theme";
-import { getGenerations, deleteGeneration, updateGeneration } from "../utils/libraryStorage";
+import { getGenerations, deleteGeneration, updateGeneration, clearGenerations } from "../utils/libraryStorage";
 
 const fadeInUp = keyframes`
   from { opacity: 0; transform: translateY(12px); }
@@ -490,6 +490,13 @@ export default function Library({ onNavigate }) {
     if (selected?.id === id) setSelected(null);
   };
 
+  const handleDeleteAll = () => {
+    if (!confirm("Supprimer tout l'historique ? Cette action est irréversible.")) return;
+    clearGenerations();
+    setGenerations([]);
+    setSelected(null);
+  };
+
   const startEditTitle = () => {
     setTitleDraft(selected.title);
     setEditingTitle(true);
@@ -614,7 +621,15 @@ export default function Library({ onNavigate }) {
           /* ── Vue liste ── */
           <>
             <PageHeader>
-              <h2>Historique</h2>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: theme.spacing.sm, flexWrap: "wrap" }}>
+                <h2>Historique</h2>
+                {generations.length > 0 && (
+                  <DetailDeleteBtn onClick={handleDeleteAll} style={{ alignSelf: "auto" }}>
+                    <span className="icon">delete_sweep</span>
+                    Supprimer tout
+                  </DetailDeleteBtn>
+                )}
+              </div>
               <LocalNotice>
                 <span className="icon">info</span>
                 Historique local à ce navigateur — non synchronisé entre appareils.
