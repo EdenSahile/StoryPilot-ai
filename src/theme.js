@@ -3,51 +3,52 @@
 
 export const theme = {
   colors: {
-    // Backgrounds
-    background: "#031427",
-    surface: "#031427",
-    surfaceContainerLowest: "#000f21",
-    surfaceContainerLow: "#0b1c30",
-    surfaceContainer: "#102034",
-    surfaceContainerHigh: "#1b2b3f",
-    surfaceContainerHighest: "#26364a",
-    surfaceBright: "#2a3a4f",
+    // Backgrounds — "Forge à braises" (charbon chaud)
+    background: "#171310",
+    surface: "#171310",
+    surfaceContainerLowest: "#171310",
+    surfaceContainerLow: "#1c1712",
+    surfaceContainer: "#2c241d",
+    surfaceContainerHigh: "#362d24",
+    surfaceContainerHighest: "#423628",
+    surfaceBright: "#4a3d2d",
 
-    // Primary (indigo)
-    primary: "#c0c1ff",
-    primaryContainer: "#8083ff",
-    onPrimary: "#1000a9",
-    onPrimaryContainer: "#0d0096",
-    inversePrimary: "#494bd6",
+    // Primary (braise orange)
+    primary: "#e2793d",
+    primaryContainer: "#e2793d",
+    onPrimary: "#171310",
+    onPrimaryContainer: "#171310",
+    inversePrimary: "#e2793d",
 
-    // Secondary (violet)
-    secondary: "#d0bcff",
-    secondaryContainer: "#571bc1",
-    onSecondary: "#3c0091",
-    onSecondaryContainer: "#c4abff",
+    // Secondary (kaki / laiton)
+    secondary: "#b8a072",
+    secondaryContainer: "#b8a072",
+    onSecondary: "#171310",
+    onSecondaryContainer: "#171310",
 
-    // Tertiary
-    tertiary: "#bec6e0",
+    // Tertiary (sable chaud — non spécifié par la palette validée, dérivé pour le
+    // 3e surlignage Gherkin "Et" ; à confirmer)
+    tertiary: "#c9a97e",
 
     // Surface text
-    onSurface: "#d3e4fe",
-    onSurfaceVariant: "#c7c4d7",
-    onBackground: "#d3e4fe",
+    onSurface: "#f0e6d8",
+    onSurfaceVariant: "#a89a85",
+    onBackground: "#f0e6d8",
 
     // Borders
-    outline: "#908fa0",
-    outlineVariant: "#464554",
+    outline: "#9c8a72",
+    outlineVariant: "#332a20",
 
-    // Semantic
+    // Semantic (inchangés — conventions universelles, indépendantes de l'accent de marque)
     error: "#ffb4ab",
     success: "#4ade80",
     amber: "#fbbf24",
   },
 
   gradients: {
-    primary: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-    primaryContainer: "linear-gradient(135deg, #8083ff, #571bc1)",
-    subtle: "linear-gradient(135deg, #494bd6, #571bc1)",
+    primary: "linear-gradient(135deg, #e2793d, #b8a072)",
+    primaryContainer: "linear-gradient(135deg, #e2793d, #b8a072)",
+    subtle: "linear-gradient(135deg, #e2793d, #b8a072)",
   },
 
   fonts: {
@@ -85,8 +86,8 @@ export const theme = {
   },
 
   shadows: {
-    primary: "0 0 20px rgba(99, 102, 241, 0.15)",
-    primaryStrong: "0 8px 32px rgba(99, 102, 241, 0.25)",
+    primary: "0 0 20px rgba(226, 121, 61, 0.15)",
+    primaryStrong: "0 8px 32px rgba(226, 121, 61, 0.25)",
     card: "0 2px 12px rgba(0, 0, 0, 0.3)",
   },
 
@@ -97,17 +98,17 @@ export const theme = {
   },
 };
 
-// Helpers CSS réutilisables
+// Helpers CSS réutilisables (non utilisés actuellement dans le code)
 export const glassCard = `
-  background: rgba(30, 41, 59, 0.4);
+  background: rgba(44, 36, 29, 0.4);
   backdrop-filter: blur(12px);
-  border: 1px solid #334155;
+  border: 1px solid #332a20;
 `;
 
 export const indigoGradient = `
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #e2793d, #b8a072);
 `;
 
 export const primaryGradient = `
-  background: linear-gradient(135deg, #8083ff, #571bc1);
+  background: linear-gradient(135deg, #e2793d, #b8a072);
 `;

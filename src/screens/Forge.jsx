@@ -31,8 +31,8 @@ const pulse = keyframes`
 `;
 
 const glow = keyframes`
-  0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.15); }
-  50% { box-shadow: 0 0 30px rgba(99, 102, 241, 0.35); }
+  0%, 100% { box-shadow: 0 0 20px rgba(226, 121, 61, 0.15); }
+  50% { box-shadow: 0 0 30px rgba(226, 121, 61, 0.35); }
 `;
 
 // ─── Layout ───────────────────────────────────────────────
@@ -57,7 +57,7 @@ const TopBar = styled.header`
   align-items: center;
   height: 64px;
   padding: 0 ${theme.spacing.lg};
-  background: rgba(3, 20, 39, 0.85);
+  background: rgba(23, 19, 16, 0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid ${theme.colors.outlineVariant};
   gap: ${theme.spacing.sm};
@@ -278,7 +278,7 @@ const TextareaFooter = styled.div`
 const KbdHint = styled.span`
   font-size: ${theme.fontSizes.xs};
   color: ${theme.colors.onSurfaceVariant};
-  background: rgba(38, 54, 74, 0.8);
+  background: rgba(66, 54, 40, 0.8);
   padding: 3px 8px;
   border-radius: 6px;
   border: 1px solid ${theme.colors.outlineVariant};
@@ -288,7 +288,7 @@ const CharCount = styled.span`
   font-size: ${theme.fontSizes.xs};
   color: ${({ $over }) =>
     $over ? theme.colors.error : theme.colors.onSurfaceVariant};
-  background: rgba(38, 54, 74, 0.8);
+  background: rgba(66, 54, 40, 0.8);
   padding: 3px 8px;
   border-radius: 6px;
 `;
@@ -299,8 +299,8 @@ const RestoreHint = styled.div`
   gap: 6px;
   padding: 8px 12px;
   margin-bottom: ${theme.spacing.sm};
-  background: rgba(99, 102, 241, 0.08);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: rgba(226, 121, 61, 0.08);
+  border: 1px solid rgba(226, 121, 61, 0.2);
   border-radius: ${theme.radii.sm};
   color: ${theme.colors.primary};
   font-size: ${theme.fontSizes.xs};
@@ -320,9 +320,9 @@ const GenerateBtn = styled.button`
   background: ${({ $disabled }) =>
     $disabled
       ? theme.colors.surfaceContainerHighest
-      : "linear-gradient(135deg, #6366f1, #8b5cf6)"};
+      : "linear-gradient(135deg, #e2793d, #b8a072)"};
   color: ${({ $disabled }) =>
-    $disabled ? theme.colors.onSurfaceVariant : "white"};
+    $disabled ? theme.colors.onSurfaceVariant : "#171310"};
   font-weight: 700;
   font-size: ${theme.fontSizes.md};
   cursor: ${({ $disabled }) => ($disabled ? "not-allowed" : "pointer")};
@@ -333,7 +333,7 @@ const GenerateBtn = styled.button`
   &:hover:not(:disabled) {
     opacity: 0.9;
     transform: translateY(-1px);
-    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+    box-shadow: 0 8px 24px rgba(226, 121, 61, 0.35);
   }
 
   &:active:not(:disabled) {
@@ -426,8 +426,8 @@ const SourcePill = styled.div`
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  background: rgba(99, 102, 241, 0.08);
-  border: 1px solid rgba(99, 102, 241, 0.18);
+  background: rgba(226, 121, 61, 0.08);
+  border: 1px solid rgba(226, 121, 61, 0.18);
   border-radius: 999px;
   font-size: 11px;
   color: ${theme.colors.onSurface};
@@ -468,7 +468,7 @@ const StreamingCard = styled.div`
     bottom: -60px;
     width: 180px;
     height: 180px;
-    background: rgba(99, 102, 241, 0.05);
+    background: rgba(226, 121, 61, 0.05);
     border-radius: 50%;
     filter: blur(30px);
   }
@@ -483,10 +483,10 @@ const StreamingBadge = styled.span`
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: ${theme.colors.primary};
-  background: rgba(192, 193, 255, 0.1);
+  background: rgba(226, 121, 61, 0.08);
   padding: 4px 10px;
   border-radius: 6px;
-  border: 1px solid rgba(192, 193, 255, 0.2);
+  border: 1px solid rgba(226, 121, 61, 0.2);
 
   .spin-icon {
     font-family: "Material Symbols Outlined";
@@ -665,7 +665,7 @@ const DocCard = styled.div`
   transition: border-color 0.2s;
 
   &:hover {
-    border-color: rgba(192, 193, 255, 0.3);
+    border-color: rgba(226, 121, 61, 0.3);
   }
 
   .doc-icon {
@@ -746,7 +746,7 @@ const ProgressBar = styled.div`
 
   .fill {
     height: 100%;
-    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    background: linear-gradient(90deg, #e2793d, #b8a072);
     border-radius: 999px;
     width: ${({ $pct }) => $pct}%;
     transition: width 0.5s ease;
@@ -766,7 +766,7 @@ const UploadZone = styled.div`
   cursor: pointer;
   transition: all 0.2s;
   background: ${({ $dragOver }) =>
-    $dragOver ? "rgba(99, 102, 241, 0.05)" : "transparent"};
+    $dragOver ? "rgba(226, 121, 61, 0.05)" : "transparent"};
   border-color: ${({ $dragOver }) =>
     $dragOver ? theme.colors.primary : theme.colors.outlineVariant};
 
@@ -779,8 +779,8 @@ const UploadZone = styled.div`
   `}
 
   &:hover {
-    border-color: rgba(192, 193, 255, 0.4);
-    background: rgba(99, 102, 241, 0.03);
+    border-color: rgba(226, 121, 61, 0.4);
+    background: rgba(226, 121, 61, 0.03);
   }
 
   .upload-icon {
@@ -858,7 +858,7 @@ const IndexBtn = styled.button`
   &:hover {
     background: ${theme.colors.surfaceContainerHighest};
     color: ${theme.colors.onSurface};
-    border-color: rgba(192, 193, 255, 0.3);
+    border-color: rgba(226, 121, 61, 0.3);
   }
 `;
 
@@ -880,8 +880,8 @@ const ModeHint = styled.p`
   line-height: 1.6;
   margin: 0;
   padding: ${theme.spacing.sm} ${theme.spacing.md};
-  background: rgba(99, 102, 241, 0.06);
-  border-left: 2px solid rgba(99, 102, 241, 0.3);
+  background: rgba(226, 121, 61, 0.06);
+  border-left: 2px solid rgba(226, 121, 61, 0.3);
   border-radius: 0 ${theme.radii.sm} ${theme.radii.sm} 0;
 
   strong {
@@ -913,7 +913,7 @@ const Chip = styled.button`
   &:hover {
     border-color: ${theme.colors.primary};
     color: ${theme.colors.primary};
-    background: rgba(99, 102, 241, 0.06);
+    background: rgba(226, 121, 61, 0.06);
   }
 
   &:active {

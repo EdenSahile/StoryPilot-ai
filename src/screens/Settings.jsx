@@ -30,7 +30,7 @@ const TopBar = styled.header`
   align-items: center;
   height: 64px;
   padding: 0 ${theme.spacing.lg};
-  background: rgba(3, 20, 39, 0.85);
+  background: rgba(23, 19, 16, 0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid ${theme.colors.outlineVariant};
   gap: ${theme.spacing.sm};
@@ -132,7 +132,7 @@ const ThemeChip = styled.div`
   cursor: ${({ $active }) => ($active ? "default" : "not-allowed")};
   background: ${({ $active }) =>
     $active
-      ? "rgba(192, 193, 255, 0.12)"
+      ? "rgba(226, 121, 61, 0.12)"
       : "transparent"};
   border-color: ${({ $active }) =>
     $active ? theme.colors.primary : theme.colors.outlineVariant};
@@ -245,7 +245,7 @@ const AppIdentity = styled.div`
     justify-content: center;
     font-family: "Material Symbols Outlined";
     font-size: 22px;
-    color: white;
+    color: #171310;
   }
 
   .meta {
