@@ -65,3 +65,10 @@ export function deleteGeneration(id) {
 export function updateGeneration(id, patch) {
   save(load().map((e) => (e.id === id ? { ...e, ...patch } : e)));
 }
+
+/**
+ * Supprime toutes les générations de l'historique local.
+ */
+export function clearGenerations() {
+  save([]);
+}
