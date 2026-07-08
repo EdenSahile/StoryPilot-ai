@@ -59,7 +59,7 @@ export default async function handler(req, res) {
 
     // 3. Format results
     const chunks = queryResponse.matches
-      .filter((match) => match.score > 0.3) // seuil minimal de pertinence
+      .filter((match) => match.score > 0.42) // seuil minimal de pertinence
       .map((match) => ({
         text: match.metadata.text,
         score: Math.round(match.score * 100),
