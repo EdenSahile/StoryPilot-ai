@@ -1,5 +1,33 @@
 # StoryForge AI — Contexte actif
-*Mis à jour le 2026-06-21*
+*Mis à jour le 2026-07-08*
+
+---
+
+## Session POLISH (2026-07-08) — Copie par US, garde-fou RAG, palette
+
+**Branche :** `feat/polish` (4 commits + le commit palette ci-dessous, tous poussés en local, rien pushé sur remote)
+
+### Réalisé
+
+- [x] **Bouton "Copier" par user story** — en plus du bouton global renommé "Copier tout" (`Results.jsx` : `StoryCopyBtn`, état `copiedStoryId`, `story.rawBlock` ajouté par `parseStories`). Tests dans `Results.test.jsx`.
+- [x] **Seuil de pertinence RAG recalibré 0.3 → 0.42** (`api/retrieve-context.js:62`) — mesuré en conditions réelles : hors-sujet (auth, restaurant) ≤ 0.41, pertinent (factures, livraison, catalogue) ≥ 0.44. À 0.3 le RAG se déclenchait même hors-sujet ; à 0.5 (essayé puis rejeté) il ratait des briefs pourtant pertinents comme "voir mes factures".
+- [x] **Badge "RAG actif" / "RAG non utilisé — US Générique"** dans `Results.jsx`, avec panel "Sources utilisées" affichant le score de pertinence par document (`ragChunks` groupés par filename, score max, triés desc).
+- [x] **Bouton "Supprimer tout" l'historique** (`Library.jsx` + `libraryStorage.js:clearGenerations()`), garde le bouton "Supprimer" par génération. Confirmation avant suppression totale.
+- [x] **Fix infra de test** : Node 22+/25 expose un `localStorage` global expérimental qui shadowe celui de jsdom et casse `setItem`/`clear` silencieusement (les tests passaient quand même à cause d'un try/catch dans `libraryStorage.js`, mais `saveGeneration` sans try/catch aurait planté). Polyfill mémoire ajouté dans `src/test/setup.js`.
+- [x] **Investigation streaming** : signalé "pas de streaming visible" par l'utilisateur — non reproductible après 3 tests propres (page neuve, Chrome, brief identique) : le "Streaming Result" apparaît bien à 4-7s et se met à jour jusqu'à la fin. Pas de bug trouvé côté code ; cause probablement ponctuelle/environnementale, non élucidée.
+- [x] **Palette "Forge à braises"** — remplacement complet de l'indigo/violet (`#6366f1`/`#8b5cf6`/etc., signature "généré par IA") par une palette charbon/braise/laiton dans `theme.js` + tous les hex/rgba en dur trouvés dans les composants (voir détail ci-dessous).
+
+### ⚠️ Palette non validée par l'utilisateur — probablement à refaire
+
+L'utilisateur a dit ne pas aimer le résultat après coup. **Ne pas repartir de zéro sur le processus de contraste** (le calculateur WCAG et la méthode de vérification restent valables), mais s'attendre à changer les valeurs hex. Repères pour la prochaine session :
+
+- Palette actuelle : fond `#171310`, carte `#2c241d`, carte alt `#1c1712`, texte `#f0e6d8`, accent orange `#e2793d`, accent olive `#b8a072`.
+- Piège découvert : un fond plein orange/olive avec texte blanc/crème échoue toujours le contraste AA (~2-3:1) — toujours utiliser un texte sombre (`#171310`) sur les fonds pleins (boutons CTA, avatar, gradients).
+- Piège découvert n°2 : un badge à fond teinté (rgba accent à faible alpha) **avec le texte de la même couleur que la teinte** perd du contraste quand l'alpha augmente (ex. hover). Plafonner ces fonds tintés à ~0.08 d'alpha.
+- Tokens sans valeur donnée par l'utilisateur, dérivés par Claude (à reconfirmer si la palette change) : `onSurfaceVariant`, `outline`, `outlineVariant`, `tertiary` (3ᵉ couleur pour le mot-clé Gherkin "Et" — jamais spécifiée).
+- `error`/`success`/`amber` laissés inchangés (sémantiques, indépendants de l'accent de marque) — probablement à garder tel quel même si la palette de marque change.
+- Fichiers touchés par la palette : `theme.js` + `Results.jsx`, `Forge.jsx`, `Dashboard.jsx`, `Library.jsx`, `Settings.jsx`, `Sidebar.jsx`, et par cohérence deux fichiers **morts/non utilisés par l'app réelle** : `StoriesOutput.jsx`, `BriefInput.jsx` (uniquement testés par leurs propres tests unitaires, jamais rendus — `App.jsx` utilise les écrans dans `src/screens/`, pas ces composants).
+- `src/index.css` **non touché** : système de theme CSS-variables légataire (gris-ardoise), utilisé seulement par les deux fichiers morts ci-dessus, jamais rendu.
 
 ---
 
