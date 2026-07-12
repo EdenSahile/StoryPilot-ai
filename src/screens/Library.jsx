@@ -31,7 +31,7 @@ const TopBar = styled.header`
   align-items: center;
   height: 64px;
   padding: 0 ${theme.spacing.lg};
-  background: rgba(23, 19, 16, 0.85);
+  background: rgba(13, 25, 23, 0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid ${theme.colors.outlineVariant};
   gap: ${theme.spacing.sm};
@@ -165,7 +165,7 @@ const EntryCard = styled.div`
 
   &:hover {
     background: ${theme.colors.surfaceContainer};
-    border-color: rgba(226, 121, 61, 0.25);
+    border-color: rgba(209, 169, 84, 0.25);
     &::before { width: 3px; }
   }
 
@@ -217,8 +217,8 @@ const Pill = styled.a`
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 999px;
-  background: rgba(226, 121, 61, 0.08);
-  border: 1px solid rgba(226, 121, 61, 0.18);
+  background: rgba(209, 169, 84, 0.08);
+  border: 1px solid rgba(209, 169, 84, 0.18);
   color: ${theme.colors.onSurfaceVariant};
   max-width: 160px;
   white-space: nowrap;
@@ -229,8 +229,8 @@ const Pill = styled.a`
   transition: background 0.15s, border-color 0.15s;
 
   &:hover {
-    background: rgba(226, 121, 61, 0.08);
-    border-color: rgba(226, 121, 61, 0.35);
+    background: rgba(209, 169, 84, 0.08);
+    border-color: rgba(209, 169, 84, 0.35);
     color: ${theme.colors.primary};
   }
 `;
@@ -266,8 +266,8 @@ const DocChip = styled.a`
   gap: 6px;
   padding: 8px 14px;
   border-radius: ${theme.radii.md};
-  background: rgba(226, 121, 61, 0.08);
-  border: 1px solid rgba(226, 121, 61, 0.22);
+  background: rgba(209, 169, 84, 0.08);
+  border: 1px solid rgba(209, 169, 84, 0.22);
   color: ${theme.colors.primary};
   font-size: ${theme.fontSizes.sm};
   font-weight: 600;
@@ -283,8 +283,8 @@ const DocChip = styled.a`
   }
 
   &:hover {
-    background: rgba(226, 121, 61, 0.08);
-    border-color: rgba(226, 121, 61, 0.45);
+    background: rgba(209, 169, 84, 0.08);
+    border-color: rgba(209, 169, 84, 0.45);
   }
 
   &:active {
@@ -425,7 +425,7 @@ const CopyBtn = styled.button`
   padding: 8px 16px;
   border-radius: ${theme.radii.md};
   border: 1px solid ${({ $copied }) => $copied ? theme.colors.primary : theme.colors.outlineVariant};
-  background: ${({ $copied }) => $copied ? "rgba(226, 121, 61,0.08)" : "transparent"};
+  background: ${({ $copied }) => $copied ? "rgba(209, 169, 84,0.08)" : "transparent"};
   color: ${({ $copied }) => $copied ? theme.colors.primary : theme.colors.onSurfaceVariant};
   font-size: ${theme.fontSizes.sm};
   font-weight: 600;

@@ -3,41 +3,45 @@
 
 export const theme = {
   colors: {
-    // Backgrounds — "Forge à braises" (charbon chaud)
-    background: "#171310",
-    surface: "#171310",
-    surfaceContainerLowest: "#171310",
-    surfaceContainerLow: "#1c1712",
-    surfaceContainer: "#2c241d",
-    surfaceContainerHigh: "#362d24",
-    surfaceContainerHighest: "#423628",
-    surfaceBright: "#4a3d2d",
+    // Backgrounds — "Pétrole & or" (échelle dérivée par interpolation HSL entre
+    // les 2 ancrages validés : fond page #0d1917 et fond carte #16211f)
+    background: "#0d1917",
+    surface: "#0d1917",
+    surfaceContainerLowest: "#0d1917",
+    surfaceContainerLow: "#0f1b19",
+    surfaceContainer: "#16211f",
+    surfaceContainerHigh: "#1a2624",
+    surfaceContainerHighest: "#1d2b28",
+    surfaceBright: "#1e302d",
 
-    // Primary (braise orange)
-    primary: "#e2793d",
-    primaryContainer: "#e2793d",
-    onPrimary: "#171310",
-    onPrimaryContainer: "#171310",
-    inversePrimary: "#e2793d",
+    // Primary (accent or)
+    primary: "#d1a954",
+    primaryContainer: "#d1a954",
+    onPrimary: "#0d1917",
+    onPrimaryContainer: "#0d1917",
+    inversePrimary: "#d1a954",
 
-    // Secondary (kaki / laiton)
-    secondary: "#b8a072",
-    secondaryContainer: "#b8a072",
-    onSecondary: "#171310",
-    onSecondaryContainer: "#171310",
+    // Secondary (vert d'eau)
+    secondary: "#7fae9d",
+    secondaryContainer: "#7fae9d",
+    onSecondary: "#0d1917",
+    onSecondaryContainer: "#0d1917",
 
-    // Tertiary (sable chaud — non spécifié par la palette validée, dérivé pour le
+    // Tertiary (violet-mauve — non spécifié par la palette validée, dérivé pour le
     // 3e surlignage Gherkin "Et" ; à confirmer)
-    tertiary: "#c9a97e",
+    tertiary: "#a881bb",
 
     // Surface text
-    onSurface: "#f0e6d8",
-    onSurfaceVariant: "#a89a85",
-    onBackground: "#f0e6d8",
+    onSurface: "#eef2f0",
+    // Réutilise l'accent secondaire : la palette validée décrit #7fae9d comme
+    // "labels secondaires, icônes RAG", ce qui correspond exactement à l'usage
+    // de onSurfaceVariant dans le code (texte muté/secondaire).
+    onSurfaceVariant: "#7fae9d",
+    onBackground: "#eef2f0",
 
-    // Borders
-    outline: "#9c8a72",
-    outlineVariant: "#332a20",
+    // Borders (dérivés, non spécifiés par la palette validée ; à confirmer)
+    outline: "#6e8782",
+    outlineVariant: "#1c2926",
 
     // Semantic (inchangés — conventions universelles, indépendantes de l'accent de marque)
     error: "#ffb4ab",
@@ -46,9 +50,9 @@ export const theme = {
   },
 
   gradients: {
-    primary: "linear-gradient(135deg, #e2793d, #b8a072)",
-    primaryContainer: "linear-gradient(135deg, #e2793d, #b8a072)",
-    subtle: "linear-gradient(135deg, #e2793d, #b8a072)",
+    primary: "linear-gradient(135deg, #d1a954, #7fae9d)",
+    primaryContainer: "linear-gradient(135deg, #d1a954, #7fae9d)",
+    subtle: "linear-gradient(135deg, #d1a954, #7fae9d)",
   },
 
   fonts: {
@@ -86,8 +90,8 @@ export const theme = {
   },
 
   shadows: {
-    primary: "0 0 20px rgba(226, 121, 61, 0.15)",
-    primaryStrong: "0 8px 32px rgba(226, 121, 61, 0.25)",
+    primary: "0 0 20px rgba(209, 169, 84, 0.15)",
+    primaryStrong: "0 8px 32px rgba(209, 169, 84, 0.25)",
     card: "0 2px 12px rgba(0, 0, 0, 0.3)",
   },
 
@@ -100,15 +104,15 @@ export const theme = {
 
 // Helpers CSS réutilisables (non utilisés actuellement dans le code)
 export const glassCard = `
-  background: rgba(44, 36, 29, 0.4);
+  background: rgba(22, 33, 31, 0.4);
   backdrop-filter: blur(12px);
-  border: 1px solid #332a20;
+  border: 1px solid #1c2926;
 `;
 
 export const indigoGradient = `
-  background: linear-gradient(135deg, #e2793d, #b8a072);
+  background: linear-gradient(135deg, #d1a954, #7fae9d);
 `;
 
 export const primaryGradient = `
-  background: linear-gradient(135deg, #e2793d, #b8a072);
+  background: linear-gradient(135deg, #d1a954, #7fae9d);
 `;

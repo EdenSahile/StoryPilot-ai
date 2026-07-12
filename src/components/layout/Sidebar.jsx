@@ -63,7 +63,7 @@ const NavItem = styled.a`
     $active ? theme.colors.primary : theme.colors.onSurfaceVariant};
   background: ${({ $active }) =>
     $active
-      ? "linear-gradient(90deg, rgba(226, 121, 61,0.15) 0%, rgba(226, 121, 61,0.05) 100%)"
+      ? "linear-gradient(90deg, rgba(209, 169, 84,0.15) 0%, rgba(209, 169, 84,0.05) 100%)"
       : "transparent"};
   border-right-color: ${({ $active }) =>
     $active ? theme.colors.primary : "transparent"};
@@ -96,8 +96,8 @@ const NewStoryBtn = styled.button`
   padding: ${theme.spacing.sm} ${theme.spacing.md};
   border-radius: ${theme.radii.lg};
   border: none;
-  background: linear-gradient(135deg, #e2793d, #b8a072);
-  color: #171310;
+  background: linear-gradient(135deg, #d1a954, #7fae9d);
+  color: #0d1917;
   font-weight: 700;
   font-size: ${theme.fontSizes.sm};
   cursor: pointer;
@@ -106,7 +106,7 @@ const NewStoryBtn = styled.button`
   justify-content: center;
   gap: ${theme.spacing.sm};
   transition: all 0.2s;
-  box-shadow: 0 4px 16px rgba(226, 121, 61, 0.3);
+  box-shadow: 0 4px 16px rgba(209, 169, 84, 0.3);
 
   &:hover {
     opacity: 0.9;

@@ -72,10 +72,10 @@ const TextArea = styled.textarea`
 
   &:focus {
     border-color: ${({ $hasError }) =>
-      $hasError ? "var(--field-error)" : "#e2793d"};
+      $hasError ? "var(--field-error)" : "#d1a954"};
     box-shadow: 0 0 0 3px
       ${({ $hasError }) =>
-        $hasError ? "rgba(239,68,68,0.15)" : "rgba(226, 121, 61,0.15)"};
+        $hasError ? "rgba(239,68,68,0.15)" : "rgba(209, 169, 84,0.15)"};
   }
 
   &:disabled {
@@ -94,8 +94,8 @@ const Button = styled.button`
   align-self: center;
   padding: 12px 28px;
   min-height: 44px;
-  background: linear-gradient(135deg, #e2793d, #b8a072);
-  color: #171310;
+  background: linear-gradient(135deg, #d1a954, #7fae9d);
+  color: #0d1917;
   border: none;
   border-radius: 8px;
   font-size: 1rem;

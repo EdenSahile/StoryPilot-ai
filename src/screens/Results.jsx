@@ -38,7 +38,7 @@ const TopBar = styled.header`
   justify-content: space-between;
   height: 64px;
   padding: 0 ${theme.spacing.lg};
-  background: rgba(23, 19, 16, 0.85);
+  background: rgba(13, 25, 23, 0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid ${theme.colors.outlineVariant};
 `;
@@ -164,8 +164,8 @@ const ActionBar = styled.div`
   flex-wrap: wrap;
   gap: ${theme.spacing.md};
   padding: ${theme.spacing.md} ${theme.spacing.lg};
-  background: rgba(226, 121, 61, 0.05);
-  border: 1px solid rgba(226, 121, 61, 0.15);
+  background: rgba(209, 169, 84, 0.05);
+  border: 1px solid rgba(209, 169, 84, 0.15);
   border-radius: ${theme.radii.lg};
 `;
 
@@ -241,7 +241,7 @@ const OutlineBtn = styled.button`
 
   &:hover {
     background: ${theme.colors.surfaceContainerHighest};
-    border-color: rgba(226, 121, 61, 0.3);
+    border-color: rgba(209, 169, 84, 0.3);
   }
 `;
 
@@ -253,12 +253,12 @@ const ExportBtn = styled.button`
   border-radius: ${theme.radii.md};
   border: none;
   background: ${theme.colors.inversePrimary};
-  color: #171310;
+  color: #0d1917;
   font-size: ${theme.fontSizes.sm};
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(226, 121, 61, 0.3);
+  box-shadow: 0 4px 12px rgba(209, 169, 84, 0.3);
 
   .icon {
     font-family: "Material Symbols Outlined";
@@ -268,7 +268,7 @@ const ExportBtn = styled.button`
   &:hover {
     opacity: 0.9;
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(226, 121, 61, 0.4);
+    box-shadow: 0 6px 16px rgba(209, 169, 84, 0.4);
   }
 
   &:active {
@@ -284,7 +284,7 @@ const StoryList = styled.div`
 `;
 
 const StoryCard = styled.article`
-  background: rgba(44, 36, 29, 0.4);
+  background: rgba(22, 33, 31, 0.4);
   backdrop-filter: blur(12px);
   border: 1px solid ${theme.colors.outlineVariant};
   border-radius: ${theme.radii.xl};
@@ -294,7 +294,7 @@ const StoryCard = styled.article`
   transition: border-color 0.2s;
 
   &:hover {
-    border-color: rgba(226, 121, 61, 0.25);
+    border-color: rgba(209, 169, 84, 0.25);
   }
 `;
 
@@ -303,8 +303,8 @@ const CardHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: ${theme.spacing.lg};
-  background: rgba(28, 23, 18, 0.5);
-  border-bottom: 1px solid rgba(51, 42, 32, 0.3);
+  background: rgba(15, 27, 25, 0.5);
+  border-bottom: 1px solid rgba(28, 41, 38, 0.3);
 
   h3 {
     font-size: ${theme.fontSizes.xl};
@@ -388,7 +388,7 @@ const CardGrid = styled.div`
   grid-template-columns: 1fr 1fr;
   gap: ${theme.spacing.lg};
   padding-top: ${theme.spacing.md};
-  border-top: 1px solid rgba(51, 42, 32, 0.3);
+  border-top: 1px solid rgba(28, 41, 38, 0.3);
 
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
@@ -535,7 +535,7 @@ const RightColumn = styled.aside`
 `;
 
 const Panel = styled.div`
-  background: rgba(44, 36, 29, 0.4);
+  background: rgba(22, 33, 31, 0.4);
   border: 1px solid ${theme.colors.outlineVariant};
   border-radius: ${theme.radii.xl};
   padding: ${theme.spacing.lg};
@@ -575,21 +575,21 @@ const QuickActionBtn = styled.button`
       ? theme.colors.inversePrimary
       : "transparent"};
   color: ${({ $variant }) =>
-    $variant === "primary" ? "#171310" : theme.colors.onSurfaceVariant};
+    $variant === "primary" ? "#0d1917" : theme.colors.onSurfaceVariant};
   border: ${({ $variant }) =>
     $variant === "primary"
       ? "none"
       : `1px solid ${theme.colors.outlineVariant}`};
   box-shadow: ${({ $variant }) =>
-    $variant === "primary" ? "0 4px 12px rgba(226, 121, 61, 0.3)" : "none"};
+    $variant === "primary" ? "0 4px 12px rgba(209, 169, 84, 0.3)" : "none"};
 
   &:hover {
     opacity: 0.9;
     transform: translateY(-1px);
     color: ${({ $variant }) =>
-      $variant === "primary" ? "#171310" : theme.colors.onSurface};
+      $variant === "primary" ? "#0d1917" : theme.colors.onSurface};
     border-color: ${({ $variant }) =>
-      $variant === "primary" ? "none" : "rgba(226, 121, 61, 0.3)"};
+      $variant === "primary" ? "none" : "rgba(209, 169, 84, 0.3)"};
   }
 
   &:active {
@@ -599,14 +599,14 @@ const QuickActionBtn = styled.button`
 
 const RecentItem = styled.div`
   padding: ${theme.spacing.md};
-  background: rgba(44, 36, 29, 0.4);
-  border: 1px solid rgba(51, 42, 32, 0.15);
+  background: rgba(22, 33, 31, 0.4);
+  border: 1px solid rgba(28, 41, 38, 0.15);
   border-radius: ${theme.radii.md};
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    border-color: rgba(226, 121, 61, 0.25);
+    border-color: rgba(209, 169, 84, 0.25);
   }
 
   .title {
@@ -657,7 +657,7 @@ const MobileStickyBar = styled.div`
   left: 0;
   right: 0;
   padding: ${theme.spacing.sm} ${theme.spacing.md};
-  background: rgba(28, 23, 18, 0.9);
+  background: rgba(15, 27, 25, 0.9);
   backdrop-filter: blur(12px);
   border-top: 1px solid ${theme.colors.outlineVariant};
   gap: ${theme.spacing.sm};
@@ -793,7 +793,7 @@ const SourceItem = styled.div`
   gap: ${theme.spacing.sm};
   padding: 6px ${theme.spacing.sm};
   border-radius: ${theme.radii.md};
-  background: rgba(226, 121, 61, 0.05);
+  background: rgba(209, 169, 84, 0.05);
 
   .dot {
     width: 7px;
@@ -987,9 +987,9 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
                         lineHeight: 1.7,
                         fontStyle: "italic",
                         padding: "12px 16px",
-                        background: "rgba(44, 36, 29, 0.4)",
+                        background: "rgba(22, 33, 31, 0.4)",
                         borderRadius: "8px",
-                        borderLeft: "3px solid rgba(226, 121, 61, 0.2)"
+                        borderLeft: "3px solid rgba(209, 169, 84, 0.2)"
                       }}>
                         {story.description}
                       </p>
