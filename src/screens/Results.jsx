@@ -38,7 +38,7 @@ const TopBar = styled.header`
   justify-content: space-between;
   height: 64px;
   padding: 0 ${theme.spacing.lg};
-  background: rgba(3, 20, 39, 0.85);
+  background: rgba(13, 25, 23, 0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid ${theme.colors.outlineVariant};
 `;
@@ -164,8 +164,8 @@ const ActionBar = styled.div`
   flex-wrap: wrap;
   gap: ${theme.spacing.md};
   padding: ${theme.spacing.md} ${theme.spacing.lg};
-  background: rgba(128, 131, 255, 0.05);
-  border: 1px solid rgba(192, 193, 255, 0.15);
+  background: rgba(209, 169, 84, 0.05);
+  border: 1px solid rgba(209, 169, 84, 0.15);
   border-radius: ${theme.radii.lg};
 `;
 
@@ -183,6 +183,23 @@ const StatusBadge = styled.div`
     border-radius: 50%;
     background: #4ade80;
     box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+  }
+`;
+
+const RagBadge = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.sm};
+  font-size: ${theme.fontSizes.sm};
+  font-weight: 700;
+  color: ${({ $active }) => ($active ? "#4ade80" : theme.colors.onSurfaceVariant)};
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: ${({ $active }) => ($active ? "#4ade80" : theme.colors.onSurfaceVariant)};
+    box-shadow: ${({ $active }) => ($active ? "0 0 8px rgba(74, 222, 128, 0.6)" : "none")};
   }
 `;
 
@@ -224,7 +241,7 @@ const OutlineBtn = styled.button`
 
   &:hover {
     background: ${theme.colors.surfaceContainerHighest};
-    border-color: rgba(192, 193, 255, 0.3);
+    border-color: rgba(209, 169, 84, 0.3);
   }
 `;
 
@@ -236,12 +253,12 @@ const ExportBtn = styled.button`
   border-radius: ${theme.radii.md};
   border: none;
   background: ${theme.colors.inversePrimary};
-  color: white;
+  color: #0d1917;
   font-size: ${theme.fontSizes.sm};
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(73, 75, 214, 0.3);
+  box-shadow: 0 4px 12px rgba(209, 169, 84, 0.3);
 
   .icon {
     font-family: "Material Symbols Outlined";
@@ -251,7 +268,7 @@ const ExportBtn = styled.button`
   &:hover {
     opacity: 0.9;
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(73, 75, 214, 0.4);
+    box-shadow: 0 6px 16px rgba(209, 169, 84, 0.4);
   }
 
   &:active {
@@ -267,7 +284,7 @@ const StoryList = styled.div`
 `;
 
 const StoryCard = styled.article`
-  background: rgba(30, 41, 59, 0.4);
+  background: rgba(22, 33, 31, 0.4);
   backdrop-filter: blur(12px);
   border: 1px solid ${theme.colors.outlineVariant};
   border-radius: ${theme.radii.xl};
@@ -277,7 +294,7 @@ const StoryCard = styled.article`
   transition: border-color 0.2s;
 
   &:hover {
-    border-color: rgba(192, 193, 255, 0.25);
+    border-color: rgba(209, 169, 84, 0.25);
   }
 `;
 
@@ -286,8 +303,8 @@ const CardHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: ${theme.spacing.lg};
-  background: rgba(11, 28, 48, 0.5);
-  border-bottom: 1px solid rgba(70, 69, 84, 0.3);
+  background: rgba(15, 27, 25, 0.5);
+  border-bottom: 1px solid rgba(28, 41, 38, 0.3);
 
   h3 {
     font-size: ${theme.fontSizes.xl};
@@ -326,6 +343,15 @@ const ComplexityBadge = styled.span`
       : "rgba(239, 68, 68, 0.2)"};
 `;
 
+const StoryCopyBtn = styled(IconBtn)`
+  color: ${({ $copied }) => ($copied ? "#0284c7" : theme.colors.onSurfaceVariant)};
+  background: ${({ $copied }) => ($copied ? "#dbeafe22" : "transparent")};
+
+  .icon {
+    font-size: 18px;
+  }
+`;
+
 const IncompleteTag = styled.span`
   font-size: ${theme.fontSizes.xs};
   font-weight: 700;
@@ -362,7 +388,7 @@ const CardGrid = styled.div`
   grid-template-columns: 1fr 1fr;
   gap: ${theme.spacing.lg};
   padding-top: ${theme.spacing.md};
-  border-top: 1px solid rgba(70, 69, 84, 0.3);
+  border-top: 1px solid rgba(28, 41, 38, 0.3);
 
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
@@ -435,68 +461,6 @@ const GherkinBlock = styled.div`
   .keyword-and { color: ${theme.colors.tertiary}; font-weight: 700; }
 `;
 
-// ─── RAG Comparison Toggle ────────────────────────────────
-const ComparisonToggle = styled.div`
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: ${theme.radii.lg};
-  overflow: hidden;
-`;
-
-const ToggleHeader = styled.button`
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: ${theme.spacing.md} ${theme.spacing.lg};
-  background: rgba(239, 68, 68, 0.05);
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s;
-
-  .left {
-    display: flex;
-    align-items: center;
-    gap: ${theme.spacing.sm};
-    font-size: ${theme.fontSizes.sm};
-    font-weight: 600;
-    color: #ef4444;
-  }
-
-  .chevron {
-    font-family: "Material Symbols Outlined";
-    font-size: 20px;
-    color: ${theme.colors.onSurfaceVariant};
-    transform: ${({ $open }) => ($open ? "rotate(180deg)" : "rotate(0)")};
-    transition: transform 0.2s;
-  }
-
-  &:hover {
-    background: rgba(239, 68, 68, 0.08);
-  }
-`;
-
-const ComparisonContent = styled.div`
-  padding: ${theme.spacing.lg};
-  background: rgba(239, 68, 68, 0.03);
-  border-top: 1px solid rgba(239, 68, 68, 0.1);
-  font-size: ${theme.fontSizes.sm};
-  color: ${theme.colors.onSurfaceVariant};
-  line-height: 1.7;
-
-  .warning {
-    display: flex;
-    align-items: center;
-    gap: ${theme.spacing.sm};
-    padding: ${theme.spacing.sm} ${theme.spacing.md};
-    background: rgba(239, 68, 68, 0.1);
-    border-radius: ${theme.radii.sm};
-    color: #ef4444;
-    font-weight: 600;
-    font-size: ${theme.fontSizes.xs};
-    margin-top: ${theme.spacing.md};
-  }
-`;
-
 // ─── Right Column ─────────────────────────────────────────
 const RightColumn = styled.aside`
   display: flex;
@@ -509,7 +473,7 @@ const RightColumn = styled.aside`
 `;
 
 const Panel = styled.div`
-  background: rgba(30, 41, 59, 0.4);
+  background: rgba(22, 33, 31, 0.4);
   border: 1px solid ${theme.colors.outlineVariant};
   border-radius: ${theme.radii.xl};
   padding: ${theme.spacing.lg};
@@ -549,21 +513,21 @@ const QuickActionBtn = styled.button`
       ? theme.colors.inversePrimary
       : "transparent"};
   color: ${({ $variant }) =>
-    $variant === "primary" ? "white" : theme.colors.onSurfaceVariant};
+    $variant === "primary" ? "#0d1917" : theme.colors.onSurfaceVariant};
   border: ${({ $variant }) =>
     $variant === "primary"
       ? "none"
       : `1px solid ${theme.colors.outlineVariant}`};
   box-shadow: ${({ $variant }) =>
-    $variant === "primary" ? "0 4px 12px rgba(73, 75, 214, 0.3)" : "none"};
+    $variant === "primary" ? "0 4px 12px rgba(209, 169, 84, 0.3)" : "none"};
 
   &:hover {
     opacity: 0.9;
     transform: translateY(-1px);
     color: ${({ $variant }) =>
-      $variant === "primary" ? "white" : theme.colors.onSurface};
+      $variant === "primary" ? "#0d1917" : theme.colors.onSurface};
     border-color: ${({ $variant }) =>
-      $variant === "primary" ? "none" : "rgba(192, 193, 255, 0.3)"};
+      $variant === "primary" ? "none" : "rgba(209, 169, 84, 0.3)"};
   }
 
   &:active {
@@ -573,14 +537,14 @@ const QuickActionBtn = styled.button`
 
 const RecentItem = styled.div`
   padding: ${theme.spacing.md};
-  background: rgba(16, 32, 52, 0.4);
-  border: 1px solid rgba(70, 69, 84, 0.15);
+  background: rgba(22, 33, 31, 0.4);
+  border: 1px solid rgba(28, 41, 38, 0.15);
   border-radius: ${theme.radii.md};
   cursor: pointer;
   transition: all 0.2s;
 
   &:hover {
-    border-color: rgba(192, 193, 255, 0.25);
+    border-color: rgba(209, 169, 84, 0.25);
   }
 
   .title {
@@ -631,7 +595,7 @@ const MobileStickyBar = styled.div`
   left: 0;
   right: 0;
   padding: ${theme.spacing.sm} ${theme.spacing.md};
-  background: rgba(11, 28, 48, 0.9);
+  background: rgba(15, 27, 25, 0.9);
   backdrop-filter: blur(12px);
   border-top: 1px solid ${theme.colors.outlineVariant};
   gap: ${theme.spacing.sm};
@@ -736,6 +700,7 @@ function parseStories(rawText) {
     return {
       id: index + 1,
       title: `User Story ${index + 1}`,
+      rawBlock: block.trim(),
       fullStatement,
       incomplete: hasValidTitle && !fullStatement,
       hasValidTitle,
@@ -766,7 +731,7 @@ const SourceItem = styled.div`
   gap: ${theme.spacing.sm};
   padding: 6px ${theme.spacing.sm};
   border-radius: ${theme.radii.md};
-  background: rgba(99, 102, 241, 0.05);
+  background: rgba(209, 169, 84, 0.05);
 
   .dot {
     width: 7px;
@@ -782,21 +747,22 @@ const SourceItem = styled.div`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 1;
+  }
+
+  .score {
+    font-size: ${theme.fontSizes.xs};
+    font-weight: 700;
+    color: #4ade80;
+    flex-shrink: 0;
   }
 `;
-
-// ─── Generic stories for comparison ──────────────────────
-const GENERIC_STORIES = `En tant qu'utilisateur, je veux me connecter afin d'accéder à mon compte.
-
-En tant qu'administrateur, je veux gérer les accès afin de contrôler les utilisateurs.
-
-En tant qu'utilisateur, je veux recevoir une facture afin de justifier mon achat.`;
 
 // ─── Component ────────────────────────────────────────────
 export default function Results({ brief = "", stories, ragChunks = [], onNewGeneration, onRegenerate, onNavigate, truncated = false, autoSaved = false }) {
   const [copied, setCopied] = useState(false);
+  const [copiedStoryId, setCopiedStoryId] = useState(null);
   const [showTrelloMsg, setShowTrelloMsg] = useState(false);
-  const [comparisonOpen, setComparisonOpen] = useState(false);
   const [recentGenerations, setRecentGenerations] = useState([]);
 
   const handleTrelloExport = () => {
@@ -815,6 +781,16 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
       await navigator.clipboard.writeText(stories);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // silent
+    }
+  };
+
+  const handleCopyStory = async (story) => {
+    try {
+      await navigator.clipboard.writeText(story.rawBlock);
+      setCopiedStoryId(story.id);
+      setTimeout(() => setCopiedStoryId(null), 2000);
     } catch {
       // silent
     }
@@ -853,14 +829,20 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
 
           {/* Action Bar */}
           <ActionBar>
-            <StatusBadge>
-              <span className="dot" />
-              ✦ Génération par IA terminée
-            </StatusBadge>
+            <div style={{ display: "flex", alignItems: "center", gap: theme.spacing.md, flexWrap: "wrap" }}>
+              <StatusBadge>
+                <span className="dot" />
+                ✦ Génération par IA terminée
+              </StatusBadge>
+              <RagBadge $active={ragChunks.length > 0}>
+                <span className="dot" />
+                {ragChunks.length > 0 ? "RAG actif" : "RAG non utilisé — US Générique"}
+              </RagBadge>
+            </div>
             <ActionBtns>
               <OutlineBtn onClick={handleCopy} $copied={copied}>
                 <span className="icon">{copied ? "done" : "content_copy"}</span>
-                {copied ? "Copié !" : "Copier"}
+                {copied ? "Copié !" : "Copier tout"}
               </OutlineBtn>
               <ExportBtn onClick={handleTrelloExport}>
                 <span className="icon">view_kanban</span>
@@ -897,6 +879,14 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
                       <ComplexityBadge $level={story.complexity}>
                         {story.complexity}
                       </ComplexityBadge>
+                      <StoryCopyBtn
+                        onClick={() => handleCopyStory(story)}
+                        $copied={copiedStoryId === story.id}
+                        title={copiedStoryId === story.id ? "Copié !" : "Copier cette user story"}
+                        aria-label={copiedStoryId === story.id ? "Copié" : "Copier cette user story"}
+                      >
+                        <span className="icon">{copiedStoryId === story.id ? "done" : "content_copy"}</span>
+                      </StoryCopyBtn>
                     </div>
                   </CardHeader>
 
@@ -927,9 +917,9 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
                         lineHeight: 1.7,
                         fontStyle: "italic",
                         padding: "12px 16px",
-                        background: "rgba(16, 32, 52, 0.4)",
+                        background: "rgba(22, 33, 31, 0.4)",
                         borderRadius: "8px",
-                        borderLeft: "3px solid rgba(192, 193, 255, 0.2)"
+                        borderLeft: "3px solid rgba(209, 169, 84, 0.2)"
                       }}>
                         {story.description}
                       </p>
@@ -1002,27 +992,6 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
               </StoryCard>
             )}
           </StoryList>
-
-          {/* Comparison Toggle */}
-          <ComparisonToggle>
-            <ToggleHeader
-              $open={comparisonOpen}
-              onClick={() => setComparisonOpen(!comparisonOpen)}
-            >
-              <div className="left">
-                🔴 Sans RAG — voir la version générique (moins précise)
-              </div>
-              <span className="chevron">expand_more</span>
-            </ToggleHeader>
-            {comparisonOpen && (
-              <ComparisonContent>
-                <div style={{ whiteSpace: "pre-wrap" }}>{GENERIC_STORIES}</div>
-                <div className="warning">
-                  ❌ Aucun vocabulaire métier · Aucune règle de gestion · Identique à du ChatGPT générique
-                </div>
-              </ComparisonContent>
-            )}
-          </ComparisonToggle>
         </LeftColumn>
 
         {/* ── Right Column ── */}
@@ -1049,12 +1018,22 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
             <Panel>
               <PanelLabel>Sources utilisées</PanelLabel>
               <SourcesList>
-                {[...new Set(ragChunks.map((c) => c.filename))].map((filename) => (
-                  <SourceItem key={filename}>
-                    <span className="dot" />
-                    <span className="name" title={filename}>{filename}</span>
-                  </SourceItem>
-                ))}
+                {Object.values(
+                  ragChunks.reduce((acc, c) => {
+                    if (!acc[c.filename] || c.score > acc[c.filename].score) {
+                      acc[c.filename] = { filename: c.filename, score: c.score };
+                    }
+                    return acc;
+                  }, {})
+                )
+                  .sort((a, b) => b.score - a.score)
+                  .map(({ filename, score }) => (
+                    <SourceItem key={filename}>
+                      <span className="dot" />
+                      <span className="name" title={filename}>{filename}</span>
+                      <span className="score">{score}%</span>
+                    </SourceItem>
+                  ))}
               </SourcesList>
             </Panel>
           )}
