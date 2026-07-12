@@ -3,6 +3,19 @@
 
 ---
 
+## Session RAG-TOGGLE (2026-07-12) — Toggle "Générer sans RAG"
+
+**Branche :** `feat/polish`
+
+**Objectif :** Permettre à un visiteur de désactiver volontairement le RAG pour une génération (test d'US génériques), même sur un brief par ailleurs pertinent. Spec : `docs/superpowers/specs/2026-07-12-rag-toggle-design.md`.
+
+### Réalisé
+- [x] Checkbox "Générer sans RAG (US génériques)" dans `Forge.jsx`, entre le textarea et le bouton Générer. State local `ragDisabled` (non persisté), saute l'appel `retrieveContext()` dans `handleSubmit` quand coché.
+- [x] Suppression du panneau de comparaison statique dans `Results.jsx` (`GENERIC_STORIES`, `ComparisonToggle`/`ToggleHeader`/`ComparisonContent`) — affichait toujours les 3 mêmes US codées en dur, jamais le vrai brief.
+- [x] Tests : 2 nouveaux tests dans `src/test/Forge.test.jsx` (comportement par défaut + toggle coché).
+
+---
+
 ## Session PALETTE (2026-07-12) — Application de "Pétrole & or"
 
 **Branche :** `feat/polish` (non commité à la fin de la session — à valider avant commit)
