@@ -228,8 +228,6 @@ StoryForge n'est pas un wrapper ChatGPT. C'est un outil de Product Owner conçu 
 
 Le RAG est ce qui fait la différence : un client alimente l'outil avec ses docs métier, et les user stories générées utilisent **son vocabulaire, ses règles de gestion, ses contraintes techniques** — pas des généricités.
 
-C'est exactement le pattern qu'une entreprise a vendu 20 000€ pour automatiser les réponses aux appels d'offres. StoryForge applique la même approche à la rédaction de specs produit.
-
 ---
 
 ## Auteur
