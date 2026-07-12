@@ -1,5 +1,56 @@
 # StoryForge AI — Contexte actif
-*Mis à jour le 2026-07-08*
+*Mis à jour le 2026-07-12*
+
+---
+
+## Session PALETTE (2026-07-12) — Application de "Pétrole & or"
+
+**Branche :** `feat/polish` (non commité à la fin de la session — à valider avant commit)
+
+Applique la palette "Pétrole & or" validée en session POLISH (voir section ci-dessous), qui n'avait pas encore été appliquée au code.
+
+### Réalisé
+- [x] `src/theme.js` : remplacement complet des tokens `colors`, `gradients`, `shadows`, et des helpers `glassCard`/`indigoGradient`/`primaryGradient`.
+- [x] Remplacement de tous les hex/rgba en dur dans les 10 fichiers identifiés (`Results.jsx`, `Forge.jsx`, `Dashboard.jsx`, `Library.jsx`, `Settings.jsx`, `Sidebar.jsx`, `BottomNav.jsx`, `StoriesOutput.jsx`, `BriefInput.jsx`, `ErrorBoundary.jsx`) via substitution mécanique des triplets RGB exacts (chaque rgba en dur correspondait à un token nommé de `theme.js`, donc mapping 1:1 sans ambiguïté).
+- [x] Couleurs sémantiques laissées inchangées (confirmé par grep) : `success`/`#4ade80`, `error`/`#ffb4ab`/`#ef4444`, `amber`/`#fbbf24`, le jaune `#ca8a04`/`rgba(234,179,8,…)` (bannière), le bleu Trello `#0284c7`/`#dbeafe`, `#1a0500` (texte sur bouton `error`), et toute la palette d'`ErrorBoundary.jsx`.
+- [x] Tests Vitest : 29/29 passent, aucun test ne référence de hex en dur.
+- [x] Vérification visuelle via `vite dev` + Playwright (Dashboard, Forge) : rendu cohérent, badges à fond plein lisibles.
+
+### Tokens dérivés (non fournis explicitement par la palette validée à 5 couleurs — à confirmer si besoin d'ajustement)
+
+| Token | Valeur | Méthode |
+|---|---|---|
+| `surfaceContainerLow` | `#0f1b19` | Interpolation HSL entre fond page et fond carte, en conservant la forme (proportions) de l'échelle à 6 niveaux de l'ancienne palette "Forge à braises" |
+| `surfaceContainer` | `#16211f` | = fond carte (donné), correspond à l'usage le plus fréquent ("card") dans le code |
+| `surfaceContainerHigh` | `#1a2624` | Extrapolation HSL (même méthode) |
+| `surfaceContainerHighest` | `#1d2b28` | Extrapolation HSL (même méthode) |
+| `surfaceBright` | `#1e302d` | Extrapolation HSL (même méthode) |
+| `onSurfaceVariant` | `#7fae9d` | Réutilise l'accent secondaire tel quel — la palette validée le décrit comme "labels secondaires, icônes RAG", exactement l'usage de ce token dans le code (62 usages) |
+| `tertiary` | `#a881bb` (violet-mauve) | Hue dérivée en relation triadique avec l'or (H≈41°) et le vert d'eau (H≈158°) → H≈281°, L/S calés pour rester dans la famille de luminosité des 2 accents validés. Sert au 3ᵉ surlignage Gherkin ("Et") et à l'icône de statut "loading" dans Forge |
+| `outline` | `#6e8782` | Teinte neutre desaturée dérivée (même famille de teinte que le fond), pour texte tertiaire discret (séparateurs, icônes chevron/corbeille) |
+| `outlineVariant` | `#1c2926` | Interpolation HSL, bordures subtiles |
+
+### Ratios WCAG calculés
+
+| Paire | Ratio | Usage |
+|---|---|---|
+| `#eef2f0` (onSurface) sur `#0d1917` | 15.91:1 | validé session précédente |
+| `#eef2f0` sur `#16211f` | 14.62:1 | validé session précédente |
+| `#d1a954` (primary) sur `#0d1917` | 8.14:1 | validé session précédente |
+| `#d1a954` sur `#16211f` | 7.48:1 | validé session précédente |
+| `#7fae9d` (secondary / onSurfaceVariant) sur `#0d1917` | 7.23:1 | validé session précédente |
+| `#7fae9d` sur `#16211f` | 6.64:1 | validé session précédente |
+| `#7fae9d` (onSurfaceVariant) sur `#1e302d` (surfaceBright, le fond le plus clair) | 5.58:1 | nouveau — reste largement AA même sur la surface la moins contrastée |
+| `#0d1917` (onPrimary/onSecondary) sur `#d1a954` ou `#7fae9d` (fond plein) | 8.14:1 / 7.23:1 | règle critique respectée : texte foncé sur badge à fond plein accent |
+| `#a881bb` (tertiary, dérivé) sur `#0d1917` | 5.58:1 | AA |
+| `#a881bb` sur `#16211f` | 5.12:1 | AA |
+| `#6e8782` (outline, dérivé) sur `#0d1917` | ~4.67:1 | AA, usage non-critique (icônes/séparateurs) |
+| `#6e8782` sur `#16211f` | ~4.28:1 | légèrement sous AA texte normal — acceptable car jamais utilisé pour du texte de lecture, seulement icônes/séparateurs (seuil non-texte WCAG 1.4.11 = 3:1) |
+
+### Reste à faire
+- [ ] Confirmer les 3 tokens dérivés (`tertiary`, `outline`, `outlineVariant`) — pas de retour utilisateur négatif obtenu pendant cette session, à valider au prochain passage si un ajustement visuel est souhaité.
+- [ ] Commit (pas fait automatiquement, à la demande explicite de l'utilisateur uniquement).
+- [ ] Tester Library/Results avec de vraies données sauvegardées (Dashboard était vide pendant le test visuel — pas de génération en historique sur ce profil de test).
 
 ---
 

@@ -42,7 +42,7 @@ const CopyButton = styled.button`
   font-family: "Plus Jakarta Sans", sans-serif;
   cursor: pointer;
   transition: all 0.2s;
-  color: #e2793d;
+  color: #d1a954;
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -53,7 +53,7 @@ const CopyButton = styled.button`
 
   &:hover {
     background: var(--copy-hover-bg);
-    border-color: #e2793d;
+    border-color: #d1a954;
   }
 
   &.copied {
@@ -90,7 +90,7 @@ const StoryCard = styled.div`
 
   h2 {
     font-size: 1.1rem;
-    color: #e2793d;
+    color: #d1a954;
     margin-top: 24px;
     margin-bottom: 8px;
   }
@@ -132,7 +132,7 @@ const StoryCard = styled.div`
   }
 
   em {
-    color: #e2793d;
+    color: #d1a954;
     font-style: italic;
   }
 
@@ -145,7 +145,7 @@ const StoryCard = styled.div`
   code {
     display: block;
     background: var(--code-bg);
-    border-left: 3px solid #e2793d;
+    border-left: 3px solid #d1a954;
     padding: 12px 16px;
     border-radius: 4px;
     font-size: 0.85rem;

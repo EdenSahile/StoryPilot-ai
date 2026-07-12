@@ -33,7 +33,7 @@ const TopBar = styled.header`
   align-items: center;
   height: 64px;
   padding: 0 ${theme.spacing.lg};
-  background: rgba(23, 19, 16, 0.85);
+  background: rgba(13, 25, 23, 0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid ${theme.colors.outlineVariant};
 `;
@@ -162,7 +162,7 @@ const StatCard = styled.div`
   }
 
   &:hover {
-    border-color: rgba(226, 121, 61, 0.3);
+    border-color: rgba(209, 169, 84, 0.3);
   }
 
   .label {
@@ -277,7 +277,7 @@ const GenerationCard = styled.div`
 
   &:hover {
     background: ${theme.colors.surfaceContainer};
-    border-color: rgba(226, 121, 61, 0.2);
+    border-color: rgba(209, 169, 84, 0.2);
 
     &::before {
       width: 3px;
@@ -349,7 +349,7 @@ const DashDeleteBtn = styled.button`
 const CTACard = styled.div`
   height: 100%;
   min-height: 280px;
-  background: rgba(66, 54, 40, 0.3);
+  background: rgba(29, 43, 40, 0.3);
   border: 2px dashed ${theme.colors.outlineVariant};
   border-radius: 24px;
   display: flex;
@@ -363,7 +363,7 @@ const CTACard = styled.div`
   cursor: pointer;
 
   &:hover {
-    border-color: rgba(226, 121, 61, 0.4);
+    border-color: rgba(209, 169, 84, 0.4);
 
     .cta-icon {
       transform: scale(1.1);
@@ -374,13 +374,13 @@ const CTACard = styled.div`
     width: 64px;
     height: 64px;
     border-radius: 16px;
-    background: rgba(226, 121, 61, 0.1);
+    background: rgba(209, 169, 84, 0.1);
     display: flex;
     align-items: center;
     justify-content: center;
     color: ${theme.colors.primary};
     transition: transform 0.2s;
-    box-shadow: 0 0 20px rgba(226, 121, 61, 0.2);
+    box-shadow: 0 0 20px rgba(209, 169, 84, 0.2);
 
     .icon {
       font-family: "Material Symbols Outlined";
@@ -418,8 +418,8 @@ const GenerateBtn = styled.button`
   padding: ${theme.spacing.sm} ${theme.spacing.xl};
   border-radius: ${theme.radii.full};
   border: none;
-  background: linear-gradient(135deg, #e2793d, #b8a072);
-  color: #171310;
+  background: linear-gradient(135deg, #d1a954, #7fae9d);
+  color: #0d1917;
   font-weight: 700;
   font-size: ${theme.fontSizes.md};
   cursor: pointer;
@@ -427,7 +427,7 @@ const GenerateBtn = styled.button`
   align-items: center;
   gap: ${theme.spacing.sm};
   transition: all 0.2s;
-  box-shadow: 0 4px 20px rgba(226, 121, 61, 0.3);
+  box-shadow: 0 4px 20px rgba(209, 169, 84, 0.3);
 
   .icon {
     font-family: "Material Symbols Outlined";
@@ -435,7 +435,7 @@ const GenerateBtn = styled.button`
   }
 
   &:hover {
-    box-shadow: 0 8px 28px rgba(226, 121, 61, 0.45);
+    box-shadow: 0 8px 28px rgba(209, 169, 84, 0.45);
     transform: translateY(-1px);
   }
 
@@ -518,11 +518,11 @@ export default function Dashboard({ onNavigate }) {
               style={{
                 width: "100%",
                 height: "100%",
-                background: "linear-gradient(135deg, #e2793d, #b8a072)",
+                background: "linear-gradient(135deg, #d1a954, #7fae9d)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#171310",
+                color: "#0d1917",
                 fontWeight: 700,
                 fontSize: "14px",
               }}
