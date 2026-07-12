@@ -3,51 +3,56 @@
 
 export const theme = {
   colors: {
-    // Backgrounds
-    background: "#031427",
-    surface: "#031427",
-    surfaceContainerLowest: "#000f21",
-    surfaceContainerLow: "#0b1c30",
-    surfaceContainer: "#102034",
-    surfaceContainerHigh: "#1b2b3f",
-    surfaceContainerHighest: "#26364a",
-    surfaceBright: "#2a3a4f",
+    // Backgrounds — "Pétrole & or" (échelle dérivée par interpolation HSL entre
+    // les 2 ancrages validés : fond page #0d1917 et fond carte #16211f)
+    background: "#0d1917",
+    surface: "#0d1917",
+    surfaceContainerLowest: "#0d1917",
+    surfaceContainerLow: "#0f1b19",
+    surfaceContainer: "#16211f",
+    surfaceContainerHigh: "#1a2624",
+    surfaceContainerHighest: "#1d2b28",
+    surfaceBright: "#1e302d",
 
-    // Primary (indigo)
-    primary: "#c0c1ff",
-    primaryContainer: "#8083ff",
-    onPrimary: "#1000a9",
-    onPrimaryContainer: "#0d0096",
-    inversePrimary: "#494bd6",
+    // Primary (accent or)
+    primary: "#d1a954",
+    primaryContainer: "#d1a954",
+    onPrimary: "#0d1917",
+    onPrimaryContainer: "#0d1917",
+    inversePrimary: "#d1a954",
 
-    // Secondary (violet)
-    secondary: "#d0bcff",
-    secondaryContainer: "#571bc1",
-    onSecondary: "#3c0091",
-    onSecondaryContainer: "#c4abff",
+    // Secondary (vert d'eau)
+    secondary: "#7fae9d",
+    secondaryContainer: "#7fae9d",
+    onSecondary: "#0d1917",
+    onSecondaryContainer: "#0d1917",
 
-    // Tertiary
-    tertiary: "#bec6e0",
+    // Tertiary (violet-mauve — non spécifié par la palette validée, dérivé pour le
+    // 3e surlignage Gherkin "Et" ; à confirmer)
+    tertiary: "#a881bb",
 
     // Surface text
-    onSurface: "#d3e4fe",
-    onSurfaceVariant: "#c7c4d7",
-    onBackground: "#d3e4fe",
+    onSurface: "#eef2f0",
+    // Réutilise l'accent secondaire : la palette validée décrit #7fae9d comme
+    // "labels secondaires, icônes RAG", ce qui correspond exactement à l'usage
+    // de onSurfaceVariant dans le code (texte muté/secondaire).
+    onSurfaceVariant: "#7fae9d",
+    onBackground: "#eef2f0",
 
-    // Borders
-    outline: "#908fa0",
-    outlineVariant: "#464554",
+    // Borders (dérivés, non spécifiés par la palette validée ; à confirmer)
+    outline: "#6e8782",
+    outlineVariant: "#1c2926",
 
-    // Semantic
+    // Semantic (inchangés — conventions universelles, indépendantes de l'accent de marque)
     error: "#ffb4ab",
     success: "#4ade80",
     amber: "#fbbf24",
   },
 
   gradients: {
-    primary: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-    primaryContainer: "linear-gradient(135deg, #8083ff, #571bc1)",
-    subtle: "linear-gradient(135deg, #494bd6, #571bc1)",
+    primary: "linear-gradient(135deg, #d1a954, #7fae9d)",
+    primaryContainer: "linear-gradient(135deg, #d1a954, #7fae9d)",
+    subtle: "linear-gradient(135deg, #d1a954, #7fae9d)",
   },
 
   fonts: {
@@ -85,8 +90,8 @@ export const theme = {
   },
 
   shadows: {
-    primary: "0 0 20px rgba(99, 102, 241, 0.15)",
-    primaryStrong: "0 8px 32px rgba(99, 102, 241, 0.25)",
+    primary: "0 0 20px rgba(209, 169, 84, 0.15)",
+    primaryStrong: "0 8px 32px rgba(209, 169, 84, 0.25)",
     card: "0 2px 12px rgba(0, 0, 0, 0.3)",
   },
 
@@ -97,17 +102,17 @@ export const theme = {
   },
 };
 
-// Helpers CSS réutilisables
+// Helpers CSS réutilisables (non utilisés actuellement dans le code)
 export const glassCard = `
-  background: rgba(30, 41, 59, 0.4);
+  background: rgba(22, 33, 31, 0.4);
   backdrop-filter: blur(12px);
-  border: 1px solid #334155;
+  border: 1px solid #1c2926;
 `;
 
 export const indigoGradient = `
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #d1a954, #7fae9d);
 `;
 
 export const primaryGradient = `
-  background: linear-gradient(135deg, #8083ff, #571bc1);
+  background: linear-gradient(135deg, #d1a954, #7fae9d);
 `;
