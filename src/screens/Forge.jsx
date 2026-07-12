@@ -309,6 +309,24 @@ const RestoreHint = styled.div`
   }
 `;
 
+const RagToggleRow = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: ${theme.spacing.sm};
+  color: ${theme.colors.onSurfaceVariant};
+  font-size: ${theme.fontSizes.xs};
+  cursor: pointer;
+  user-select: none;
+
+  input[type="checkbox"] {
+    accent-color: ${theme.colors.primary};
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+`;
+
 const GenerateBtn = styled.button`
   display: flex;
   align-items: center;
@@ -1053,6 +1071,7 @@ export default function Forge({
 }) {
   const [status, setStatus] = useState("idle"); // 'idle' | 'loading' | 'success' | 'error'
   const [error, setError] = useState(null);
+  const [ragDisabled, setRagDisabled] = useState(false);
   const [ragOpen, setRagOpen] = useState(true);
   const [dragOver, setDragOver] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(null);
@@ -1085,12 +1104,14 @@ export default function Forge({
 
     let contextChunks = [];
 
-    try {
-      const ragResult = await retrieveContext(brief);
-      contextChunks = ragResult.chunks || [];
-      setRagChunks(contextChunks);
-    } catch (err) {
-      console.warn("RAG retrieval failed, generating without context:", err);
+    if (!ragDisabled) {
+      try {
+        const ragResult = await retrieveContext(brief);
+        contextChunks = ragResult.chunks || [];
+        setRagChunks(contextChunks);
+      } catch (err) {
+        console.warn("RAG retrieval failed, generating without context:", err);
+      }
     }
 
     let hasError = false;
@@ -1265,6 +1286,15 @@ export default function Forge({
                 Brief précédent restauré — cliquez sur Générer pour relancer.
               </RestoreHint>
             )}
+
+            <RagToggleRow>
+              <input
+                type="checkbox"
+                checked={ragDisabled}
+                onChange={(e) => setRagDisabled(e.target.checked)}
+              />
+              Générer sans RAG (US génériques)
+            </RagToggleRow>
 
             <GenerateBtn
               onClick={handleSubmit}
