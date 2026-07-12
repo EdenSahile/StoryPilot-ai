@@ -17,17 +17,43 @@
 - [x] **Investigation streaming** : signalé "pas de streaming visible" par l'utilisateur — non reproductible après 3 tests propres (page neuve, Chrome, brief identique) : le "Streaming Result" apparaît bien à 4-7s et se met à jour jusqu'à la fin. Pas de bug trouvé côté code ; cause probablement ponctuelle/environnementale, non élucidée.
 - [x] **Palette "Forge à braises"** — remplacement complet de l'indigo/violet (`#6366f1`/`#8b5cf6`/etc., signature "généré par IA") par une palette charbon/braise/laiton dans `theme.js` + tous les hex/rgba en dur trouvés dans les composants (voir détail ci-dessous).
 
-### ⚠️ Palette non validée par l'utilisateur — probablement à refaire
+### ⚠️ Palette "Forge à braises" rejetée — remplacée par "Pétrole & or" (À APPLIQUER, pas encore fait)
 
-L'utilisateur a dit ne pas aimer le résultat après coup. **Ne pas repartir de zéro sur le processus de contraste** (le calculateur WCAG et la méthode de vérification restent valables), mais s'attendre à changer les valeurs hex. Repères pour la prochaine session :
+L'utilisateur n'a pas aimé "Forge à braises" (orange/olive, trop orange/marron). Nouveau choix validé : **"Pétrole & or"**. La palette ci-dessous n'est **pas encore appliquée au code** — c'est la tâche de la prochaine session.
 
-- Palette actuelle : fond `#171310`, carte `#2c241d`, carte alt `#1c1712`, texte `#f0e6d8`, accent orange `#e2793d`, accent olive `#b8a072`.
-- Piège découvert : un fond plein orange/olive avec texte blanc/crème échoue toujours le contraste AA (~2-3:1) — toujours utiliser un texte sombre (`#171310`) sur les fonds pleins (boutons CTA, avatar, gradients).
-- Piège découvert n°2 : un badge à fond teinté (rgba accent à faible alpha) **avec le texte de la même couleur que la teinte** perd du contraste quand l'alpha augmente (ex. hover). Plafonner ces fonds tintés à ~0.08 d'alpha.
-- Tokens sans valeur donnée par l'utilisateur, dérivés par Claude (à reconfirmer si la palette change) : `onSurfaceVariant`, `outline`, `outlineVariant`, `tertiary` (3ᵉ couleur pour le mot-clé Gherkin "Et" — jamais spécifiée).
-- `error`/`success`/`amber` laissés inchangés (sémantiques, indépendants de l'accent de marque) — probablement à garder tel quel même si la palette de marque change.
-- Fichiers touchés par la palette : `theme.js` + `Results.jsx`, `Forge.jsx`, `Dashboard.jsx`, `Library.jsx`, `Settings.jsx`, `Sidebar.jsx`, et par cohérence deux fichiers **morts/non utilisés par l'app réelle** : `StoriesOutput.jsx`, `BriefInput.jsx` (uniquement testés par leurs propres tests unitaires, jamais rendus — `App.jsx` utilise les écrans dans `src/screens/`, pas ces composants).
-- `src/index.css` **non touché** : système de theme CSS-variables légataire (gris-ardoise), utilisé seulement par les deux fichiers morts ci-dessus, jamais rendu.
+**Palette validée à appliquer :**
+- Fond page : `#0d1917`
+- Fond carte : `#16211f`
+- Accent or (badges, highlights, éléments interactifs) : `#d1a954`
+- Accent secondaire vert d'eau (labels secondaires, icônes RAG) : `#7fae9d`
+- Texte principal (body, descriptions) : `#eef2f0`
+
+**Contrastes WCAG validés :**
+| Paire | Ratio |
+|---|---|
+| `#eef2f0` sur `#0d1917` | 15.91:1 |
+| `#eef2f0` sur `#16211f` | 14.62:1 |
+| `#d1a954` sur `#0d1917` | 8.14:1 |
+| `#d1a954` sur `#16211f` | 7.48:1 |
+| `#7fae9d` sur `#0d1917` | 7.23:1 |
+| `#7fae9d` sur `#16211f` | 6.64:1 |
+
+**Règle critique (déjà apprise sur "Forge à braises", reconfirmée ici)** : sur un badge/pastille/bouton à **fond plein** rempli d'une couleur d'accent, le texte doit être `#0d1917` (foncé), jamais `#eef2f0` (clair sur `#d1a954` = 1.95:1, échec sévère). Un fond translucide/bordure seule peut garder le texte clair ou accent.
+
+**Tâches pour la prochaine session (données telles quelles par l'utilisateur) :**
+1. Localiser `src/theme.js` (tokens de couleur du projet).
+2. Remplacer les valeurs, avec des noms de tokens explicites (`--color-bg-page`, `--color-bg-card`, `--color-accent`, `--color-accent-secondary`, `--color-text-primary`, `--color-text-on-accent` — adapter à la convention `theme.colors.*` déjà en place plutôt que des CSS vars, `theme.js` n'utilise pas de CSS custom properties).
+3. Chercher tous les hex/rgba en dur dans les composants (cf. session précédente : `Results.jsx`, `Forge.jsx`, `Dashboard.jsx`, `Library.jsx`, `Settings.jsx`, `Sidebar.jsx`, `StoriesOutput.jsx`/`BriefInput.jsx` morts) et les remplacer par les tokens.
+4. Repérer spécifiquement les badges/pastilles à fond plein (`Badge`, `Pill`, `Tag`, composants de statut) et forcer `--color-text-on-accent` dessus ; fond translucide/bordure seule → texte peut rester clair/accent.
+5. Ne toucher qu'aux couleurs, aucune logique fonctionnelle.
+6. Calculer le ratio WCAG pour toute nouvelle paire introduite (hover, disabled, focus) avant de l'utiliser — ne pas inventer sans calcul.
+7. Lister les fichiers modifiés et les ratios des nouvelles paires à la fin.
+8. Ne pas assumer sur les couleurs non listées (ex: `tertiary` pour le mot-clé Gherkin "Et", `onSurfaceVariant`, `outline`/`outlineVariant`, `error`/`success`/`amber`) — redemander si ambigu, comme la session précédente l'a fait.
+
+**Pièges de contraste déjà identifiés sur la session précédente, toujours valables ici :**
+- Fond plein accent + texte clair → échec (voir règle critique ci-dessus).
+- Badge à fond teinté (rgba accent à faible alpha) **avec texte de la même couleur que la teinte** perd du contraste quand l'alpha augmente (ex. hover) — plafonner ces fonds tintés à ~0.08 d'alpha, vérifier au cas par cas avec le nouvel accent or `#d1a954` (le calcul dépendra de sa luminosité, différente de l'orange précédent).
+- `error`/`success`/`amber` restent probablement inchangés (sémantiques, indépendants de l'accent de marque).
 
 ---
 
