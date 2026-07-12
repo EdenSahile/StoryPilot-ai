@@ -461,68 +461,6 @@ const GherkinBlock = styled.div`
   .keyword-and { color: ${theme.colors.tertiary}; font-weight: 700; }
 `;
 
-// ─── RAG Comparison Toggle ────────────────────────────────
-const ComparisonToggle = styled.div`
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: ${theme.radii.lg};
-  overflow: hidden;
-`;
-
-const ToggleHeader = styled.button`
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: ${theme.spacing.md} ${theme.spacing.lg};
-  background: rgba(239, 68, 68, 0.05);
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s;
-
-  .left {
-    display: flex;
-    align-items: center;
-    gap: ${theme.spacing.sm};
-    font-size: ${theme.fontSizes.sm};
-    font-weight: 600;
-    color: #ef4444;
-  }
-
-  .chevron {
-    font-family: "Material Symbols Outlined";
-    font-size: 20px;
-    color: ${theme.colors.onSurfaceVariant};
-    transform: ${({ $open }) => ($open ? "rotate(180deg)" : "rotate(0)")};
-    transition: transform 0.2s;
-  }
-
-  &:hover {
-    background: rgba(239, 68, 68, 0.08);
-  }
-`;
-
-const ComparisonContent = styled.div`
-  padding: ${theme.spacing.lg};
-  background: rgba(239, 68, 68, 0.03);
-  border-top: 1px solid rgba(239, 68, 68, 0.1);
-  font-size: ${theme.fontSizes.sm};
-  color: ${theme.colors.onSurfaceVariant};
-  line-height: 1.7;
-
-  .warning {
-    display: flex;
-    align-items: center;
-    gap: ${theme.spacing.sm};
-    padding: ${theme.spacing.sm} ${theme.spacing.md};
-    background: rgba(239, 68, 68, 0.1);
-    border-radius: ${theme.radii.sm};
-    color: #ef4444;
-    font-weight: 600;
-    font-size: ${theme.fontSizes.xs};
-    margin-top: ${theme.spacing.md};
-  }
-`;
-
 // ─── Right Column ─────────────────────────────────────────
 const RightColumn = styled.aside`
   display: flex;
@@ -820,19 +758,11 @@ const SourceItem = styled.div`
   }
 `;
 
-// ─── Generic stories for comparison ──────────────────────
-const GENERIC_STORIES = `En tant qu'utilisateur, je veux me connecter afin d'accéder à mon compte.
-
-En tant qu'administrateur, je veux gérer les accès afin de contrôler les utilisateurs.
-
-En tant qu'utilisateur, je veux recevoir une facture afin de justifier mon achat.`;
-
 // ─── Component ────────────────────────────────────────────
 export default function Results({ brief = "", stories, ragChunks = [], onNewGeneration, onRegenerate, onNavigate, truncated = false, autoSaved = false }) {
   const [copied, setCopied] = useState(false);
   const [copiedStoryId, setCopiedStoryId] = useState(null);
   const [showTrelloMsg, setShowTrelloMsg] = useState(false);
-  const [comparisonOpen, setComparisonOpen] = useState(false);
   const [recentGenerations, setRecentGenerations] = useState([]);
 
   const handleTrelloExport = () => {
@@ -1062,27 +992,6 @@ export default function Results({ brief = "", stories, ragChunks = [], onNewGene
               </StoryCard>
             )}
           </StoryList>
-
-          {/* Comparison Toggle */}
-          <ComparisonToggle>
-            <ToggleHeader
-              $open={comparisonOpen}
-              onClick={() => setComparisonOpen(!comparisonOpen)}
-            >
-              <div className="left">
-                🔴 Sans RAG — voir la version générique (moins précise)
-              </div>
-              <span className="chevron">expand_more</span>
-            </ToggleHeader>
-            {comparisonOpen && (
-              <ComparisonContent>
-                <div style={{ whiteSpace: "pre-wrap" }}>{GENERIC_STORIES}</div>
-                <div className="warning">
-                  ❌ Aucun vocabulaire métier · Aucune règle de gestion · Identique à du ChatGPT générique
-                </div>
-              </ComparisonContent>
-            )}
-          </ComparisonToggle>
         </LeftColumn>
 
         {/* ── Right Column ── */}
