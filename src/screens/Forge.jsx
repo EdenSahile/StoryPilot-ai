@@ -309,21 +309,59 @@ const RestoreHint = styled.div`
   }
 `;
 
-const RagToggleRow = styled.label`
+const RagToggleBar = styled.div`
   display: flex;
+  justify-content: flex-end;
+`;
+
+const RagToggleRow = styled.label`
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: ${theme.spacing.sm};
   color: ${theme.colors.onSurfaceVariant};
   font-size: ${theme.fontSizes.xs};
+  font-weight: 600;
   cursor: pointer;
   user-select: none;
 
-  input[type="checkbox"] {
-    accent-color: ${theme.colors.primary};
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .track {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    width: 36px;
+    height: 20px;
+    border-radius: ${theme.radii.full};
+    background: ${theme.colors.surfaceContainerHighest};
+    border: 1px solid ${theme.colors.outlineVariant};
+    transition: background 0.2s;
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 1px;
+      left: 1px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: ${theme.colors.onSurfaceVariant};
+      transition: left 0.2s, background 0.2s;
+    }
+  }
+
+  input:checked + .track {
+    background: ${theme.colors.primary};
+  }
+
+  input:checked + .track::after {
+    left: 17px;
+    background: #0d1917;
   }
 `;
 
@@ -1263,6 +1301,18 @@ export default function Forge({
               ))}
             </ChipRow>
 
+            <RagToggleBar>
+              <RagToggleRow>
+                <input
+                  type="checkbox"
+                  checked={ragDisabled}
+                  onChange={(e) => setRagDisabled(e.target.checked)}
+                />
+                <span className="track" />
+                Générer sans RAG (US génériques)
+              </RagToggleRow>
+            </RagToggleBar>
+
             <TextareaWrapper>
               <StyledTextarea
                 placeholder="Décris ton besoin métier ici... (Ctrl+Entrée pour soumettre)"
@@ -1286,15 +1336,6 @@ export default function Forge({
                 Brief précédent restauré — cliquez sur Générer pour relancer.
               </RestoreHint>
             )}
-
-            <RagToggleRow>
-              <input
-                type="checkbox"
-                checked={ragDisabled}
-                onChange={(e) => setRagDisabled(e.target.checked)}
-              />
-              Générer sans RAG (US génériques)
-            </RagToggleRow>
 
             <GenerateBtn
               onClick={handleSubmit}
