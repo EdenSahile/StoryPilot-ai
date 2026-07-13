@@ -7,6 +7,8 @@ StoryPilot transforme un brief métier en user stories structurées avec critèr
 🔗 **[Démo live](https://storypilot-ai.vercel.app)**
 
 ---
+<!-- test workflow claude-pr-review v4 (token abonnement) -->
+
 
 ## Ce que fait StoryPilot
 
