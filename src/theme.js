@@ -33,10 +33,14 @@ export const theme = {
 
     // Surface text
     onSurface: "#eef2f0",
-    // Réutilise l'accent secondaire : la palette validée décrit #7fae9d comme
-    // "labels secondaires, icônes RAG", ce qui correspond exactement à l'usage
-    // de onSurfaceVariant dans le code (texte muté/secondaire).
-    onSurfaceVariant: "#7fae9d",
+    // Gris-teal neutre et désaturé (H169° S8% L68%), distinct de l'accent
+    // secondaire #7fae9d. onSurfaceVariant est utilisé ~150 fois dans le code
+    // pour du texte muté générique (nav, hints, sous-titres, placeholders) —
+    // réutiliser l'accent vert d'eau ici rendait quasiment tout le texte
+    // secondaire de l'app vert sur un fond déjà pétrole/vert foncé ("vert sur
+    // vert", signalé par l'utilisateur). #7fae9d reste réservé aux accents
+    // volontaires (mots-clés Gherkin, badges RAG).
+    onSurfaceVariant: "#a7b4b2",
     onBackground: "#eef2f0",
 
     // Borders (dérivés, non spécifiés par la palette validée ; à confirmer)
