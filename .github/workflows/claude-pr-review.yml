@@ -1,0 +1,64 @@
+name: Claude PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npx vitest run
+
+  claude-review:
+    name: Claude review
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Review this pull request against the conventions in CLAUDE.md
+            (never expose the Anthropic API key client-side, never return raw
+            error.message to the client per SEC-001, brief validated server-side
+            at 2000 chars, 30s timeout on Claude calls, max_tokens capped at 1000,
+            French system prompt/response). Check for correctness bugs, security
+            issues, and consistency with existing patterns in the codebase.
+
+            The `test` job already ran `npx vitest run` in CI before this step —
+            treat that as ground truth for whether the suite passes. Don't
+            re-run the full suite yourself; run a single focused test only if
+            you need to double check a specific concern.
+
+            Categorize findings as Critical / Important / Minor, same as this
+            project's /code-review skill would.
+
+            When you're done:
+            - If there are no Critical or Important findings, submit an
+              approving review: `gh pr review --approve --body "<short summary>"`.
+            - If there are Critical or Important findings, request changes:
+              `gh pr review --request-changes --body "<findings with file:line>"`.
+
+            Do not merge the PR yourself and do not push commits — your only
+            job is to leave the review verdict. Merging is handled separately
+            by branch protection + auto-merge once required checks pass.
