@@ -1,5 +1,48 @@
-# StoryForge AI — Contexte actif
-*Mis à jour le 2026-07-12*
+# StoryPilot AI — Contexte actif
+*Mis à jour le 2026-07-13*
+
+---
+
+## Session CI/PR-REVIEW (2026-07-13) — Toggle RAG, contraste, renommage, workflow Claude — EN COURS, bloqué sur l'installation GitHub App
+
+**Branche :** `feat/polish` (tout poussé sur `origin`, rien en attente). **PR ouverte : #26** `feat/polish` → `main` sur `github.com/EdenSahile/StoryPilot-ai`, auto-merge activé dessus, mais **bloquée** (voir "Où ça bloque" ci-dessous).
+
+### Réalisé cette session (tout committé + poussé, dans l'ordre)
+
+1. **Toggle "Générer sans RAG"** dans `Forge.jsx` — checkbox devenue un vrai bouton toggle (piste + curseur animés), déplacée en haut à droite du textarea (était en bas, peu visible). Suppression du faux panneau de comparaison statique dans `Results.jsx` (US codées en dur, jamais le vrai brief). Voir `docs/superpowers/specs/2026-07-12-rag-toggle-design.md` et `docs/superpowers/plans/2026-07-12-rag-toggle.md` pour le détail du design/plan (fait via brainstorming + subagent-driven-development).
+2. **Fix contraste** : `onSurfaceVariant` (texte muté générique, ~150 usages : nav, hints, sous-titres, placeholders) était réglé sur l'accent vert d'eau `#7fae9d` depuis la session palette précédente — ça rendait tout le texte secondaire vert sur un fond déjà pétrole/vert foncé ("vert sur vert" signalé par l'utilisateur). Remplacé par un gris-teal neutre `#a7b4b2` (contraste 8.40:1/7.71:1/6.48:1 sur les 3 fonds, meilleur qu'avant). Le bloc `ModeHint` (Démo Lumeo Boutique) et le libellé du toggle RAG sont passés de `onSurfaceVariant` à `onSurface` (blanc cassé) pour plus de lisibilité — demande explicite de l'utilisateur après un premier retour "pas assez clair".
+3. **Renommage StoryForge → StoryPilot** : le repo GitHub et l'URL Vercel ont été renommés côté utilisateur (`storypilot-ai.vercel.app`, `EdenSahile/StoryPilot-ai`). Renommé partout où affiché : titre page, sidebar, topbar, About Settings, `package.json`, README, `CLAUDE.md`, règle `.claude/rules/storypilot-api.md` (fichier renommé), fallback CORS dans `generate-stories.js`. Remote git local mis à jour. **Volontairement pas touché** : `context.md`/`HANDOFF.md`/anciens specs-plans (enregistrements historiques du nom à l'époque), et le nom technique de l'index Pinecone `storyforge` (ressource externe live, migration hors scope).
+4. **`index.html`** : `theme-color` et fond de secours pré-React étaient encore sur l'ancien indigo `#6366f1`/bleu marine `#031427` (jamais mis à jour depuis "Forge à braises"). Alignés sur `#0d1917` (fond Pétrole & or actuel).
+5. **Workflow CI `.github/workflows/claude-pr-review.yml`** (nouveau) : job `test` (npm ci + vitest, check de statut requis) + job `claude-review` (anthropics/claude-code-action revoit le diff selon `CLAUDE.md`, censé soumettre `gh pr review --approve` ou `--request-changes`). Objectif : que Claude review + approuve les PR automatiquement, combiné à une branch protection rule sur `main` (1 review requise + check "Tests" requis) + auto-merge GitHub natif.
+
+### Bug npm résolu en cours de route (important si ça revient)
+
+`npm ci` échouait en CI avec deux erreurs successives, toutes deux dues à un **`package-lock.json` corrompu**, pas au code :
+1. D'abord "Missing: esbuild@0.28.1 from lock file" — lockfile désynchronisé, probablement séquelle du `npm install --package-lock-only` lancé pendant le renommage.
+2. Puis "EBADPLATFORM @esbuild/netbsd-arm64@0.28.1" après une 1ère régénération — cause réelle : **npm 11.17 (bundled avec Node 26 sur cette machine) a un bug** qui marque certains paquets optionnels imbriqués (la famille `esbuild@0.28.1` que `vitest` embarque en interne, distincte du `esbuild@0.21.5` de `vite@5`) comme `"extraneous": true` sans le flag `"optional"` — `npm ci` les traite alors comme requis au lieu de les ignorer sur une plateforme incompatible.
+   - **Fix : régénérer le lockfile avec npm 10**, pas npm 11 : `npm_config_cache=/tmp/xxx npx -y npm@10 install`, puis vérifier `grep -c '"extraneous": true' package-lock.json` → doit être bas/cohérent avec les siblings qui ont bien `optional: true`. Toujours valider avec `npm ci` dans un répertoire isolé avant de committer.
+   - Pendant le dépannage, `brew install node@22` a cassé le `node` principal (dylib `simdjson` incompatible) — `brew reinstall node` a réparé (a fait remonter à Node 26.5.0 au passage).
+   - Le cache npm partagé (`~/.npm`) contient des fichiers root-owned (vieux bug npm) qui bloquent régulièrement les commandes — contournement systématique avec `--cache /tmp/xxx` ou `npm_config_cache=...`. L'utilisateur a tenté `sudo chown -R $(id -u):$(id -g) ~/.npm` mais a eu une erreur suspecte ("killall: unknown signal R") suggérant un alias/correction shell qui interfère — **non résolu, non bloquant** (juste contourner avec un cache temp).
+
+### Où ça bloque — PROCHAINE ÉTAPE
+
+Le workflow tourne bien techniquement (jobs `test` et `claude-review` passent tous les deux au vert), **mais Claude ne soumet jamais de review formelle** (`gh pr review --approve`) — GitHub affiche toujours "No reviews — at least 1 approving review is required", donc la PR reste bloquée malgré auto-merge activé.
+
+Chronologie des erreurs déjà corrigées sur ce même workflow (pour ne pas les redécouvrir) :
+1. `id-token: write` manquant dans `permissions:` → ajouté (commit `74dd4b6`), a résolu "Unable to get ACTIONS_ID_TOKEN_REQUEST_URL".
+2. Ensuite : "Claude Code is not installed on this repository" → l'utilisateur a installé l'app partagée `github.com/apps/claude`, mais a été redirigé vers une page claude.ai "paramètres de l'organisation — Claude Team/Enterprise requis" (probablement un compte Claude Team lié qui route l'install au mauvais endroit, pas forcément un vrai blocage).
+3. Après un "Re-run failed jobs", le job est passé vert — mais toujours aucune review soumise. Hypothèse non confirmée : l'app partagée `claude` n'a pas la permission "Pull requests: write" dans son scope par défaut (fixé par Anthropic, pas configurable par l'utilisateur à l'installation).
+
+**Piste essayée puis abandonnée** (rejetée par l'utilisateur car trop compliquée) : créer une GitHub App personnelle dédiée (`actions/create-github-app-token` + secrets `APP_ID`/`APP_PRIVATE_KEY`) pour garantir le scope "Pull requests: write". L'edit du workflow a été rejetée par l'utilisateur.
+
+**Décision prise en fin de session** : au lieu de bricoler manuellement, utiliser le chemin officiel intégré : lancer `/install-github-app` directement dans Claude Code (CLI), qui gère l'installation de l'app + le fichier workflow + le secret en une fois, de façon garantie compatible. C'est une commande interactive (OAuth GitHub) que l'utilisateur doit lancer lui-même.
+
+**À faire à la reprise :**
+1. Lancer `/install-github-app` dans Claude Code, suivre les prompts.
+2. Comparer ce que ça génère à `.github/workflows/claude-pr-review.yml` existant — probablement à remplacer/fusionner plutôt qu'à garder les deux.
+3. Une fois l'app correctement installée avec le bon scope, re-tester sur la PR #26 (repush un commit vide ou "Re-run jobs") et vérifier que "Reviewers" affiche enfin une review de Claude.
+4. Si ça marche : vérifier que l'auto-merge (déjà activé sur la PR #26) fusionne bien automatiquement une fois la review + le check "Tests" au vert.
+5. Rappel branch protection déjà configurée sur `main` (faite par l'utilisateur pendant cette session) : require 1 approving review + check "Tests" requis, "Allow auto-merge" activé au niveau repo.
 
 ---
 

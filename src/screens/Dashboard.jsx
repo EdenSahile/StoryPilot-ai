@@ -508,7 +508,7 @@ export default function Dashboard({ onNavigate }) {
   return (
     <PageWrapper>
       <TopBar>
-        <TopBarTitle>StoryForge AI</TopBarTitle>
+        <TopBarTitle>StoryPilot AI</TopBarTitle>
         <TopBarActions>
           <IconBtn>
             <span className="icon">dark_mode</span>

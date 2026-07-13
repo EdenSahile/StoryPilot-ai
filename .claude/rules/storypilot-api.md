@@ -3,7 +3,7 @@ paths:
   - "api/**"
 ---
 
-# Règles API StoryForge
+# Règles API StoryPilot
 
 - Ne jamais exposer la clé API Anthropic côté client, uniquement via variable d'environnement serveur
 - Toute requête vers Claude doit avoir un timeout de 30 secondes maximum
