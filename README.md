@@ -8,6 +8,7 @@ StoryPilot transforme un brief métier en user stories structurées avec critèr
 
 ---
 
+
 ## Ce que fait StoryPilot
 
 Un PO écrit un brief en langage naturel. StoryPilot génère instantanément des user stories complètes, prêtes à intégrer dans un backlog Jira/Linear :
