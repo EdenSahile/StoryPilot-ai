@@ -3,7 +3,36 @@
 
 ---
 
-## Session CI/PR-REVIEW (2026-07-13) — Toggle RAG, contraste, renommage, workflow Claude — EN COURS, bloqué sur l'installation GitHub App
+## Session CI/PR-REVIEW (2026-07-13) — Toggle RAG, contraste, renommage, workflow Claude — RÉSOLU
+
+**Branche :** `feat/polish`, mergée dans `main` via PR #26 (bypass admin, voir plus bas). Le workflow `claude-pr-review.yml` est pleinement fonctionnel depuis la fin de cette session : test → review Claude → approbation formelle → auto-merge natif GitHub, sur toute PR qui ne touche pas au fichier workflow lui-même.
+
+### Suite et résolution (même session, après la partie "EN COURS" ci-dessous)
+
+1. `/install-github-app` lancé avec succès après avoir dû installer + authentifier `gh` CLI (absent de la machine), avec les scopes `repo` puis `workflow` (ajouté via `gh auth refresh -h github.com -s repo,workflow`, sinon erreur "GitHub CLI is missing required permissions: workflow"). A créé le secret `CLAUDE_CODE_OAUTH_TOKEN` et proposé 2 workflows (`claude-code-review.yml`, `claude.yml`) — **non retenus** (redondants avec notre workflow existant), branche distante supprimée.
+2. **Découverte clé #1** : `claude-code-action` a une protection anti-triche intentionnelle — si le fichier workflow dans la PR diffère de celui sur `main`, l'action **skip silencieusement** son exécution ("Workflow validation failed... your workflow will begin working once you merge your PR"). Donc toute PR qui modifie `claude-pr-review.yml` ne peut jamais recevoir de review sur elle-même — normal, pas un bug. Implication pratique : chaque fix du workflow nécessite un bypass merge (`gh pr merge <n> --merge --admin`), et il faut tester sur une PR **suivante**, séparée, qui ne touche pas au fichier.
+3. **Découverte clé #2** : GitHub interdit nativement qu'un auteur approuve sa propre PR (tooltip UI : "Pull request authors can't approve their own pull requests") — restriction plateforme non contournable, indépendante des permissions admin/owner. D'où la nécessité du bypass admin pour merger la PR qui introduit le fix (personne ne peut l'approuver formellement). Les PR **suivantes** n'ont pas ce problème car c'est le bot `claude[bot]` (identité différente) qui approuve, pas l'auteur humain.
+4. **Découverte clé #3 (fausse piste)** : `claude_args: --allowedTools "Bash(gh pr review:*)"` avec seulement ce pattern → 8 refus de permission, review jamais soumise. Cause réelle : un seul pattern autorisé empêchait Claude d'explorer la PR (`gh pr diff`, `gh pr view`) via Bash. Un essai de syntaxe alternative (`Bash(gh pr review *)`, espace au lieu de deux-points) a cassé encore plus (crash instantané SDK). La syntaxe deux-points (`Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr review:*)`) est la bonne, confirmée par l'exemple officiel `anthropics/claude-code-action/examples/pr-review-comprehensive.yml`.
+5. **Découverte clé #4 (la vraie cause du dernier blocage)** : après le fix de syntaxe, les runs échouaient toujours, mais différemment (crash instantané, 1 tour, coût $0, 0 refus). Cause : le compte Anthropic derrière `secrets.ANTHROPIC_API_KEY` (la même clé pay-per-use que `api/generate-stories.js` en prod !) était à sec — "Your credit balance is too low" / solde impayé de 0,17$ affiché sur console.anthropic.com. **Problème d'architecture** : réutiliser la clé API prod pour la review CI fait consommer le même budget que la démo publique. **Fix définitif** : le workflow utilise maintenant `claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}` (token lié à l'abonnement Claude.ai de l'utilisateur, provisionné par `/install-github-app`), complètement découplé du budget de l'app en prod.
+6. **Validation end-to-end réussie** : PR de test #33 (petit commentaire HTML dans README, ne touchant pas au workflow) → `claude[bot]` a soumis une review `APPROVED` avec un résumé pertinent. PR non mergée (fermée sans merge, c'était juste un test) mais le flux est prouvé fonctionnel.
+7. **État final de `.github/workflows/claude-pr-review.yml`** sur `main` :
+   ```yaml
+   - uses: anthropics/claude-code-action@v1
+     with:
+       claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+       claude_args: |
+         --allowedTools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr review:*)"
+       prompt: | ...
+   ```
+8. **PR de nettoyage** : #27, #29, #31, #33 (tests intermédiaires, tous des commits README triviaux) fermées sans merge, branches locales et distantes supprimées.
+
+### Point d'attention pour la suite
+
+Le secret `ANTHROPIC_API_KEY` reste utilisé par l'app en prod (`api/generate-stories.js`) — le solde impayé (0,17$ au moment du diagnostic) doit être régularisé côté utilisateur sur console.anthropic.com sans quoi **la démo publique elle-même est cassée** (pas juste la CI). Vérifier que l'utilisateur a bien rechargé, ce n'était pas confirmé en fin de session.
+
+---
+
+## Session CI/PR-REVIEW (2026-07-13) — partie initiale (contexte historique, gardé pour référence)
 
 **Branche :** `feat/polish` (tout poussé sur `origin`, rien en attente). **PR ouverte : #26** `feat/polish` → `main` sur `github.com/EdenSahile/StoryPilot-ai`, auto-merge activé dessus, mais **bloquée** (voir "Où ça bloque" ci-dessous).
 
