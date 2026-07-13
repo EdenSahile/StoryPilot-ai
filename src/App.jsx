@@ -1,4 +1,4 @@
-// App.jsx — StoryForge AI v2
+// App.jsx — StoryPilot AI v2
 // Remplace l'App.jsx existant
 
 import { useState, useEffect, useRef } from "react";

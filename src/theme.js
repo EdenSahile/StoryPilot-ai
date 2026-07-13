@@ -1,4 +1,4 @@
-// theme.js — Design tokens StoryForge AI
+// theme.js — Design tokens StoryPilot AI
 // À importer dans tous les composants styled-components
 
 export const theme = {
