@@ -318,7 +318,7 @@ const RagToggleRow = styled.label`
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: ${theme.colors.onSurfaceVariant};
+  color: ${theme.colors.onSurface};
   font-size: ${theme.fontSizes.xs};
   font-weight: 600;
   cursor: pointer;
@@ -338,8 +338,8 @@ const RagToggleRow = styled.label`
     width: 36px;
     height: 20px;
     border-radius: ${theme.radii.full};
-    background: ${theme.colors.surfaceContainerHighest};
-    border: 1px solid ${theme.colors.outlineVariant};
+    background: ${theme.colors.surfaceBright};
+    border: 1px solid ${theme.colors.onSurfaceVariant};
     transition: background 0.2s;
 
     &::after {
@@ -350,7 +350,7 @@ const RagToggleRow = styled.label`
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: ${theme.colors.onSurfaceVariant};
+      background: ${theme.colors.onSurface};
       transition: left 0.2s, background 0.2s;
     }
   }
@@ -932,7 +932,7 @@ const DemoContext = styled.p`
 
 const ModeHint = styled.p`
   font-size: ${theme.fontSizes.sm};
-  color: ${theme.colors.onSurfaceVariant};
+  color: ${theme.colors.onSurface};
   line-height: 1.6;
   margin: 0;
   padding: ${theme.spacing.sm} ${theme.spacing.md};
@@ -941,8 +941,7 @@ const ModeHint = styled.p`
   border-radius: 0 ${theme.radii.sm} ${theme.radii.sm} 0;
 
   strong {
-    color: ${theme.colors.onSurface};
-    font-weight: 600;
+    font-weight: 700;
   }
 `;
 
