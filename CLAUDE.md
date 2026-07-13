@@ -1,4 +1,4 @@
-# StoryForge AI
+# StoryPilot AI
 
 Générateur de user stories à partir d'un brief métier, avec streaming en temps réel via l'API Claude.
 

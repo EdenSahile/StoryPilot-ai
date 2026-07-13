@@ -382,7 +382,7 @@ export default function Settings() {
             <AppIdentity>
               <div className="logo">auto_stories</div>
               <div className="meta">
-                <div className="name">StoryForge AI</div>
+                <div className="name">StoryPilot AI</div>
                 <div className="version">v2.0 — juin 2026</div>
               </div>
             </AppIdentity>

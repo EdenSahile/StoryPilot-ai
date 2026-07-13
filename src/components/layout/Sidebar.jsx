@@ -183,7 +183,7 @@ export default function Sidebar({ activeItem = "dashboard", onNavigate }) {
   return (
     <SidebarWrapper>
       <Logo>
-        <h1>StoryForge</h1>
+        <h1>StoryPilot</h1>
         <p>Docs métier → stories</p>
       </Logo>
 

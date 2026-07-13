@@ -1,16 +1,16 @@
-# StoryForge AI
+# StoryPilot AI
 
 **Générateur de user stories contextualisé par IA — pour les Product Owners qui veulent des specs précises, pas des généricités.**
 
-StoryForge transforme un brief métier en user stories structurées avec critères d'acceptation, estimation de complexité et scénarios Gherkin multi-cas — le tout généré par Claude en streaming temps réel, optionnellement enrichi par une base de connaissance documentaire (RAG).
+StoryPilot transforme un brief métier en user stories structurées avec critères d'acceptation, estimation de complexité et scénarios Gherkin multi-cas — le tout généré par Claude en streaming temps réel, optionnellement enrichi par une base de connaissance documentaire (RAG).
 
-🔗 **[Démo live](https://story-forge-ai-blond.vercel.app)**
+🔗 **[Démo live](https://storypilot-ai.vercel.app)**
 
 ---
 
-## Ce que fait StoryForge
+## Ce que fait StoryPilot
 
-Un PO écrit un brief en langage naturel. StoryForge génère instantanément des user stories complètes, prêtes à intégrer dans un backlog Jira/Linear :
+Un PO écrit un brief en langage naturel. StoryPilot génère instantanément des user stories complètes, prêtes à intégrer dans un backlog Jira/Linear :
 
 - **Statement** structuré : En tant que / Je veux / Afin de
 - **Description métier** : contexte fonctionnel détaillé
@@ -20,7 +20,7 @@ Un PO écrit un brief en langage naturel. StoryForge génère instantanément de
 
 Le tout arrive en streaming — l'utilisateur voit la génération en temps réel.
 
-Si des documents métier ont été indexés dans la base de connaissance, StoryForge récupère automatiquement les passages pertinents (RAG) et les injecte dans le prompt : les stories générées réutilisent alors le vocabulaire, les règles de gestion et les contraintes réelles du client, plutôt que des généralités. Un toggle permet de désactiver ce comportement pour une génération donnée et forcer une sortie générique — utile pour comparer, ou pour tester rapidement sans dépendre de la base de connaissance.
+Si des documents métier ont été indexés dans la base de connaissance, StoryPilot récupère automatiquement les passages pertinents (RAG) et les injecte dans le prompt : les stories générées réutilisent alors le vocabulaire, les règles de gestion et les contraintes réelles du client, plutôt que des généralités. Un toggle permet de désactiver ce comportement pour une génération donnée et forcer une sortie générique — utile pour comparer, ou pour tester rapidement sans dépendre de la base de connaissance.
 
 ---
 
@@ -131,8 +131,8 @@ Le déploiement public désactive l'upload, l'indexation et la suppression de do
 ## Installation
 
 ```bash
-git clone https://github.com/EdenSahile/StoryForgeAI.git
-cd StoryForgeAI
+git clone https://github.com/EdenSahile/StoryPilot-ai.git
+cd StoryPilot-ai
 npm install
 ```
 
@@ -224,7 +224,7 @@ Le rate limiting (`api/generate-stories.js`) utilise une `Map` en mémoire, qui 
 
 ## Pourquoi ce projet
 
-StoryForge n'est pas un wrapper ChatGPT. C'est un outil de Product Owner conçu par une PO.
+StoryPilot n'est pas un wrapper ChatGPT. C'est un outil de Product Owner conçu par une PO.
 
 Le RAG est ce qui fait la différence : un client alimente l'outil avec ses docs métier, et les user stories générées utilisent **son vocabulaire, ses règles de gestion, ses contraintes techniques** — pas des généricités.
 
