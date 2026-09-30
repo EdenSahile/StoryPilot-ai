@@ -36,3 +36,6 @@ docs/ci-claude-pr-review-workflow.md
 # Playwright
 /playwright-report/
 /test-results/
+context.md
+HANDOFF.md
+PREP-ENTRETIEN-STORYPILOT.md
