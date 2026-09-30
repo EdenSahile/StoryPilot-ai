@@ -24,7 +24,11 @@ src/App.jsx                                # état global, orchestration
 - Clé API Anthropic jamais côté client (variable d'environnement serveur, jamais préfixée `VITE_`).
 - Ne jamais renvoyer `error.message` brut au client (SEC-001), message générique seulement.
 
-Le reste des contraintes serveur (timeout, max_tokens, rate limiter, upload, RAG, prompt système) est dans la rule `.claude/rules/storypilot-api.md`, chargée automatiquement en travaillant sous `api/`. L'anti-injection CSV est dans `.claude/rules/csv-export.md` (scopée `src/logic/`).
+Le reste des contraintes serveur (timeout, max_tokens, rate limiter, upload, RAG, prompt système) est dans la rule `.claude/rules/storypilot-api.md`, chargée automatiquement en travaillant sous `api/` ou `src/components/services/`. L'anti-injection CSV est dans `.claude/rules/csv-export.md` (scopée `src/logic/`).
+
+## Discipline de branche
+
+- **Avant de commencer tout travail (nouveau fichier, correction, feature), vérifier la branche courante (`git branch --show-current`).** Si elle est `main`, prévenir explicitement l'utilisateur avant de continuer ("Tu es sur `main`, tu veux que je crée une branche d'abord ?") plutôt que de commencer à modifier des fichiers dessus. Ne jamais créer une branche à sa place sans le dire.
 
 ## CI (`claude-pr-review.yml`)
 
