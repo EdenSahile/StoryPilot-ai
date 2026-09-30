@@ -1,64 +1,51 @@
 # StoryPilot AI
 
-Générateur de user stories à partir d'un brief métier, avec streaming en temps réel via l'API Claude.
+Générateur de user stories à partir d'un brief métier, avec streaming temps réel via l'API Claude.
 
 ## Stack
 
 - React 18+ avec Vite 6+ (bundler)
-- styled-components pour le CSS-in-JS
-- API Claude (Sonnet) appelée côté serveur via `api/generate-stories.js` (route serverless Vercel)
+- styled-components (CSS-in-JS)
+- API Claude (Sonnet) côté serveur via `api/generate-stories.js` (route serverless Vercel)
 - Tests : Vitest + @testing-library/react
 
 ## Architecture
 
 ```
-api/generate-stories.js     # route serverless, appelle Claude, gère rate limiting et CORS
-src/components/services/claudeService.js   # client streaming SSE, gère timeout et erreurs
-src/screens/Forge.jsx                      # formulaire de saisie du brief + upload RAG
-src/screens/Results.jsx                    # parsing et rendu des user stories générées
+api/generate-stories.js                    # route serverless : appelle Claude, rate limiting, CORS
+src/components/services/claudeService.js   # client streaming SSE : timeout, erreurs
+src/screens/Forge.jsx                      # formulaire brief + upload RAG
+src/screens/Results.jsx                    # parsing et rendu des user stories
 src/App.jsx                                # état global, orchestration
 ```
 
-## Règles non négociables
+## Sécurité (toujours)
 
-- Ne jamais exposer la clé API Anthropic côté client. Elle vit uniquement en variable d'environnement serveur (`ANTHROPIC_API_KEY`), jamais préfixée `VITE_`.
-- Toute erreur serveur renvoyée au client doit être un message générique. Ne jamais renvoyer `error.message` brut au client (cf. SEC-001) — logger le détail côté serveur uniquement.
-- Le brief utilisateur est limité à 2000 caractères, validé côté serveur (pas seulement côté client) et encadré par des délimiteurs `"""` dans le prompt envoyé à Claude pour limiter le risque d'injection.
-- Timeout de 30 secondes max sur tout appel à l'API Claude.
-- `max_tokens` de la réponse Claude actuellement à 8000 côté serveur (augmenté depuis 1000 pour couvrir 3-5 stories à 3 scénarios Gherkin chacune, justifié par mesure réelle via js-tiktoken, cf. commentaire dans api/generate-stories.js) — toute augmentation supplémentaire doit rester documentée par un calcul réel, jamais une estimation.
-- Le rate limiting actuel (Map en mémoire dans `api/generate-stories.js`) n'est pas persistant entre cold starts Vercel. Le signaler dans tout commentaire ou PR touchant cette logique tant que la migration vers Vercel KV / Upstash Redis n'est pas faite.
-- Les origins CORS autorisées viennent de `process.env.ALLOWED_ORIGINS`, jamais hardcodées dans le code.
-- L'extension du fichier envoyé à `api/upload-doc.js` doit être `.txt`, `.pdf` ou `.docx`, validée côté serveur avant tout appel à `extractText()`. Extension absente ou non supportée → rejet 400 explicite (`Format non supporté : .xyz. Utilisez PDF, DOCX ou TXT.`), jamais via une exception.
-- `unpdf` (extraction PDF dans `api/upload-doc.js`) est pin sur `~1.7.0`, pas `^1.6.2` : `1.8.0` introduit `"engines": {"node": ">=22"}`, ce qui était incompatible avec le Node 20 verrouillé à l'époque (`.nvmrc`, `engines` de `package.json`, `engine-strict=true` dans `.npmrc`, cf. section CI) — `engine-strict=true` l'aurait fait échouer en CI (Node 20.20.2) sans avertissement en local (`npm install` en environnement Node ≥22 ne voyait pas le problème). Depuis la migration Node 24 / npm 11 (PR #91), cette contrainte `>=22` est satisfaite, mais le pin `~1.7.0` reste conservé : ne pas repasser à `^1.7.0` ou plus sans revérifier les `engines` déclarés par la version ciblée.
-- `topK` (`api/retrieve-context.js`) doit être un entier compris entre 1 et 20 inclus, validé côté serveur avant tout appel à Pinecone. Absent du body → valeur par défaut 5 (comportement inchangé). Présent mais invalide (non numérique, non entier, < 1, > 20, y compris une chaîne numérique comme `"5"`) → rejet 400 explicite, pas de coercition silencieuse.
-- Le seuil de pertinence RAG (`0.45` en dur, `api/retrieve-context.js` ligne ~78) a été calibré empiriquement le 2026-08-25 — avant cette date, `0.42` avait été fixé sans évaluation documentée. `scripts/calibrate-threshold.mjs` (`npm run calibrate-threshold`, nécessite `.env` — mêmes clés que l'app) : embedde 21 briefs pré-étiquetés (10 pertinents/11 hors-sujet, dont le cas de reproduction original "téléphone" de PR #78, gardé en permanence dans l'échantillon) avec les mêmes paramètres OpenAI que l'API, interroge Pinecone `topK: 20` sans filtre de score, puis compare la distribution des meilleurs scores entre les deux groupes. Sur cet échantillon : min on-topic 46.18%, max off-topic 44.66% (brief "vêtements"), le brief "téléphone" à 43.41% — séparation nette mais étroite (1.52 point). Résultat complet dans `context.md` (session CALIBRATION-SEUIL-RAG, 2026-08-25). Recalibrer avec le script si de nouveaux documents sont ajoutés à `public/docs/` ; toute modification du seuil réel reste une décision explicite après revue des données (comportement de production), jamais automatique.
-- `contextChunks` (`api/generate-stories.js`) vient du corps de requête et est interpolé dans le prompt système : entièrement contrôlé par l'appelant HTTP (l'appel `retrieveContext()` côté client et cet endpoint sont deux appels réseau indépendants — un appel direct hors UI peut fabriquer un `contextChunks` qui n'est jamais passé par Pinecone ni le seuil 0.45). Validé côté serveur avant toute utilisation : absent/null/`[]` → génération sans contexte (comportement inchangé) ; présent → doit être un tableau de ≤ 20 éléments (max `topK`), chaque élément avec `filename` et `text` de type string, `text` ≤ 2500 caractères, somme des `text` ≤ 28000 caractères. Toute violation → rejet 400 générique (`Contexte documentaire invalide.`), détail loggé côté serveur uniquement (SEC-001). **Les plafonds de taille (`MAX_CHUNK_CHARS`, `MAX_CONTEXT_TOTAL_CHARS`) sont dérivés de la VRAIE distribution des chunks indexés dans Pinecone, mesurée en interrogeant directement l'index — jamais du `chunkSize` déclaré dans `api/upload-doc.js`.** Le LOT 3 (PR #99) avait dérivé `MAX_CHUNK_CHARS = 1000` du `chunkSize: 500` du code du splitter et cassé le RAG en prod : les documents ont en réalité été indexés avec `chunkSize: 1600` (cf. `context.md`, session RAG-3, étape « Re-indexer » jamais faite → code du splitter désynchronisé des données). Distribution réelle mesurée le 2026-08-31 : min 68 / moyenne 1135 / p90 1568 / **max 1597** caractères ; somme des 20 plus longs chunks = 23 759. Toute ré-indexation de `public/docs/` ou ajout de document impose de re-mesurer et d'ajuster ces plafonds. `MAX_CONTEXT_CHUNKS = 20` reste dérivé du `topK` max (indépendant de la taille). Option non retenue à ce stade : faire l'appel Pinecone directement dans `generate-stories.js` pour supprimer entièrement la transmission de `contextChunks` par le client (supprime la surface de confiance à la racine, mais changement d'architecture plus large).
-- Tout champ dérivé de contenu utilisateur ou généré par le LLM et exporté en CSV doit neutraliser l'injection de formule (OWASP CSV Injection) : préfixer d'une apostrophe tout champ commençant par `=`, `+`, `-`, `@`, une tabulation ou un retour chariot (`\r`, défense en profondeur — pas un déclencheur de formule reconnu en pratique), en plus de l'échappement RFC 4180. Voir `escapeCsvField` dans `src/logic/csvExport.js`.
-- Le prompt système (`api/generate-stories.js`) doit toujours autoriser le modèle à rester générique sur un point précis du brief quand le contexte documentaire RAG injecté ne montre aucun équivalent métier chez ce client — jamais forcer un rattachement inventé (fausse caractéristique produit, faux prix, faux programme lié) juste parce qu'un chunk a passé le seuil de pertinence. Cas réel qui l'a motivé : brief hors-sujet "choisir la couleur de mon téléphone" sur la démo Lumeo Boutique (déco/luminaires, ne vend aucun téléphone) — un seul chunk FAQ à 43% (juste au-dessus du seuil 0.42 en vigueur à l'époque) a suffi à faire inventer par le modèle que Lumeo vend des téléphones, avec un faux prix et un faux calcul de cashback sur le programme fidélité réel "Lumeo+". Depuis la calibration du 2026-08-25 (seuil relevé à 0.45), ce même brief score 43.41% — sous le seuil actuel, filtré avant même d'atteindre le prompt système ; cette clause reste néanmoins une deuxième ligne de défense, pas une garantie que le seuil filtre systématiquement tout brief hors-sujet. La clause doit rester équilibrée : elle ne doit ni se faire ignorer par les instructions `DOIS`/`INTERDIT` plus fortes situées juste au-dessus (testé : une formulation trop faible n'a rien changé), ni faire refuser toute génération ou demander une clarification au client (testé : une formulation trop absolue a fait produire une réponse méta au lieu de user stories). Toute modification de cette clause doit être revérifiée avec ce même brief de reproduction avant merge.
+- Clé API Anthropic jamais côté client (variable d'environnement serveur, jamais préfixée `VITE_`).
+- Ne jamais renvoyer `error.message` brut au client (SEC-001), message générique seulement.
 
-## CI (`claude-pr-review.yml`)
-
-- Trois jobs sur chaque pull request : `test` (`npx vitest run`), `e2e` (`npx playwright install --with-deps chromium` puis `npx playwright test`), et `claude-review`, qui dépend des deux premiers (`needs: [test, e2e]`).
-- `e2e` fait partie de la CI depuis le 2026-08-23 seulement. Avant cette date, seul `npx vitest run` tournait en CI : la suite Playwright (`e2e/generate-stories.spec.js`) n'existait qu'en local, via `npm run test:e2e`. Une régression e2e (deux bugs indépendants : un texte de heading Dashboard désynchronisé depuis 177d67a, et l'écran initial conditionnel introduit par dd5bff2 qui envoie désormais un nouvel utilisateur sans historique sur Forge plutôt que Dashboard) est passée inaperçue faute d'exécution automatique — d'où l'ajout du job `e2e`.
-- Le job `claude-review` (`anthropics/claude-code-action@v1`) refuse de s'exécuter, et ne soumet donc jamais de review, tant que le fichier `.github/workflows/claude-pr-review.yml` de la branche de la PR diffère de celui sur `main` — protection anti-triche intentionnelle de l'action, pas un bug de ce projet. Une PR qui modifie ce fichier ne recevra donc jamais sa propre review automatique ; elle doit être mergée (bypass admin si la branch protection l'exige) avant que le nouveau comportement s'applique aux PR suivantes.
-- Symptôme trompeur : le job apparaît vert ("succeeded"), mais aucune review n'existe (vérifiable via `GET /repos/.../pulls/<n>/reviews`). Le détail réel (message "Workflow validation failed…") n'apparaît qu'avec `show_full_output: true` sur l'action, désactivé par défaut.
-- **Version Node/npm verrouillée** (`.nvmrc`, `engines` dans `package.json`, `engine-strict=true` dans `.npmrc`) : la CI (`actions/setup-node@v4`) tourne sur Node 24 / npm 11.x depuis la migration PR #91 (Node 20 / npm ~10.x auparavant). Sur PR #71, `package-lock.json` avait été régénéré en local avec npm 11.17.0, qui résout différemment une dépendance imbriquée d'`esbuild` dans `vitest` — `npm ci` échouait alors en CI (`Missing: esbuild@0.28.2 from lock file`) sans que rien ne le signale en local (`npm install` accepte silencieusement l'incohérence, `npm ci` non). `engine-strict=true` fait refuser `npm install`/`npm ci` si la version locale ne correspond pas à `engines`, pour empêcher de reproduire ce bug.
-- **`vite` pin sur `^6.0.0`, pas `^8.0.0`** : `npm audit` (esbuild `<=0.24.2`, moderate, remonté via `vite <=6.4.2`, high — affecte uniquement le serveur de dev, pas le build de production) proposait via `npm audit fix --force` de sauter à `vite@8.2.2`, qui exige Node `^20.19.0 || >=22.12.0` — à l'époque plus strict que l'`engines.node` du projet (`>=20 <21` alors, n'importe quel Node 20.x), un écart qui aurait recréé le type de bug de PR #71/#72 (verrou qui dit "compatible" sans l'être forcément). Vite 6 suffit à corriger la vulnérabilité (résolu en `vite@6.4.3` avec `esbuild@0.25.12`, confirmé) et son exigence Node (`^18.0.0 || ^20.0.0 || >=22.0.0`) reste compatible avec l'`engines.node` actuel (`>=24 <25` depuis PR #91), sans le modifier — vérifié via `npm audit` (0 vulnérabilité après ce changement).
+Le reste des contraintes serveur (timeout, max_tokens, rate limiter, upload, RAG, prompt système) est dans la rule `.claude/rules/storypilot-api.md`, chargée automatiquement en travaillant sous `api/` ou `src/components/services/`. L'anti-injection CSV est dans `.claude/rules/csv-export.md` (scopée `src/logic/`).
 
 ## Discipline de branche
 
 - **Avant de commencer tout travail (nouveau fichier, correction, feature), vérifier la branche courante (`git branch --show-current`).** Si elle est `main`, prévenir explicitement l'utilisateur avant de continuer ("Tu es sur `main`, tu veux que je crée une branche d'abord ?") plutôt que de commencer à modifier des fichiers dessus. Ne jamais créer une branche à sa place sans le dire.
 
+## CI (`claude-pr-review.yml`)
+
+- 3 jobs par PR : `test` (vitest), `e2e` (playwright chromium), `claude-review` (dépend des deux).
+- `claude-review` ne s'exécute pas tant que le `.github/workflows/claude-pr-review.yml` de la branche diffère de `main` (protection anti-triche de l'action). Une PR qui modifie ce fichier ne reçoit pas sa propre review ; elle doit être mergée avant que le nouveau comportement s'applique. Symptôme trompeur : job vert mais aucune review (visible seulement avec `show_full_output: true`).
+- Versions Node/npm verrouillées (`.nvmrc`, `engines`, `engine-strict=true` dans `.npmrc`) : Node 24 / npm 11. `vite` pin sur `^6.0.0`. Détail des incidents (lock PR #71, saga vite) dans `context.md`.
+
 ## Conventions de code
 
 - Composants fonctionnels avec hooks, pas de classes.
-- Tout nouveau composant avec logique non triviale doit avoir un test associé (Vitest).
-- JSDoc requis sur les fonctions exportées de `claudeService.js` (`@param`, `@throws`, description des callbacks).
-- Pas de `console.error` actif en production côté client — conditionner au mode dev.
-- Le prompt système envoyé à Claude est en français ; la réponse doit rester en français même si le brief est rédigé en anglais (comportement voulu, ne pas "corriger" sans demande explicite).
-- Toute couleur dans un composant passe par un token `theme.colors.*` (jamais de `#hex` ou `rgba()` codé en dur) — environ 85 valeurs en dur ont dû être traquées et corrigées le 2026-08-23 faute de cette discipline dès le départ.
-- La logique métier réutilisable (parsing, calculs, formatage) est extraite en fonction pure dans `src/logic/`, testée dans `src/test/` (jamais colocalisée) — voir `storyParser.js`, `csvExport.js`, `initialScreen.js`, `themeStorage.js`, `dashboardStats.js`.
+- Tout composant à logique non triviale a un test Vitest associé.
+- JSDoc requis sur les fonctions exportées de `claudeService.js` (`@param`, `@throws`, callbacks).
+- Pas de `console.error` actif en production côté client : conditionner au mode dev.
+- Le prompt système envoyé à Claude est en français ; la réponse reste en français même si le brief est en anglais (voulu, ne pas "corriger" sans demande explicite).
+- Toute couleur passe par un token `theme.colors.*`, jamais de `#hex` ou `rgba()` en dur.
+- La logique métier réutilisable (parsing, calculs, formatage) est une fonction pure dans `src/logic/`, testée dans `src/test/` (jamais colocalisée) : `storyParser.js`, `csvExport.js`, `initialScreen.js`, `themeStorage.js`, `dashboardStats.js`.
 
-## Pour le suivi d'avancement, les sessions précédentes, et la grille de tests recruteur
+## Suivi, sessions précédentes, grille de tests recruteur
 
-Voir `context.md` à la racine du projet — ce fichier n'est pas chargé automatiquement, le mentionner explicitement si une tâche en dépend.
+Voir `context.md` à la racine (non chargé automatiquement) : le mentionner explicitement si une tâche en dépend.
