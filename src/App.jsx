@@ -18,6 +18,9 @@ import ErrorBoundary from "./components/ErrorBoundary";
 
 import Library from "./screens/Library";
 import Settings from "./screens/Settings";
+import MentionsLegales from "./screens/MentionsLegales";
+import Confidentialite from "./screens/Confidentialite";
+import Footer from "./components/Footer";
 
 const GlobalStyle = createGlobalStyle`
   @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
@@ -258,6 +261,10 @@ function App() {
         return <Library onNavigate={handleNavigate} themeMode={themeMode} onThemeChange={setThemeMode} />;
       case "settings":
         return <Settings themeMode={themeMode} onThemeChange={setThemeMode} />;
+      case "mentions":
+        return <MentionsLegales onNavigate={handleNavigate} />;
+      case "confidentialite":
+        return <Confidentialite onNavigate={handleNavigate} />;
       default:
         return <Dashboard onNavigate={setCurrentScreen} themeMode={themeMode} onThemeChange={setThemeMode} />;
     }
@@ -272,6 +279,7 @@ function App() {
          transparent — aucun impact visuel, mais un point d'entrée pour les
          lecteurs d'écran et le "skip to content". */}
       <main>{renderScreen()}</main>
+      <Footer onNavigate={handleNavigate} />
       <BottomNav activeItem={currentScreen} onNavigate={handleNavigate} />
     </ErrorBoundary>
   );
