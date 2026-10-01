@@ -163,6 +163,20 @@ export default function Confidentialite({ onNavigate }) {
           <li>Données du navigateur (localStorage)&nbsp;: conservées jusqu'à leur effacement par vos soins.</li>
         </ul>
 
+        <h2>Sécurité</h2>
+        <p>
+          Les échanges avec le site se font en HTTPS. La clé d'accès aux API d'intelligence
+          artificielle est conservée côté serveur et n'est jamais exposée au navigateur. Les briefs
+          ne sont pas conservés durablement par l'éditeur.
+        </p>
+
+        <h2>Mineurs</h2>
+        <p>
+          Ce service n'est pas destiné aux personnes de moins de 15 ans et ne collecte pas sciemment
+          leurs données. En France, 15 ans est le seuil en dessous duquel l'accord d'un titulaire de
+          l'autorité parentale est requis pour un traitement fondé sur le consentement.
+        </p>
+
         <h2>Vos droits</h2>
         <p>
           Vous disposez des droits d'accès, de rectification, d'effacement, d'opposition et de
@@ -180,6 +194,12 @@ export default function Confidentialite({ onNavigate }) {
 
         <h2>Cookies</h2>
         <p>Ce site n'utilise aucun cookie ni traceur publicitaire ou de mesure d'audience.</p>
+
+        <h2>Évolution de cette politique</h2>
+        <p>
+          Cette politique de confidentialité peut être amenée à évoluer. Toute modification est
+          signalée par la mise à jour de la date figurant en haut de cette page.
+        </p>
       </Content>
     </PageWrapper>
   );
