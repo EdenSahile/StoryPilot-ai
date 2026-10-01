@@ -33,3 +33,10 @@ dist-ssr
 # Playwright
 /playwright-report/
 /test-results/
+
+# Notes de session et docs locales (non versionnees)
+context.md
+HANDOFF.md
+handoffs/
+/.claude/RESUME.md
+docs/ci-claude-pr-review-workflow.md
