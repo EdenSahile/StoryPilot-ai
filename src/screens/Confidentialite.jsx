@@ -135,9 +135,16 @@ export default function Confidentialite({ onNavigate }) {
 
         <h2>Transferts hors Union européenne</h2>
         <p>
-          Ces prestataires étant établis aux États-Unis, vos données y sont transférées. Ces
-          transferts sont encadrés par les garanties prévues par le RGPD (clauses contractuelles
-          types et/ou adhésion au Data Privacy Framework), mises en place par chacun d'eux.
+          Ces prestataires étant établis aux États-Unis, vos données y sont transférées. Pour
+          Anthropic, OpenAI et Pinecone, ces transferts sont encadrés par les garanties prévues par
+          le RGPD (clauses contractuelles types et/ou adhésion au Data Privacy Framework), intégrées
+          à leurs conditions commerciales.
+        </p>
+        <p>
+          L'hébergement et l'exécution des fonctions serveur sont assurés par Vercel sur une offre
+          gratuite, dans le cadre de cette démonstration personnelle et non commerciale, sans accord
+          de traitement (DPA) dédié. Vos données transitent donc par son infrastructure, sans y être
+          conservées de façon durable par l'application.
         </p>
 
         <h2>Durée de conservation</h2>
