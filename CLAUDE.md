@@ -34,7 +34,7 @@ Le reste des contraintes serveur (timeout, max_tokens, rate limiter, upload, RAG
 
 - 3 jobs par PR : `test` (vitest), `e2e` (playwright chromium), `claude-review` (dépend des deux).
 - `claude-review` ne s'exécute pas tant que le `.github/workflows/claude-pr-review.yml` de la branche diffère de `main` (protection anti-triche de l'action). Une PR qui modifie ce fichier ne reçoit pas sa propre review ; elle doit être mergée avant que le nouveau comportement s'applique. Symptôme trompeur : job vert mais aucune review (visible seulement avec `show_full_output: true`).
-- Versions Node/npm verrouillées (`.nvmrc`, `engines`, `engine-strict=true` dans `.npmrc`) : Node 24 / npm 11. `vite` pin sur `^6.0.0`. Détail des incidents (lock PR #71, saga vite) dans `context.md`.
+- Versions Node/npm verrouillées (`.nvmrc`, `engines`, `engine-strict=true` dans `.npmrc`) : Node 24 / npm 11. `vite` pin sur `^6.0.0`. Détail des incidents (lock PR #71, saga vite) : voir l'historique des PR.
 
 ## Conventions de code
 
@@ -45,7 +45,3 @@ Le reste des contraintes serveur (timeout, max_tokens, rate limiter, upload, RAG
 - Le prompt système envoyé à Claude est en français ; la réponse reste en français même si le brief est en anglais (voulu, ne pas "corriger" sans demande explicite).
 - Toute couleur passe par un token `theme.colors.*`, jamais de `#hex` ou `rgba()` en dur.
 - La logique métier réutilisable (parsing, calculs, formatage) est une fonction pure dans `src/logic/`, testée dans `src/test/` (jamais colocalisée) : `storyParser.js`, `csvExport.js`, `initialScreen.js`, `themeStorage.js`, `dashboardStats.js`.
-
-## Suivi, sessions précédentes, grille de tests recruteur
-
-Voir `context.md` à la racine (non chargé automatiquement) : le mentionner explicitement si une tâche en dépend.
