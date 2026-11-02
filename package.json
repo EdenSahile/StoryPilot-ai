@@ -16,7 +16,7 @@
     "calibrate-threshold": "node --env-file=.env scripts/calibrate-threshold.mjs"
   },
   "engines": {
-    "node": ">=24 <25",
+    "node": ">=24.22.1 <25",
     "npm": ">=11 <12"
   },
   "dependencies": {
