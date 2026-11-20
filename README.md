@@ -8,6 +8,18 @@ StoryPilot transforme un brief métier en user stories structurées avec critèr
 
 ---
 
+## Ingénierie
+
+- **Tests.** 6644 lignes de test pour 7981 de production (ratio 0,83). 26 suites Vitest (440 cas) couvrant les 5 routes serverless, 2 modules API partagés, 5 écrans et la logique métier. Chaque fichier `api/` a son test.
+- **End-to-end.** 4 parcours Playwright : génération complète, sauvegarde en historique, erreur API, navigation entre écrans. Ne couvre pas l'upload de documents, le RAG ni l'export CSV.
+- **CI.** 3 jobs par PR : Vitest, Playwright Chromium, revue automatique Claude (déclenchée seulement si les 2 premiers passent).
+- **Versions verrouillées.** Node 24, npm 11, `engine-strict=true`. Corrige un incident où un écart npm local/CI cassait `npm ci` sans signal côté développeur.
+- **Sécurité.** Clé API serveur uniquement. Erreurs client génériques (SEC-001). CORS par allowlist (`api/_cors.js`). `contextChunks` validé avant interpolation prompt (type, taille, plafonds calés sur la distribution réelle des chunks indexés). Ecritures 403 en mode démo.
+- **Seuil RAG calibré.** `scripts/calibrate-threshold.mjs` teste 20 briefs pré-étiquetés contre Pinecone. Seuil retenu : 0.45 (`api/retrieve-context.js`).
+- **Dégradation gracieuse.** Pinecone indisponible : la génération continue sans contexte, un bandeau signale l'absence de RAG.
+
+---
+
 ## Ce que fait StoryPilot
 
 Un PO écrit un brief en langage naturel. StoryPilot génère instantanément des user stories complètes, prêtes à intégrer dans un backlog Jira/Linear :
