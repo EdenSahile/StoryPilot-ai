@@ -66,10 +66,10 @@ export default async function handler(req, res) {
     // 3. Format results
     const chunks = queryResponse.matches
       // Seuil minimal de pertinence — calibré empiriquement le 2026-08-25 via
-      // scripts/calibrate-threshold.mjs (20 briefs pré-étiquetés, dont le cas
+      // scripts/calibrate-threshold.mjs (21 briefs pré-étiquetés, dont le cas
       // de reproduction original "téléphone" de PR #78, score 43.41% < 0.45) :
-      // sépare proprement les briefs pertinents (min observé 46.18%) des
-      // hors-sujet (max observé 44.66%). Détail complet et méthode dans
+      // sépare proprement les briefs pertinents (min observé 46.17%) des
+      // hors-sujet (max observé 44.66%,relancé le 2026-11-25). Détail complet et méthode dans
       // context.md, session CALIBRATION-SEUIL-RAG. Recalibrer avec le script
       // si de nouveaux documents sont ajoutés à public/docs/.
       .filter((match) => match.score > 0.45)

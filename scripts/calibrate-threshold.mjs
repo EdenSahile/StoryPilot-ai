@@ -1,7 +1,7 @@
 // scripts/calibrate-threshold.mjs
 //
-// Script autonome de calibration du seuil de pertinence RAG (0.42 en dur dans
-// api/retrieve-context.js, ligne ~78). N'est jamais appelé par l'app — exécuté
+// Script autonome de calibration du seuil de pertinence RAG (0.45 en dur dans
+// api/retrieve-context.js, filtre sur match.score). N'est jamais appelé par l'app — exécuté
 // à la main, pour recalibrer si de nouveaux documents sont ajoutés à
 // public/docs/ ou si le seuil actuel est remis en question.
 //
@@ -154,7 +154,7 @@ async function main() {
     console.log(
       `Séparation nette : max off-topic (${offTopicStats.max}%) < min on-topic (${onTopicStats.min}%).\n` +
         `Seuil médian suggéré : ${suggestedThreshold}% (soit ${(suggestedThreshold / 100).toFixed(4)} sur l'échelle 0-1 utilisée dans le code).\n` +
-        `Seuil actuel en dur : 42% (0.42).`,
+        `Seuil actuel en dur : 45% (0.45).`,
     );
   } else {
     console.log(

@@ -134,7 +134,7 @@ api/
 ### Pipeline RAG
 
 1. **Indexation** (`upload-doc.js`) : extraction du texte (PDF via `unpdf`, DOCX via `mammoth`, TXT brut) → chunking (`RecursiveCharacterTextSplitter`, taille 500 caractères, overlap 50) → embedding OpenAI `text-embedding-3-small` (512 dims) → stockage Pinecone (index `storyforge`, métrique cosine).
-2. **Retrieval** (`retrieve-context.js`) : le brief est embeddé, une requête `topK=5` est envoyée à Pinecone, seuls les chunks avec un score de pertinence **> 0.42** sont retenus.
+2. **Retrieval** (`retrieve-context.js`) : le brief est embeddé, une requête `topK=5` est envoyée à Pinecone, seuls les chunks avec un score de pertinence **> 0.45** sont retenus.
 3. **Génération** (`generate-stories.js`) : si des chunks ont été retenus, ils sont injectés dans le prompt système avec des instructions impératives de réutilisation du vocabulaire et des règles métier du client. Le toggle "Générer sans RAG" côté client saute simplement l'étape 2 — aucune modification du backend n'est nécessaire pour ce cas.
 
 ⚠️ L'index Pinecone n'a pas d'isolation multi-tenant : tous les documents indexés partagent le même espace. Si vous clonez ce projet et réactivez l'upload (`DEMO_MODE=false`) sur un déploiement accessible à plusieurs utilisateurs, prévoyez une isolation par namespace Pinecone avant d'y indexer des documents réels.
