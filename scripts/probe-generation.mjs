@@ -25,6 +25,13 @@
 // tester sans clé locale valide :
 //   npm run probe:generate -- --probe <fichier> --endpoint https://<domaine>/api/generate-stories
 //
+// Les deploiements de preview Vercel sont proteges par authentification SSO et
+// renvoient 401 a tout appel automatise. Deux solutions : desactiver la
+// Deployment Protection pour les previews, ou generer un secret dans Vercel
+// (Settings, Deployment Protection, Protection Bypass for Automation) et le
+// passer ici :
+//   --bypass <secret>   ou la variable d'environnement VERCEL_AUTOMATION_BYPASS_SECRET
+//
 // Le modèle étant non déterministe, lancer plusieurs fois : en août, il avait
 // fallu plusieurs appels pour reproduire le bug d'origine.
 //
@@ -52,23 +59,55 @@ function mockRes() {
   return r;
 }
 
-// Mots qui commencent une phrase, un titre ou une ligne Gherkin : capitalises
-// sans etre des noms propres. Sans ce filtre, la detection ci-dessous est noyee.
-const MOTS_COURANTS = new Set(`Etant Étant Quand Alors Et Mais Donc Or Ni Car Si Lorsque Apres Après Avant Afin Ainsi Ensuite Enfin Scenario Scénario Scenarios Scénarios Titre Description Criteres Critères Complexite Complexité User Story Stories Le La Les Un Une Du De Des Dans Sur Sous Entre Par Avec Sans Au Aux Pour Cette Cet Ce Ces Chaque Il Elle Ils Elles Je Tu Nous Vous On Son Sa Ses Leur Leurs Mon Ma Mes Notre Nos Votre Vos Tout Toute Tous Toutes Plusieurs Aucun Aucune Limite Acces Accès Ajout Consulter Generer Générer Exporter Ouvrir Fermer Navigation Comparaison Essayage Visualiser Analyser Renseigner Produit Client Systeme Système Back Front Mo Go CSV JPG PNG PDF API UI UX SAV FAQ RGPD S M L XL`.split(/\s+/));
+// Vocabulaire du prompt systeme et mots-cles de format : capitalises sans etre
+// des noms propres.
+const MOTS_IGNORES = new Set(
+  `Gherkin MAXIMUM Scenario Scénario Scenarios Scénarios Titre Description
+   Criteres Critères Complexite Complexité User Story Stories Etant Étant Quand Alors
+   CSV JPG PNG PDF API AR UI UX SAV FAQ RGPD S M L XL Mo Go`.split(/\s+/),
+);
+
+// Articles elides : "L'avatar" n'est pas un nom propre.
+const ELISIONS = /^(?:[LDSNCJMT]|Qu|Lorsqu|Jusqu|Puisqu|Quoiqu)['\u2019]/;
+
+// Caracteres apres lesquels une majuscule est grammaticale, pas onomastique.
+const FRONTIERES = /[\n.:;!?"\u00ab\u00bb\u2022*#|-]/;
+
+// Un nom d'entreprise suit presque toujours l'un de ces mots.
+const AMORCES = /\b(?:de|chez|entreprise|société|societe|client\s+de|marque|enseigne)\s+$/i;
 
 /**
- * Reperes les noms propres presents dans la sortie mais absents du contexte
+ * Repere les noms propres presents dans la sortie mais absents du contexte
  * injecte et du brief. Un nom d'entreprise invente tombe exactement la.
- * Heuristique volontairement large : a lire, pas a automatiser aveuglement.
+ *
+ * Deux regles combinees :
+ * 1. On ecarte toute majuscule en debut de phrase, de ligne, de puce, de titre
+ *    ou apres deux-points. Elle est capitalisee par la grammaire. Sans cette
+ *    regle, la sortie remonte des dizaines de faux positifs ("Creation",
+ *    "Consultation", "Echec"...) et l'outil devient inutilisable.
+ * 2. On retient systematiquement ce qui suit une amorce du type "client de",
+ *    "chez", "l'entreprise", meme en debut de phrase.
  */
 function nomsPropresHorsContexte(texte, contexte, brief) {
   const connu = (contexte + " " + brief).toLowerCase();
-  const candidats = texte.match(/\b[A-ZÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ][\wÀ-ÿ'’-]{2,}(?:\s+(?:&|et)\s+[A-ZÀ-Ÿ][\wÀ-ÿ'’.-]+)?/g) || [];
+  const propre = texte.replace(/\*\*/g, "");
   const suspects = new Map();
-  for (const brut of candidats) {
-    const mot = brut.trim();
-    if (MOTS_COURANTS.has(mot.split(/\s+/)[0])) continue;
+  const motif = /[A-Z\u00c0\u00c2\u00c4\u00c9\u00c8\u00ca\u00cb\u00ce\u00cf\u00d4\u00d6\u00d9\u00db\u00dc\u00c7][\wÀ-ÿ'\u2019-]{2,}(?:\s+(?:&|et)\s+[A-ZÀ-Ÿ][\wÀ-ÿ'\u2019.-]+)?/g;
+
+  let m;
+  while ((m = motif.exec(propre)) !== null) {
+    const mot = m[0].trim();
+    if (ELISIONS.test(mot)) continue;
+    if (MOTS_IGNORES.has(mot.split(/\s+/)[0])) continue;
     if (connu.includes(mot.toLowerCase())) continue;
+
+    const avant = propre.slice(0, m.index);
+    const suitUneAmorce = AMORCES.test(avant);
+    if (!suitUneAmorce) {
+      // Remonte jusqu'au premier caractere non blanc qui precede.
+      const precedent = avant.replace(/\s+$/, "").slice(-1);
+      if (precedent === "" || FRONTIERES.test(precedent)) continue;
+    }
     suspects.set(mot, (suspects.get(mot) || 0) + 1);
   }
   return [...suspects.entries()].sort((a, b) => b[1] - a[1]);
@@ -118,16 +157,31 @@ async function main() {
   // Appelle soit le handler local, soit un deploiement distant. Dans les deux
   // cas on recupere un flux SSE au meme format, reassemble par extraireTexte().
   let lancer;
+  const bypass = flags.bypass || process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+  if (endpoint && bypass) console.log("Bypass           : secret de contournement Vercel fourni");
+
   if (endpoint) {
     lancer = async (body) => {
+      const headers = { "content-type": "application/json" };
+      // Contourne la Deployment Protection de Vercel sur les previews.
+      if (bypass) {
+        headers["x-vercel-protection-bypass"] = bypass;
+        headers["x-vercel-set-bypass-cookie"] = "true";
+      }
       const r = await fetch(endpoint, {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers,
         body: JSON.stringify(body),
       });
       if (!r.ok || !r.body) {
         let detail = "";
         try { detail = JSON.stringify(await r.json()); } catch { detail = await r.text().catch(() => ""); }
+        if (r.status === 401 && /Protected by Vercel Authentication/i.test(detail)) {
+          detail =
+            "Deploiement protege par l'authentification Vercel. Relancer avec --bypass <secret> " +
+            "(Vercel > Settings > Deployment Protection > Protection Bypass for Automation), " +
+            "ou desactiver la protection pour les previews.";
+        }
         return { code: r.status, body: detail, written: [] };
       }
       const written = [];
