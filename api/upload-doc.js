@@ -4,8 +4,14 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 import OpenAI from "openai";
 import { extractText as extractPdfText, getDocumentProxy } from "unpdf";
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { applyCors } from "./_cors.js";
+import {
+  chunkDocument,
+  buildVectorRecords,
+  vectorIdPrefix,
+  EMBEDDING_MODEL,
+  EMBEDDING_DIMENSIONS,
+} from "./_ingest.js";
 
 export const config = {
   api: {
@@ -24,15 +30,10 @@ export const config = {
 };
 
 // ─── Chunking ─────────────────────────────────────────────
-const splitter = new RecursiveCharacterTextSplitter({
-  chunkSize: 500,
-  chunkOverlap: 50,
-  separators: ["\n\n", "\n", ". ", "! ", "? ", " ", ""],
-});
-
-async function chunkText(text) {
-  return splitter.splitText(text);
-}
+// Le découpage, les paramètres d'embedding et la forme des métadonnées vivent
+// dans api/_ingest.js, partagé avec scripts/reindex-docs.mjs. Ne rien
+// redéfinir ici : une seconde copie finit toujours par diverger, cf. session
+// INDEX-DESYNCHRONISE du journal technique.
 
 // ─── Text extraction ──────────────────────────────────────
 async function extractText(content, filename) {
@@ -112,7 +113,7 @@ export default async function handler(req, res) {
 
     // 2. Chunk
     console.log(`[upload] Chunking text (${text.length} chars)...`);
-    const chunks = await chunkText(text);
+    const chunks = await chunkDocument(text);
     console.log(`[upload] ${chunks.length} chunks created.`);
 
     if (chunks.length === 0) {
@@ -126,9 +127,9 @@ export default async function handler(req, res) {
     const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
     const embeddingResponse = await openai.embeddings.create({
-      model: "text-embedding-3-small",
+      model: EMBEDDING_MODEL,
       input: chunks,
-      dimensions: 512,
+      dimensions: EMBEDDING_DIMENSIONS,
     });
 
     const embeddings = embeddingResponse.data.map((d) => d.embedding);
@@ -147,7 +148,7 @@ export default async function handler(req, res) {
     const indexHost = PINECONE_INDEX_URL.replace("https://", "");
     const index = pc.index("storyforge", indexHost);
 
-    const prefix = `${filename.replace(/[^a-zA-Z0-9]/g, "_")}_chunk_`;
+    const prefix = vectorIdPrefix(filename);
     const candidateIds = [];
     let paginationToken;
     while (true) {
@@ -173,17 +174,7 @@ export default async function handler(req, res) {
     // 5. Upsert the new chunks into Pinecone
     console.log(`[upload] Upserting into Pinecone...`);
 
-    const vectors = chunks.map((chunk, i) => ({
-      id: `${prefix}${i}`,
-      values: embeddings[i],
-      metadata: {
-        text: chunk,
-        filename: filename,
-        chunkIndex: i,
-        totalChunks: chunks.length,
-        uploadedAt: new Date().toISOString(),
-      },
-    }));
+    const vectors = buildVectorRecords({ filename, text, chunks, embeddings });
 
     // Upsert in batches of 100
     const batchSize = 100;

@@ -117,9 +117,12 @@ beforeEach(() => {
     fetch: (...args) => mockFetch(...args),
     deleteMany: (...args) => mockDeleteMany(...args),
   });
-  mockEmbeddingsCreate = vi.fn().mockResolvedValue({
-    data: [{ embedding: new Array(512).fill(0) }],
-  });
+  // L'API OpenAI renvoie un embedding par entrée. Le mock doit faire pareil :
+  // une réponse de taille fixe passait à côté du cas à plusieurs chunks, où le
+  // code construisait alors un vecteur avec `values: undefined` sans broncher.
+  mockEmbeddingsCreate = vi.fn(async ({ input }) => ({
+    data: input.map(() => ({ embedding: new Array(512).fill(0) })),
+  }));
 });
 
 afterEach(() => {
@@ -388,6 +391,25 @@ describe('api/upload-doc — appels externes (règle CLAUDE.md : jamais de error
     expect(res.body).toEqual({ error: "Erreur lors de l'indexation du document." });
     expect(JSON.stringify(res.body)).not.toContain('ECONNREFUSED');
     expect(JSON.stringify(res.body)).not.toContain('index-host-interne');
+  });
+
+  // Garde-fou ajouté le 2026-11-25 dans api/_ingest.js. Avant lui, une réponse
+  // d'embeddings plus courte que la liste de chunks produisait un vecteur avec
+  // `values: undefined`, upserté tel quel dans Pinecone.
+  it("renvoie 500 générique et n'upsert rien si OpenAI renvoie moins d'embeddings que de chunks", async () => {
+    mockEmbeddingsCreate = vi.fn().mockResolvedValue({
+      data: [{ embedding: new Array(512).fill(0) }],
+    });
+    const handler = await freshHandler();
+    const req = createMockReq({ body: { filename: 'doc.txt', content: b64(TEXTE_2_CHUNKS) } });
+    const res = createMockRes();
+
+    await handler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.body).toEqual({ error: "Erreur lors de l'indexation du document." });
+    expect(mockUpsert).not.toHaveBeenCalled();
+    expect(mockDeleteMany).not.toHaveBeenCalled();
   });
 
   it('renvoie 200 avec succès, filename, chunks et characters quand tout réussit', async () => {
