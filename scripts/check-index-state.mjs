@@ -151,6 +151,7 @@ async function main() {
     } catch {
       ligne["fichier source"] = "ABSENT de " + DOCS_DIR;
       ligne["chunks attendus"] = "-";
+      ligne["client déclaré"] = "-";
       ligne["chunks retrouvés"] = "-";
       ligne["car. stockés"] = "-";
       sync.push(ligne);
@@ -192,6 +193,12 @@ async function main() {
           : hashsDeclares[0] === hashActuel
             ? "identique"
             : "DIFFERENT";
+    // Nom du client, pose a l'indexation (--client) et porte par chaque chunk.
+    // C'est ce qui permet au prompt de nommer le client meme quand le chunk
+    // recupere ne le mentionne pas.
+    const clients = [...new Set(chunks.map((c) => c.clientName).filter(Boolean))];
+    ligne["client déclaré"] =
+      clients.length === 0 ? "(absent)" : clients.length === 1 ? clients[0] : "MIXTE";
     ligne["chunks retrouvés"] = `${retrouves}/${chunks.length}`;
     ligne["car. stockés"] = carStockes;
     ligne["ratio stocké/source"] = (carStockes / Math.max(texte.length, 1)).toFixed(2);
@@ -296,23 +303,26 @@ async function main() {
     console.log(`  ${r.date}  ${r.label}\n      -> dernière indexation : ${position}`);
   }
 
+  // Verdict generique : ce script sera rejoue a chaque incident, il ne doit pas
+  // raconter l'enquete du 2026-11-25. Les reperes ci-dessus situent la date,
+  // cette section ne dit que ce qui reste a faire.
   console.log("\n=== Lecture ===\n");
-  if (jourDerniere < "2026-08-25") {
+  const derniereCalibration = REPERES.filter((r) => /calibration/i.test(r.label))
+    .map((r) => r.date)
+    .sort()
+    .pop();
+  if (derniereCalibration && jourDerniere > derniereCalibration) {
     console.log(
-      "L'index est ANTÉRIEUR à la calibration d'août. La dérive de 0.11 point mesurée\n" +
-        "entre août et novembre ne vient donc PAS d'une réindexation : chercher ailleurs\n" +
-        "(évolution du modèle d'embedding côté OpenAI, ou reconstruction de l'index\n" +
-        "côté Pinecone sans passer par upload-doc.js).",
-    );
-  } else if (jourDerniere <= "2026-11-25") {
-    console.log(
-      "L'index a été (ré)indexé ENTRE les deux calibrations. L'hypothèse de la\n" +
-        "reconstruction d'index comme cause de la dérive de 0.11 point est confirmée :\n" +
-        "le seuil 0.45 a été calibré sur un état de l'index qui n'existe plus.\n" +
-        "Conséquence : la calibration doit être relancée à chaque réindexation.",
+      `L'index a ete reindexe (${jourDerniere}) apres la derniere calibration connue (${derniereCalibration}).\n` +
+        "Un seuil absolu est lie a un etat d'index : relancer npm run calibrate-threshold.\n" +
+        "Sauf si seules les metadonnees ont change (option --client par exemple) : le\n" +
+        "decoupage etant alors identique, les scores le sont aussi.",
     );
   } else {
-    console.log("Dernière indexation postérieure à la recalibration : relancer npm run calibrate-threshold.");
+    console.log(
+      `Index anterieur ou contemporain de la derniere calibration connue (${derniereCalibration}).\n` +
+        "Rien a recalibrer de ce fait.",
+    );
   }
 }
 

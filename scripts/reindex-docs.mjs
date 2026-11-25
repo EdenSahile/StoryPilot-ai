@@ -16,6 +16,12 @@
 //   node --env-file=.env scripts/reindex-docs.mjs            → simulation, n'écrit rien
 //   node --env-file=.env scripts/reindex-docs.mjs --apply    → applique
 //
+// Option --client "Nom du client" : inscrit ce nom dans les métadonnées de
+// chaque chunk. Le prompt de génération peut alors nommer le client même quand
+// le chunk récupéré ne le mentionne pas, ce qui concernait 44% des chunks et
+// poussait le modèle à inventer un nom. Le nom n'est jamais déduit des
+// documents : il est posé explicitement ici, ou absent.
+//
 // Dans les deux modes, une sauvegarde complète de l'index actuel (métadonnées
 // ET vecteurs) est écrite dans notes-techniques/ avant toute modification.
 // Elle permet de restaurer l'état précédent, ou de rejouer un cas de
@@ -35,6 +41,7 @@ import {
   vectorIdPrefix,
   EMBEDDING_MODEL,
   EMBEDDING_DIMENSIONS,
+  RELEVANCE_THRESHOLD,
 } from "../api/_ingest.js";
 
 const INDEX_NAME = "storyforge";
@@ -50,6 +57,8 @@ const UPSERT_BATCH = 100;
 // upload manuel, qui était exactement le problème à résoudre.
 
 const APPLY = process.argv.includes("--apply");
+const iClient = process.argv.indexOf("--client");
+const CLIENT_NAME = iClient !== -1 ? process.argv[iClient + 1] : undefined;
 
 function requireEnv(name) {
   const value = process.env[name];
@@ -103,6 +112,7 @@ async function main() {
   const PINECONE_INDEX_URL = requireEnv("PINECONE_INDEX_URL");
 
   console.log(APPLY ? "\nMODE APPLIQUE : l'index va etre modifie.\n" : "\nMODE SIMULATION : aucune ecriture. Ajouter --apply pour appliquer.\n");
+  if (CLIENT_NAME) console.log(`Nom de client inscrit dans les metadonnees : "${CLIENT_NAME}"\n`);
 
   const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
   const pc = new Pinecone({ apiKey: PINECONE_API_KEY });
@@ -200,7 +210,7 @@ async function main() {
     const candidats = idsAvant.filter((id) => id.startsWith(prefix));
     const existants = candidats.filter((id) => recordsAvant[id]?.metadata?.filename === filename);
 
-    const vectors = buildVectorRecords({ filename, text: texte, chunks, embeddings });
+    const vectors = buildVectorRecords({ filename, text: texte, chunks, embeddings, clientName: CLIENT_NAME });
 
     for (let i = 0; i < vectors.length; i += UPSERT_BATCH) {
       await index.upsert({ records: vectors.slice(i, i + UPSERT_BATCH) });
@@ -218,7 +228,10 @@ async function main() {
   console.log("\nReindexation terminee.");
   console.log("Verifier avec : npm run check-index  (doit annoncer index synchronise)");
   console.log("Puis recalibrer : npm run calibrate-threshold");
-  console.log("Le seuil 0.45 a ete calibre contre l'ancien index : le rediscuter, ne pas le reprendre tel quel.");
+  console.log(
+    `Si le decoupage a change, le seuil ${RELEVANCE_THRESHOLD} a ete calibre contre l'ancien index : le rediscuter.\n` +
+      "Si seules les metadonnees ont change (option --client par exemple), les scores sont inchanges.",
+  );
 }
 
 main().catch((error) => {

@@ -19,11 +19,10 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 import OpenAI from "openai";
 import { writeFile, mkdir } from "node:fs/promises";
-import { EMBEDDING_MODEL, EMBEDDING_DIMENSIONS } from "../api/_ingest.js";
+import { EMBEDDING_MODEL, EMBEDDING_DIMENSIONS, RELEVANCE_THRESHOLD } from "../api/_ingest.js";
 
 const INDEX_NAME = "storyforge";
-// Garder aligné avec le filtre de api/retrieve-context.js.
-const DEFAULT_THRESHOLD = 0.46;
+const DEFAULT_THRESHOLD = RELEVANCE_THRESHOLD;
 const DEFAULT_TOPK = 5;
 
 function parseArgs(argv) {

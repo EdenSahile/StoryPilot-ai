@@ -1,7 +1,8 @@
 // api/_ingest.js
 //
-// Source unique de vérité de la pipeline d'ingestion RAG : découpage,
-// paramètres d'embedding, identifiants de vecteurs et métadonnées.
+// Source unique de vérité des paramètres de la pipeline RAG : découpage,
+// embedding, identifiants de vecteurs, métadonnées, et seuil de pertinence
+// côté retrieval.
 //
 // Pourquoi ce module existe. Jusqu'au 2026-11-25, ces paramètres étaient
 // écrits dans api/upload-doc.js uniquement, puis dupliqués dans
@@ -34,6 +35,20 @@ export const CHUNK_OVERLAP = 50;
 export const EMBEDDING_MODEL = "text-embedding-3-small";
 export const EMBEDDING_DIMENSIONS = 512;
 export const SEPARATORS = ["\n\n", "\n", ". ", "! ", "? ", " ", ""];
+
+// Longueur maximale du nom de client stocké en métadonnée puis injecté dans le
+// prompt système. Volontairement court : ce champ vient du corps d'une requête
+// HTTP, il est donc contrôlé par l'appelant. Le borner et interdire les sauts
+// de ligne limite la surface d'injection de prompt.
+export const CLIENT_NAME_MAX = 80;
+
+// Seuil de pertinence applique par api/retrieve-context.js. Recalibre le
+// 2026-11-25 apres reindexation (cf. session INDEX-DESYNCHRONISE du journal
+// technique). Il vit ici parce qu'il en existait quatre copies dans le depot,
+// et qu'une valeur dupliquee finit toujours par diverger de l'autre.
+// Un seuil absolu est lie a un etat d'index : le recalibrer apres toute
+// reindexation, via npm run calibrate-threshold.
+export const RELEVANCE_THRESHOLD = 0.46;
 
 const splitter = new RecursiveCharacterTextSplitter({
   chunkSize: CHUNK_SIZE,
@@ -76,12 +91,40 @@ export function vectorIdPrefix(filename) {
 }
 
 /**
+ * Normalise un nom de client fourni par l'appelant.
+ *
+ * Le nom du client est une propriété du corpus, pas du brief : il est posé une
+ * fois à l'indexation et voyage dans les métadonnées de chaque chunk. C'est ce
+ * qui permet au prompt de nommer le client même quand le chunk récupéré ne le
+ * mentionne pas, cas qui concernait 44% des chunks après le passage à un
+ * découpage de 500 caractères et qui poussait le modèle à inventer un nom.
+ *
+ * Il n'est jamais déduit des documents : une déduction fausse deviendrait un
+ * fait affirmé dans toutes les user stories.
+ *
+ * @param {unknown} valeur Nom brut, typiquement issu d'un corps de requête.
+ * @returns {string|null} Nom normalisé, ou null si absent ou invalide.
+ */
+export function normalizeClientName(valeur) {
+  if (typeof valeur !== "string") return null;
+  // Les sauts de ligne et caractères de contrôle permettraient d'injecter des
+  // instructions dans le prompt système : on les refuse plutôt que de les
+  // nettoyer silencieusement.
+  if (/[\u0000-\u001f\u007f]/.test(valeur)) return null;
+  const nom = valeur.trim().replace(/\s+/g, " ");
+  if (nom.length === 0 || nom.length > CLIENT_NAME_MAX) return null;
+  return nom;
+}
+
+/**
  * Construit les enregistrements Pinecone d'un document.
  * @param {object} params
  * @param {string} params.filename Nom du fichier.
  * @param {string} params.text Texte source complet, pour l'empreinte.
  * @param {string[]} params.chunks Chunks issus de chunkDocument().
  * @param {number[][]} params.embeddings Embeddings, alignés sur les chunks.
+ * @param {string} [params.clientName] Nom du client, stocké sur chaque chunk.
+ *   Ignoré s'il ne passe pas normalizeClientName().
  * @param {string} [params.uploadedAt] Horodatage ISO, identique pour tous les
  *   chunks d'un même document. Calculé une seule fois par défaut : un appel
  *   par chunk produisait des horodatages légèrement différents au sein d'un
@@ -95,6 +138,7 @@ export function buildVectorRecords({
   text,
   chunks,
   embeddings,
+  clientName,
   uploadedAt = new Date().toISOString(),
 }) {
   if (!Array.isArray(chunks) || !Array.isArray(embeddings)) {
@@ -108,6 +152,7 @@ export function buildVectorRecords({
 
   const prefix = vectorIdPrefix(filename);
   const hash = sourceHash(text);
+  const client = normalizeClientName(clientName);
 
   return chunks.map((chunk, i) => ({
     id: `${prefix}${i}`,
@@ -125,6 +170,9 @@ export function buildVectorRecords({
       chunkOverlap: CHUNK_OVERLAP,
       embeddingModel: EMBEDDING_MODEL,
       sourceHash: hash,
+      // Absent plutôt que vide : Pinecone n'accepte pas null en métadonnée, et
+      // une clé absente se teste plus simplement côté lecture.
+      ...(client ? { clientName: client } : {}),
     },
   }));
 }

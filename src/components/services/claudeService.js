@@ -11,9 +11,14 @@ const MAX_OUTPUT_LENGTH = 40000; // Garde-fou client : ~25 % au-dessus du max AP
  * @param {string} brief - Le brief métier (10–2000 caractères)
  * @param {(chunk: string) => void} onChunk - Appelé à chaque fragment de texte reçu
  * @param {(message: string) => void} onError - Appelé en cas d'erreur (validation, réseau, timeout, réponse vide)
+ * @param {Array<{text: string, filename: string}>} [contextChunks] - Chunks documentaires injectés dans le prompt
+ * @param {(() => void)|null} [onTruncated] - Appelé si la réponse a été tronquée par max_tokens
+ * @param {string|null} [clientName] - Nom du client, renvoyé par /api/retrieve-context depuis les
+ *   métadonnées de l'index. Omis du corps s'il est absent : le serveur retombe alors sur une
+ *   formulation neutre plutôt que d'inventer un nom.
  * @returns {Promise<void>} Se résout quand le stream est terminé ou interrompu
  */
-export async function generateStories(brief, onChunk, onError, contextChunks = [], onTruncated = null) {
+export async function generateStories(brief, onChunk, onError, contextChunks = [], onTruncated = null, clientName = null) {
   // Validation du brief
   if (!brief || brief.trim().length === 0) {
     onError('Veuillez entrer un brief métier.');
@@ -42,7 +47,7 @@ export async function generateStories(brief, onChunk, onError, contextChunks = [
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ brief, contextChunks }),
+      body: JSON.stringify({ brief, contextChunks, ...(clientName ? { clientName } : {}) }),
       signal: controller.signal
     });
 

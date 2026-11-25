@@ -9,6 +9,8 @@ import {
   chunkDocument,
   buildVectorRecords,
   vectorIdPrefix,
+  normalizeClientName,
+  CLIENT_NAME_MAX,
   EMBEDDING_MODEL,
   EMBEDDING_DIMENSIONS,
 } from "./_ingest.js";
@@ -86,11 +88,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { filename, content } = req.body;
+    const { filename, content, clientName } = req.body;
 
     if (!filename || !content) {
       return res.status(400).json({
         error: "Fichier manquant. Envoyez { filename, content (base64) }.",
+      });
+    }
+
+    // Rejet explicite plutot qu'ignorance silencieuse : un nom mal forme
+    // disparaitrait sans bruit et l'utilisateur chercherait longtemps pourquoi
+    // ses stories ne nomment pas son entreprise.
+    if (clientName !== undefined && clientName !== null && normalizeClientName(clientName) === null) {
+      return res.status(400).json({
+        error: `Nom de client invalide (1 a ${CLIENT_NAME_MAX} caracteres, sans saut de ligne).`,
       });
     }
 
@@ -174,7 +185,7 @@ export default async function handler(req, res) {
     // 5. Upsert the new chunks into Pinecone
     console.log(`[upload] Upserting into Pinecone...`);
 
-    const vectors = buildVectorRecords({ filename, text, chunks, embeddings });
+    const vectors = buildVectorRecords({ filename, text, chunks, embeddings, clientName });
 
     // Upsert in batches of 100
     const batchSize = 100;

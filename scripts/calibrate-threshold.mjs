@@ -23,16 +23,16 @@
 
 import { Pinecone } from "@pinecone-database/pinecone";
 import OpenAI from "openai";
+import { RELEVANCE_THRESHOLD } from "../api/_ingest.js";
 
 // Mêmes paramètres que api/retrieve-context.js — garder synchronisé.
 const EMBEDDING_MODEL = "text-embedding-3-small";
 const EMBEDDING_DIMENSIONS = 512;
 const QUERY_TOP_K = 20;
 
-// Seuil de pertinence applique en production : garder synchronise avec
-// api/retrieve-context.js (filtre sur match.score). Centralise ici pour que
-// le script ne puisse plus afficher un seuil different de celui du code.
-const CURRENT_THRESHOLD = 0.46;
+// Seuil de pertinence applique en production, importe de api/_ingest.js : le
+// script ne peut donc pas afficher un seuil different de celui du code.
+const CURRENT_THRESHOLD = RELEVANCE_THRESHOLD;
 // Seuil precedent, conserve pour mesurer ce que son relevement a coute.
 const PREVIOUS_THRESHOLD = 0.45;
 // topK reellement utilise par api/retrieve-context.js : c'est la fenetre dans

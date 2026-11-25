@@ -1,4 +1,5 @@
 import { applyCors } from './_cors.js';
+import { normalizeClientName, CLIENT_NAME_MAX } from './_ingest.js';
 
 // Modèle Claude utilisé pour la génération. Surchargeable via la variable
 // d'environnement serveur ANTHROPIC_MODEL (jamais préfixée VITE_, cf. CLAUDE.md)
@@ -36,7 +37,7 @@ if (!checkRateLimit(clientIp)) {
   return res.status(429).json({ error: 'Trop de requêtes. Maximum 10 par 15 minutes.' });
 }
 
-  const { brief, contextChunks } = req.body;
+  const { brief, contextChunks, clientName } = req.body;
 
   // Validation du brief
   if (!brief || brief.trim().length === 0) {
@@ -120,6 +121,22 @@ if (!checkRateLimit(clientIp)) {
     }
   }
 
+  // ── Validation de clientName ───────────────────────────────────────────
+  // Ce nom est injecté tel quel dans le prompt système et vient du corps de la
+  // requête : il est donc contrôlé par l'appelant, au même titre que
+  // contextChunks. normalizeClientName borne sa longueur et refuse tout
+  // caractère de contrôle, ce qui ferme la voie la plus simple à une injection
+  // d'instructions. Rejet explicite plutôt qu'ignorance silencieuse : une
+  // valeur invalide signale un bug de l'appelant, pas une préférence.
+  let clientNameValide = null;
+  if (clientName !== undefined && clientName !== null) {
+    clientNameValide = normalizeClientName(clientName);
+    if (clientNameValide === null) {
+      console.error('[generate-stories] clientName rejeté : type, longueur ou caractères invalides');
+      return res.status(400).json({ error: 'Nom de client invalide.' });
+    }
+  }
+
   // Vérifie la clé API côté serveur
   const apiKey = process.env.ANTHROPIC_API_KEY; 
 
@@ -142,8 +159,15 @@ if (!checkRateLimit(clientIp)) {
       ? "Génère 4 user stories maximum."
       : "Génère 3 user stories maximum — le brief est dense, sois sélectif et concis.";
 
+    // Quand le nom du client est connu, il est affirmé une fois et le modèle n'a
+    // plus aucune raison d'en inventer un. Quand il ne l'est pas, on conserve le
+    // repli neutre, vérifié sur 5 générations le 2026-11-25.
+    const regleNom = clientNameValide
+      ? `- Le client s'appelle exactement "${clientNameValide}". Tu DOIS employer ce nom et aucun autre, sans variante ni abréviation, ainsi que les spécificités présentes dans le CONTEXTE ci-dessus\n`
+      : `- Tu DOIS mentionner le nom de l'entreprise s'il apparaît explicitement dans le CONTEXTE ci-dessus, ainsi que les spécificités qui s'y trouvent\n- Si le contexte ci-dessus ne nomme pas l'entreprise, n'invente JAMAIS de nom : écris "le client" ou "l'entreprise". Un nom d'entreprise inventé est une erreur grave, même s'il semble plausible\n`;
+
     const contextBlock = contextChunks && contextChunks.length > 0
-      ? `\n\n---\nCONTEXTE DOCUMENTAIRE OBLIGATOIRE (documents internes du client) :\n${contextChunks.map((c, i) => `[Source ${i + 1} — ${c.filename}]\n${c.text}`).join("\n\n")}\n---\n\nINSTRUCTIONS IMPÉRATIVES pour utiliser ce contexte :\n- Tu dois TOUJOURS générer les user stories demandées — jamais refuser, jamais demander de clarification ou proposer plusieurs options au client\n- Tu DOIS mentionner le nom de l'entreprise s'il apparaît explicitement dans le CONTEXTE ci-dessus, ainsi que les spécificités qui s'y trouvent\n- Si le contexte ci-dessus ne nomme pas l'entreprise, n'invente JAMAIS de nom : écris \"le client\" ou \"l'entreprise\". Un nom d'entreprise inventé est une erreur grave, même s'il semble plausible\n- Tu DOIS réutiliser le vocabulaire exact des documents (noms de produits, délais, processus, références)\n- Chaque user story DOIT contenir au moins un élément concret issu des documents ci-dessus\n- Les critères d'acceptation DOIVENT refléter les règles métier réelles du client\n- INTERDIT de générer des user stories génériques qui s'appliqueraient à n'importe quelle entreprise — SAUF sur l'exception suivante\n- EXCEPTION : si le brief décrit un produit ou service dont ces documents ne montrent aucun équivalent chez ce client (par exemple un brief portant sur une catégorie de produits dont les documents ne font jamais mention), ne prétends pas que ce client vend, propose, envisage de proposer ou pourrait proposer ce produit précis, et n'invente aucune caractéristique produit, prix, nom d'entreprise ou programme lié à ce point — rédige ces stories-là de façon générique, comme pour n'importe quel e-commerce, sans y plaquer le nom de l'entreprise ni AUCUN fait documenté (projets, implantations, programmes, processus, chiffres), même s'il semble s'en rapprocher. Le reste du brief qui a un équivalent documenté suit les instructions ci-dessus normalement
+      ? `\n\n---\nCONTEXTE DOCUMENTAIRE OBLIGATOIRE (documents internes du client) :\n${contextChunks.map((c, i) => `[Source ${i + 1} — ${c.filename}]\n${c.text}`).join("\n\n")}\n---\n\nINSTRUCTIONS IMPÉRATIVES pour utiliser ce contexte :\n- Tu dois TOUJOURS générer les user stories demandées — jamais refuser, jamais demander de clarification ou proposer plusieurs options au client\n${regleNom}- Tu DOIS réutiliser le vocabulaire exact des documents (noms de produits, délais, processus, références)\n- Chaque user story DOIT contenir au moins un élément concret issu des documents ci-dessus\n- Les critères d'acceptation DOIVENT refléter les règles métier réelles du client\n- INTERDIT de générer des user stories génériques qui s'appliqueraient à n'importe quelle entreprise — SAUF sur l'exception suivante\n- EXCEPTION : si le brief décrit un produit ou service dont ces documents ne montrent aucun équivalent chez ce client (par exemple un brief portant sur une catégorie de produits dont les documents ne font jamais mention), ne prétends pas que ce client vend, propose, envisage de proposer ou pourrait proposer ce produit précis, et n'invente aucune caractéristique produit, prix, nom d'entreprise ou programme lié à ce point — rédige ces stories-là de façon générique, comme pour n'importe quel e-commerce, sans y plaquer le nom de l'entreprise ni AUCUN fait documenté (projets, implantations, programmes, processus, chiffres), même s'il semble s'en rapprocher. Le reste du brief qui a un équivalent documenté suit les instructions ci-dessus normalement
 - Si une information n'est pas présente dans les sources fournies (délais exacts, noms de transporteurs, formats techniques, etc.), ne l'invente pas — utilise une formulation générique (ex: "le système envoie une confirmation" plutôt qu'un délai précis non vérifié)`
       : "";
 

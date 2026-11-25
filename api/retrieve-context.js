@@ -4,6 +4,7 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 import OpenAI from "openai";
 import { applyCors } from "./_cors.js";
+import { RELEVANCE_THRESHOLD } from "./_ingest.js";
 
 export default async function handler(req, res) {
   if (applyCors(req, res, { methods: "POST, OPTIONS" })) return;
@@ -76,7 +77,7 @@ export default async function handler(req, res) {
       // laissait passer le brief "vêtements" (45.24% > 0.45).
       // Un seuil absolu est lié à un état d'index : recalibrer après TOUTE
       // réindexation, pas seulement quand public/docs/ change.
-      .filter((match) => match.score > 0.46)
+      .filter((match) => match.score > RELEVANCE_THRESHOLD)
       .map((match) => ({
         text: match.metadata.text,
         score: Math.round(match.score * 100),
@@ -84,9 +85,24 @@ export default async function handler(req, res) {
         chunkIndex: match.metadata.chunkIndex,
       }));
 
+    // Nom du client, lu dans les metadonnees des chunks retenus. Renvoye
+    // uniquement si tous s'accordent : des chunks de clients differents, cas
+    // possible le jour ou l'index sera multi-tenant, ne doivent pas produire un
+    // nom arbitraire. Absent, la generation retombe sur une formulation neutre.
+    const nomsClients = [
+      ...new Set(
+        queryResponse.matches
+          .filter((match) => match.score > RELEVANCE_THRESHOLD)
+          .map((match) => match.metadata?.clientName)
+          .filter((nom) => typeof nom === "string" && nom.length > 0),
+      ),
+    ];
+    const clientName = nomsClients.length === 1 ? nomsClients[0] : null;
+
     return res.status(200).json({
       success: true,
       chunks,
+      clientName,
       totalMatches: queryResponse.matches.length,
     });
   } catch (error) {
