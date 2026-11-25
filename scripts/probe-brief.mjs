@@ -71,6 +71,7 @@ async function main() {
     retenu: m.score > threshold ? "OUI" : "non",
     document: m.metadata?.filename ?? "?",
     chunk: m.metadata?.chunkIndex ?? "?",
+    client: m.metadata?.clientName ?? "(absent)",
     extrait: String(m.metadata?.text ?? "").replace(/\s+/g, " ").slice(0, 60) + "...",
   })));
 
@@ -84,14 +85,34 @@ async function main() {
       chunkIndex: m.metadata.chunkIndex,
     }));
 
+  // Meme logique d'unanimite que api/retrieve-context.js : un nom n'est propose
+  // que si tous les chunks retenus s'accordent. La sonde doit reproduire la
+  // production, pas inventer sa propre regle, sinon elle valide autre chose.
+  const nomsClients = [
+    ...new Set(
+      matches
+        .filter((m) => m.score > threshold)
+        .map((m) => m.metadata?.clientName)
+        .filter((nom) => typeof nom === "string" && nom.length > 0),
+    ),
+  ];
+  const clientName = nomsClients.length === 1 ? nomsClients[0] : null;
+
   console.log(`\n${retenus.length} chunk(s) retenu(s) au seuil ${threshold}.`);
+  if (clientName) {
+    console.log(`Nom de client transmis a la generation : "${clientName}".`);
+  } else if (nomsClients.length > 1) {
+    console.log(`Noms de clients divergents (${nomsClients.join(", ")}) : aucun nom transmis, repli neutre.`);
+  } else {
+    console.log("Aucun nom de client dans les chunks retenus : repli neutre attendu.");
+  }
   if (retenus.length === 0) {
     console.log("Aucun contexte ne serait injecte : la generation serait generique (badge \"RAG non utilise\").");
   }
 
   const out = flags.out || `notes-techniques/probe-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
   await mkdir(out.split("/").slice(0, -1).join("/") || ".", { recursive: true });
-  await writeFile(out, JSON.stringify({ brief, threshold, topK, matchCount: matches.length, contextChunks: retenus }, null, 2));
+  await writeFile(out, JSON.stringify({ brief, threshold, topK, matchCount: matches.length, clientName, contextChunks: retenus }, null, 2));
   console.log(`Resultat ecrit dans ${out}`);
 }
 

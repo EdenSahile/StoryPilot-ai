@@ -88,8 +88,11 @@ const AMORCES = /\b(?:de|chez|entreprise|société|societe|client\s+de|marque|en
  * 2. On retient systematiquement ce qui suit une amorce du type "client de",
  *    "chez", "l'entreprise", meme en debut de phrase.
  */
-function nomsPropresHorsContexte(texte, contexte, brief) {
-  const connu = (contexte + " " + brief).toLowerCase();
+function nomsPropresHorsContexte(texte, contexte, brief, clientName = null) {
+  // clientName vient des metadonnees, pas forcement du texte des chunks : sans lui
+  // dans le vocabulaire connu, une mention legitime du client serait comptee comme
+  // un nom invente. C'est le faux positif que ce detecteur doit eviter.
+  const connu = (contexte + " " + brief + " " + (clientName || "")).toLowerCase();
   const propre = texte.replace(/\*\*/g, "");
   const suspects = new Map();
   const motif = /[A-Z\u00c0\u00c2\u00c4\u00c9\u00c8\u00ca\u00cb\u00ce\u00cf\u00d4\u00d6\u00d9\u00db\u00dc\u00c7][\wÀ-ÿ'\u2019-]{2,}(?:\s+(?:&|et)\s+[A-ZÀ-Ÿ][\wÀ-ÿ'\u2019.-]+)?/g;
@@ -132,20 +135,25 @@ async function main() {
   const flags = parseArgs(process.argv.slice(2));
   const chemin = flags.probe;
   if (!chemin) {
-    console.error('Usage : npm run probe:generate -- --probe <fichier.json de probe-brief> [--runs 3] [--markers "mot1,mot2"] [--out sorties.json]');
+    console.error('Usage : npm run probe:generate -- --probe <fichier.json de probe-brief> [--runs 3] [--markers "mot1,mot2"] [--endpoint URL] [--bypass SECRET] [--out sorties.json]');
     process.exit(1);
   }
   const runs = Number(flags.runs || 1);
   const marqueurs = (flags.markers || "").split(",").map((m) => m.trim().toLowerCase()).filter(Boolean);
 
   const probe = JSON.parse(await readFile(chemin, "utf-8"));
-  const { brief, contextChunks, threshold } = probe;
+  const { brief, contextChunks, threshold, clientName = null } = probe;
 
   console.log(`\nBrief            : "${brief}"`);
   console.log(`Contexte injecte : ${contextChunks.length} chunk(s), issus d'une sonde au seuil ${threshold}`);
   for (const c of contextChunks) {
     console.log(`   - ${c.filename} chunk ${c.chunkIndex} (score ${c.score})`);
   }
+  console.log(
+    clientName
+      ? `Nom de client     : "${clientName}" (transmis dans le corps de la requete)`
+      : "Nom de client     : aucun, repli neutre attendu",
+  );
   if (contextChunks.length === 0) {
     console.log("\nAucun contexte : la generation serait generique, ce test n'a pas d'objet.");
     return;
@@ -207,7 +215,7 @@ async function main() {
   const sorties = [];
 
   for (let i = 1; i <= runs; i++) {
-    const res = await lancer({ brief, contextChunks });
+    const res = await lancer({ brief, contextChunks, ...(clientName ? { clientName } : {}) });
     const texte = extraireTexte(res);
     sorties.push(texte);
 
@@ -223,7 +231,7 @@ async function main() {
       console.log(`Marqueurs hors-sujet detectes : ${trouves.length ? trouves.join(", ") : "AUCUN"}`);
     }
     const contexte = contextChunks.map((c) => c.text).join(" ");
-    const suspects = nomsPropresHorsContexte(texte, contexte, brief);
+    const suspects = nomsPropresHorsContexte(texte, contexte, brief, clientName);
     console.log(
       `Noms propres absents du contexte : ${suspects.length ? suspects.map(([m, n]) => `${m} (x${n})`).join(", ") : "AUCUN"}`,
     );
@@ -235,7 +243,7 @@ async function main() {
   }
 
   const out = flags.out || chemin.replace(/\.json$/, "") + "-generation.json";
-  await writeFile(out, JSON.stringify({ brief, threshold, contextChunks, sorties }, null, 2));
+  await writeFile(out, JSON.stringify({ brief, threshold, clientName, contextChunks, sorties }, null, 2));
   console.log(`\nSorties completes ecrites dans ${out}`);
   console.log("A juger a la lecture : le modele rattache-t-il le brief au client, ou reste-t-il generique ?");
 }
