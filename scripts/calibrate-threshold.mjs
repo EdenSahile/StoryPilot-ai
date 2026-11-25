@@ -14,6 +14,12 @@
 // topK élevé et SANS filtrer par score (pour voir la distribution complète,
 // pas seulement ce qui passerait déjà le seuil actuel), puis compare la
 // distribution des meilleurs scores entre briefs pertinents et hors-sujet.
+//
+// Mesure aussi le cout du seuil : pour chaque brief pertinent, combien de
+// chunks le filtre retient dans la fenetre reelle de production (topK=5),
+// sous le seuil actuel contre le seuil precedent. Un seuil trop haut ne se
+// voit pas dans la separation des groupes, il se voit dans le contexte perdu
+// cote pertinent.
 
 import { Pinecone } from "@pinecone-database/pinecone";
 import OpenAI from "openai";
@@ -22,6 +28,17 @@ import OpenAI from "openai";
 const EMBEDDING_MODEL = "text-embedding-3-small";
 const EMBEDDING_DIMENSIONS = 512;
 const QUERY_TOP_K = 20;
+
+// Seuil de pertinence applique en production : garder synchronise avec
+// api/retrieve-context.js (filtre sur match.score). Centralise ici pour que
+// le script ne puisse plus afficher un seuil different de celui du code.
+const CURRENT_THRESHOLD = 0.46;
+// Seuil precedent, conserve pour mesurer ce que son relevement a coute.
+const PREVIOUS_THRESHOLD = 0.45;
+// topK reellement utilise par api/retrieve-context.js : c'est la fenetre dans
+// laquelle le filtre de score s'applique en production. Mesurer le filtre sur
+// une fenetre plus courte sous-estime le contexte perdu.
+const PRODUCTION_TOP_K = 5;
 
 // Étiquettes décidées à l'avance, avant tout appel — pas déduites après coup.
 // On-topic : inspirés du contenu réel des 8 documents indexés dans
@@ -98,37 +115,122 @@ async function main() {
     });
 
     const matches = queryResponse.matches || [];
-    const top3 = matches.slice(0, 3).map((m) => ({
+    const topN = matches.slice(0, PRODUCTION_TOP_K).map((m) => ({
       score: Math.round(m.score * 10000) / 100, // pourcentage, 2 décimales
       filename: m.metadata?.filename ?? "?",
     }));
 
+    // Nombre de chunks que le filtre retiendrait sous un seuil donne, dans la
+    // fenetre de production. Comparaison des scores en 0-1, comme le code.
+    const keptAt = (threshold) =>
+      topN.filter((c) => c.score / 100 > threshold).length;
+
     results.push({
       label: brief.label,
       brief: brief.text,
-      topScore: top3[0]?.score ?? 0,
-      top3,
+      topScore: topN[0]?.score ?? 0,
+      topN,
+      keptPrevious: keptAt(PREVIOUS_THRESHOLD),
+      keptCurrent: keptAt(CURRENT_THRESHOLD),
     });
 
     console.log(
-      `[${brief.label}] "${brief.text.slice(0, 60)}${brief.text.length > 60 ? "..." : ""}" → meilleur score: ${top3[0]?.score ?? "N/A"}% (${top3[0]?.filename ?? "?"})`,
+      `[${brief.label}] "${brief.text.slice(0, 60)}${brief.text.length > 60 ? "..." : ""}" → meilleur score: ${topN[0]?.score ?? "N/A"}% (${topN[0]?.filename ?? "?"}), chunks retenus : ${keptAt(PREVIOUS_THRESHOLD)} à ${PREVIOUS_THRESHOLD} / ${keptAt(CURRENT_THRESHOLD)} à ${CURRENT_THRESHOLD}`,
     );
   }
 
   // --- Tableau détaillé ---
-  console.log("\n=== Détail par brief ===\n");
+  console.log(
+    `\n=== Détail par brief (fenêtre de production, topK=${PRODUCTION_TOP_K}) ===\n`,
+  );
   console.table(
     results.map((r) => ({
       label: r.label,
       brief: r.brief.slice(0, 50) + (r.brief.length > 50 ? "..." : ""),
       "top1 score": r.topScore,
-      "top1 doc": r.top3[0]?.filename ?? "?",
-      "top2 score": r.top3[1]?.score ?? "-",
-      "top2 doc": r.top3[1]?.filename ?? "-",
-      "top3 score": r.top3[2]?.score ?? "-",
-      "top3 doc": r.top3[2]?.filename ?? "-",
+      "top1 doc": r.topN[0]?.filename ?? "?",
+      "top2 score": r.topN[1]?.score ?? "-",
+      "top3 score": r.topN[2]?.score ?? "-",
+      "top4 score": r.topN[3]?.score ?? "-",
+      "top5 score": r.topN[4]?.score ?? "-",
     })),
   );
+
+  // --- Coût du seuil sur les briefs pertinents ---
+  // La separation des groupes ne montre qu'un cote du compromis : ce qu'un
+  // seuil plus haut ecarte de bruit. Cette section montre l'autre cote, le
+  // contexte legitime perdu, brief par brief.
+  const onTopic = results.filter((r) => r.label === "on-topic");
+
+  console.log(
+    `\n=== Coût du seuil sur les briefs pertinents (${PREVIOUS_THRESHOLD} vs ${CURRENT_THRESHOLD}) ===\n`,
+  );
+  console.table(
+    onTopic.map((r) => ({
+      brief: r.brief.slice(0, 50) + (r.brief.length > 50 ? "..." : ""),
+      [`retenus > ${PREVIOUS_THRESHOLD}`]: r.keptPrevious,
+      [`retenus > ${CURRENT_THRESHOLD}`]: r.keptCurrent,
+      perdus: r.keptPrevious - r.keptCurrent,
+      "scores écartés":
+        r.topN
+          .filter(
+            (c) =>
+              c.score / 100 > PREVIOUS_THRESHOLD &&
+              c.score / 100 <= CURRENT_THRESHOLD,
+          )
+          .map((c) => c.score)
+          .join(", ") || "-",
+    })),
+  );
+
+  const keptBefore = onTopic.reduce((acc, r) => acc + r.keptPrevious, 0);
+  const keptAfter = onTopic.reduce((acc, r) => acc + r.keptCurrent, 0);
+  const lossPct =
+    keptBefore === 0
+      ? 0
+      : Math.round((1000 * (keptBefore - keptAfter)) / keptBefore) / 10;
+
+  console.log(
+    `\nTotal chunks pertinents retenus : ${keptBefore} à ${PREVIOUS_THRESHOLD}, ` +
+      `${keptAfter} à ${CURRENT_THRESHOLD}.\n` +
+      `Perte : ${keptBefore - keptAfter} chunk(s), soit ${lossPct}% du contexte ` +
+      `pertinent disponible dans la fenêtre de production.`,
+  );
+
+  // Un brief pertinent reduit a 0 ou 1 chunk genere sur un contexte quasi
+  // inexistant : le seuil ne l'a pas rejete, mais il l'a affame.
+  const starved = onTopic.filter((r) => r.keptCurrent <= 1);
+  if (starved.length > 0) {
+    console.log(
+      `\nBriefs pertinents réduits à 1 chunk ou moins sous ${CURRENT_THRESHOLD} ` +
+        `(qualité des stories à vérifier en génération réelle) :`,
+    );
+    for (const r of starved) {
+      console.log(
+        `  - "${r.brief.slice(0, 60)}" : ${r.keptCurrent} chunk(s), meilleur score ${r.topScore}%`,
+      );
+    }
+  }
+
+  // Chunks pertinents qui ne tiennent qu'a une fraction de point au-dessus du
+  // seuil : une reindexation de public/docs/ peut les faire basculer.
+  const fragile = [];
+  for (const r of onTopic) {
+    for (const c of r.topN) {
+      const margin = Math.round((c.score - CURRENT_THRESHOLD * 100) * 100) / 100;
+      if (margin > 0 && margin < 1) {
+        fragile.push({ brief: r.brief.slice(0, 50), score: c.score, margin });
+      }
+    }
+  }
+  if (fragile.length > 0) {
+    console.log(
+      `\nChunks pertinents à moins d'1 point au-dessus du seuil (fragiles) :`,
+    );
+    for (const f of fragile) {
+      console.log(`  - "${f.brief}" : ${f.score}% (+${f.margin} pt)`);
+    }
+  }
 
   // --- Statistiques par groupe ---
   const onTopicScores = results.filter((r) => r.label === "on-topic").map((r) => r.topScore);
@@ -154,7 +256,9 @@ async function main() {
     console.log(
       `Séparation nette : max off-topic (${offTopicStats.max}%) < min on-topic (${onTopicStats.min}%).\n` +
         `Seuil médian suggéré : ${suggestedThreshold}% (soit ${(suggestedThreshold / 100).toFixed(4)} sur l'échelle 0-1 utilisée dans le code).\n` +
-        `Seuil actuel en dur : 45% (0.45).`,
+        `Seuil actuel en dur : ${CURRENT_THRESHOLD * 100}% (${CURRENT_THRESHOLD}).\n` +
+        `Exposition réelle du seuil : ${Math.round((CURRENT_THRESHOLD * 100 - offTopicStats.max) * 100) / 100} point au-dessus du pire hors-sujet ` +
+        `(à ne pas confondre avec l'écart de séparation ci-dessus).`,
     );
   } else {
     console.log(
