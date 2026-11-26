@@ -396,3 +396,42 @@ describe('prompt-verdict — surveiller plutôt qu\'interdire', () => {
     expect(r.aLire.some((a) => a.type === 'terme_a_surveiller')).toBe(true);
   });
 });
+
+describe('prompt-verdict — portée de requis dans parStory', () => {
+  const principale = '**User Story 2** En tant que client de Luméo Boutique, je veux visualiser en réalité augmentée.\n**Titre :** Prévisualisation AR';
+  const secondaire = '**User Story 3** En tant que membre Lumeo+, je veux ajouter au panier depuis la réalité augmentée.\n**Titre :** Achat depuis la vue AR';
+
+  // Mesure du 2026-11-26 sur 10 runs : exiger le nom dans CHAQUE story
+  // designee comptait 3 manquements la ou la story principale le portait dans
+  // 9 runs sur 10. L'assertion trop stricte aurait fait conclure a une
+  // regression du prompt qui n'a pas eu lieu.
+  it('est satisfait si une seule des stories désignées porte le terme', () => {
+    const { violations } = evaluerRun({
+      texte: principale + '\n\n' + secondaire,
+      assertions: { parStory: [{ si: 'réalité augmentée', requis: ['Luméo Boutique'] }] },
+    });
+    expect(violations).toEqual([]);
+  });
+
+  it('échoue si aucune des stories désignées ne porte le terme', () => {
+    const { violations } = evaluerRun({
+      texte: secondaire,
+      assertions: { parStory: [{ si: 'réalité augmentée', requis: ['Luméo Boutique'] }] },
+    });
+    expect(violations.map((v) => v.type)).toEqual(['marqueur_requis_absent']);
+    expect(violations[0].message).toContain("n'apparait dans aucune");
+  });
+
+  // Les interdictions restent evaluees story par story : un terme interdit
+  // dans une seule story est une violation, meme si les autres sont propres.
+  it('garde les interdits au niveau de chaque story', () => {
+    const { violations } = evaluerRun({
+      texte: principale + '\n\n' + secondaire,
+      assertions: {
+        parStory: [{ si: 'réalité augmentée', requis: ['Luméo Boutique'], interdits: ['Lumeo+'] }],
+      },
+    });
+    expect(violations).toHaveLength(1);
+    expect(violations[0].story).toBe(2);
+  });
+});

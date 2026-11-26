@@ -203,11 +203,34 @@ function evaluerParStory({ texte, regles, numero }) {
       continue;
     }
 
+    // `requis` vaut pour l'ensemble des stories designees, pas pour chacune.
+    //
+    // Mesure du 2026-11-26 sur 10 runs : exiger le nom du client dans CHAQUE
+    // story designee comptait 3 manquements, alors que la story principale de
+    // la fonctionnalite le portait dans 9 runs sur 10. Les deux signalements
+    // supplementaires visaient une story secondaire, et la clause n'exige pas
+    // que chaque story liee repete le nom : elle exige que la fonctionnalite
+    // soit rattachee au client, ce qu'une mention satisfait.
+    //
+    // Cette assertion trop stricte faisait passer le taux de 1/10 a 3/10, et
+    // aurait fait conclure a une regression du correctif de prompt qui n'a pas
+    // eu lieu.
+    for (const terme of regle.requis ?? []) {
+      if (!cibles.some((c) => contientTerme(c.texte, terme))) {
+        violations.push({
+          type: "marqueur_requis_absent", run: numero, terme, selecteur: regle.si,
+          message:
+            `Run ${numero} : le terme requis "${terme}" n'apparait dans aucune des ` +
+            `${cibles.length} story(s) ${libelle}.`,
+        });
+      }
+    }
+
     for (const cible of cibles) {
       const r = evaluerRun({
         texte: cible.texte, contexte: "", numero,
         assertions: {
-          requis: regle.requis, interdits: regle.interdits, graphieExacte: regle.graphieExacte,
+          interdits: regle.interdits, graphieExacte: regle.graphieExacte,
         },
       });
       for (const v of r.violations) {
