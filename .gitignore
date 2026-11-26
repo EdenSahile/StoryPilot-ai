@@ -33,6 +33,7 @@ dist-ssr
 # Playwright
 /playwright-report/
 /test-results/
+.playwright-mcp/
 
 # Notes de session et docs locales (non versionnees)
 context.md
