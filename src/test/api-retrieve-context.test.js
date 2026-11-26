@@ -396,7 +396,7 @@ describe('api/retrieve-context — appels externes (règle CLAUDE.md : jamais de
 });
 
 describe('api/retrieve-context — succès (filtrage et formatage des résultats)', () => {
-  it('filtre les matches sous le seuil de pertinence (score <= 0.45) et formate les autres', async () => {
+  it('filtre les matches sous le seuil de pertinence (score <= 0.46) et formate les autres', async () => {
     mockQuery = vi.fn().mockResolvedValue({
       matches: [
         {
@@ -404,7 +404,7 @@ describe('api/retrieve-context — succès (filtrage et formatage des résultats
           metadata: { text: 'chunk pertinent', filename: 'doc.txt', chunkIndex: 0 },
         },
         {
-          score: 0.45,
+          score: 0.46,
           metadata: { text: 'chunk à la limite exacte', filename: 'doc.txt', chunkIndex: 1 },
         },
         {
@@ -420,9 +420,10 @@ describe('api/retrieve-context — succès (filtrage et formatage des résultats
     await handler(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
-    // score > 0.45 strictement : le match à 0.45 pile est exclu, seul le premier passe.
-    // Seuil calibré empiriquement le 2026-08-25 (scripts/calibrate-threshold.mjs,
-    // cf. context.md session CALIBRATION-SEUIL-RAG), remplace l'ancien 0.42 en dur.
+    // score > 0.46 strictement : le match à 0.46 pile est exclu, seul le premier passe.
+    // Seuil recalibré le 2026-11-25 après réindexation (scripts/calibrate-threshold.mjs,
+    // cf. context.md session INDEX-DESYNCHRONISE), remplace l'ancien 0.45 devenu
+    // inférieur au pire brief hors-sujet (45.24%).
     expect(res.body.chunks).toEqual([
       { text: 'chunk pertinent', score: 91, filename: 'doc.txt', chunkIndex: 0 },
     ]);
@@ -438,7 +439,72 @@ describe('api/retrieve-context — succès (filtrage et formatage des résultats
     await handler(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.body).toEqual({ success: true, chunks: [], totalMatches: 0 });
+    expect(res.body).toEqual({ success: true, chunks: [], clientName: null, totalMatches: 0 });
+  });
+
+  // Le nom du client vient des metadonnees de l'index et non du texte des
+  // chunks : 44% des chunks ne le mentionnent pas apres le passage a un
+  // decoupage de 500 caracteres, ce qui poussait le modele a en inventer un
+  // (cf. session INDEX-DESYNCHRONISE du journal technique).
+  it('renvoie le clientName des métadonnées quand les chunks retenus s\'accordent', async () => {
+    mockQuery = vi.fn().mockResolvedValue({
+      matches: [
+        { score: 0.91, metadata: { text: 'a', filename: 'd.txt', chunkIndex: 0, clientName: 'Luméo Boutique' } },
+        { score: 0.80, metadata: { text: 'b', filename: 'd.txt', chunkIndex: 1, clientName: 'Luméo Boutique' } },
+      ],
+    });
+    const handler = await freshHandler();
+    const req = createMockReq({ body: { brief: BRIEF_VALIDE } });
+    const res = createMockRes();
+
+    await handler(req, res);
+
+    expect(res.body.clientName).toBe('Luméo Boutique');
+  });
+
+  it('renvoie clientName null si les chunks retenus ne s\'accordent pas', async () => {
+    mockQuery = vi.fn().mockResolvedValue({
+      matches: [
+        { score: 0.91, metadata: { text: 'a', filename: 'd.txt', chunkIndex: 0, clientName: 'Luméo Boutique' } },
+        { score: 0.80, metadata: { text: 'b', filename: 'e.txt', chunkIndex: 0, clientName: 'Autre Client' } },
+      ],
+    });
+    const handler = await freshHandler();
+    const req = createMockReq({ body: { brief: BRIEF_VALIDE } });
+    const res = createMockRes();
+
+    await handler(req, res);
+
+    expect(res.body.clientName).toBeNull();
+  });
+
+  it('renvoie clientName null quand les métadonnées n\'en contiennent pas', async () => {
+    mockQuery = vi.fn().mockResolvedValue({
+      matches: [{ score: 0.91, metadata: { text: 'a', filename: 'd.txt', chunkIndex: 0 } }],
+    });
+    const handler = await freshHandler();
+    const req = createMockReq({ body: { brief: BRIEF_VALIDE } });
+    const res = createMockRes();
+
+    await handler(req, res);
+
+    expect(res.body.clientName).toBeNull();
+  });
+
+  it('ignore le clientName des matches sous le seuil de pertinence', async () => {
+    mockQuery = vi.fn().mockResolvedValue({
+      matches: [
+        { score: 0.91, metadata: { text: 'a', filename: 'd.txt', chunkIndex: 0 } },
+        { score: 0.20, metadata: { text: 'b', filename: 'e.txt', chunkIndex: 0, clientName: 'Client Hors Seuil' } },
+      ],
+    });
+    const handler = await freshHandler();
+    const req = createMockReq({ body: { brief: BRIEF_VALIDE } });
+    const res = createMockRes();
+
+    await handler(req, res);
+
+    expect(res.body.clientName).toBeNull();
   });
 
   it('ne fuite aucune clé API dans la réponse de succès', async () => {

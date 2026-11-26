@@ -4,6 +4,7 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 import OpenAI from "openai";
 import { applyCors } from "./_cors.js";
+import { RELEVANCE_THRESHOLD } from "./_ingest.js";
 
 export default async function handler(req, res) {
   if (applyCors(req, res, { methods: "POST, OPTIONS" })) return;
@@ -65,14 +66,18 @@ export default async function handler(req, res) {
 
     // 3. Format results
     const chunks = queryResponse.matches
-      // Seuil minimal de pertinence — calibré empiriquement le 2026-08-25 via
-      // scripts/calibrate-threshold.mjs (20 briefs pré-étiquetés, dont le cas
-      // de reproduction original "téléphone" de PR #78, score 43.41% < 0.45) :
-      // sépare proprement les briefs pertinents (min observé 46.18%) des
-      // hors-sujet (max observé 44.66%). Détail complet et méthode dans
-      // context.md, session CALIBRATION-SEUIL-RAG. Recalibrer avec le script
-      // si de nouveaux documents sont ajoutés à public/docs/.
-      .filter((match) => match.score > 0.45)
+      // Seuil minimal de pertinence, recalibré le 2026-11-25 après la
+      // réindexation complète de l'index (21 vers 52 vecteurs, cf. session
+      // INDEX-DESYNCHRONISE du journal technique), via
+      // scripts/calibrate-threshold.mjs sur 21 briefs pré-étiquetés :
+      // sépare les pertinents (min observé 46.93%) des hors-sujet (max
+      // observé 45.24%, brief "essayer virtuellement des vêtements"). Le cas
+      // de reproduction original "téléphone" de PR #78 score 44.36%, soit
+      // 1.64 pt sous le seuil. L'ancien 0.45, calibré avant réindexation,
+      // laissait passer le brief "vêtements" (45.24% > 0.45).
+      // Un seuil absolu est lié à un état d'index : recalibrer après TOUTE
+      // réindexation, pas seulement quand public/docs/ change.
+      .filter((match) => match.score > RELEVANCE_THRESHOLD)
       .map((match) => ({
         text: match.metadata.text,
         score: Math.round(match.score * 100),
@@ -80,9 +85,24 @@ export default async function handler(req, res) {
         chunkIndex: match.metadata.chunkIndex,
       }));
 
+    // Nom du client, lu dans les metadonnees des chunks retenus. Renvoye
+    // uniquement si tous s'accordent : des chunks de clients differents, cas
+    // possible le jour ou l'index sera multi-tenant, ne doivent pas produire un
+    // nom arbitraire. Absent, la generation retombe sur une formulation neutre.
+    const nomsClients = [
+      ...new Set(
+        queryResponse.matches
+          .filter((match) => match.score > RELEVANCE_THRESHOLD)
+          .map((match) => match.metadata?.clientName)
+          .filter((nom) => typeof nom === "string" && nom.length > 0),
+      ),
+    ];
+    const clientName = nomsClients.length === 1 ? nomsClients[0] : null;
+
     return res.status(200).json({
       success: true,
       chunks,
+      clientName,
       totalMatches: queryResponse.matches.length,
     });
   } catch (error) {

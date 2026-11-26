@@ -1,7 +1,8 @@
 // scripts/calibrate-threshold.mjs
 //
-// Script autonome de calibration du seuil de pertinence RAG (0.42 en dur dans
-// api/retrieve-context.js, ligne ~78). N'est jamais appelé par l'app — exécuté
+// Script autonome de calibration du seuil de pertinence RAG (RELEVANCE_THRESHOLD,
+// source unique dans api/_ingest.js, appliqué par le filtre de
+// api/retrieve-context.js). N'est jamais appelé par l'app, exécuté
 // à la main, pour recalibrer si de nouveaux documents sont ajoutés à
 // public/docs/ ou si le seuil actuel est remis en question.
 //
@@ -14,14 +15,54 @@
 // topK élevé et SANS filtrer par score (pour voir la distribution complète,
 // pas seulement ce qui passerait déjà le seuil actuel), puis compare la
 // distribution des meilleurs scores entre briefs pertinents et hors-sujet.
+//
+// Mesure aussi le cout du seuil : pour chaque brief pertinent, combien de
+// chunks le filtre retient dans la fenetre reelle de production (topK=5),
+// sous le seuil actuel contre le seuil precedent. Un seuil trop haut ne se
+// voit pas dans la separation des groupes, il se voit dans le contexte perdu
+// cote pertinent.
 
 import { Pinecone } from "@pinecone-database/pinecone";
 import OpenAI from "openai";
+import { writeFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { dirname, join, relative } from "node:path";
+import { RELEVANCE_THRESHOLD } from "../api/_ingest.js";
 
 // Mêmes paramètres que api/retrieve-context.js — garder synchronisé.
 const EMBEDDING_MODEL = "text-embedding-3-small";
 const EMBEDDING_DIMENSIONS = 512;
 const QUERY_TOP_K = 20;
+
+// Seuil de pertinence applique en production, importe de api/_ingest.js : le
+// script ne peut donc pas afficher un seuil different de celui du code.
+const CURRENT_THRESHOLD = RELEVANCE_THRESHOLD;
+// Seuil precedent, conserve pour mesurer ce que son relevement a coute.
+const PREVIOUS_THRESHOLD = 0.45;
+// topK reellement utilise par api/retrieve-context.js : c'est la fenetre dans
+// laquelle le filtre de score s'applique en production. Mesurer le filtre sur
+// une fenetre plus courte sous-estime le contexte perdu.
+const PRODUCTION_TOP_K = 5;
+
+// Plancher de bruit de la chaine embedding + retrieval, mesure le 2026-11-25 :
+// trois sondes du meme brief hors-sujet, texte rigoureusement identique, ont
+// donne 45.24 % (calibration) puis 45.27 % (sonde du soir). Les deux chiffres
+// sont justes, c'est la meme mesure repetee. Un ecart inferieur a ce plancher
+// n'est pas un signal. Sert ici a exprimer les marges en multiples du bruit,
+// parce qu'une marge de 0.03 pt et une marge de 0.73 pt ne se jugent pas de la
+// meme facon meme si les deux sont positives.
+const NOISE_FLOOR_PCT = 0.03;
+
+// Le snapshot vit dans src/test/ parce qu'il est la matiere d'un test Vitest,
+// et parce que notes-techniques/ est gitignore : un fichier de reference qui
+// n'est pas versionne ne protege personne apres un clone.
+const SNAPSHOT_PATH = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "src",
+  "test",
+  "calibration-snapshot.json",
+);
 
 // Étiquettes décidées à l'avance, avant tout appel — pas déduites après coup.
 // On-topic : inspirés du contenu réel des 8 documents indexés dans
@@ -98,37 +139,122 @@ async function main() {
     });
 
     const matches = queryResponse.matches || [];
-    const top3 = matches.slice(0, 3).map((m) => ({
+    const topN = matches.slice(0, PRODUCTION_TOP_K).map((m) => ({
       score: Math.round(m.score * 10000) / 100, // pourcentage, 2 décimales
       filename: m.metadata?.filename ?? "?",
     }));
 
+    // Nombre de chunks que le filtre retiendrait sous un seuil donne, dans la
+    // fenetre de production. Comparaison des scores en 0-1, comme le code.
+    const keptAt = (threshold) =>
+      topN.filter((c) => c.score / 100 > threshold).length;
+
     results.push({
       label: brief.label,
       brief: brief.text,
-      topScore: top3[0]?.score ?? 0,
-      top3,
+      topScore: topN[0]?.score ?? 0,
+      topN,
+      keptPrevious: keptAt(PREVIOUS_THRESHOLD),
+      keptCurrent: keptAt(CURRENT_THRESHOLD),
     });
 
     console.log(
-      `[${brief.label}] "${brief.text.slice(0, 60)}${brief.text.length > 60 ? "..." : ""}" → meilleur score: ${top3[0]?.score ?? "N/A"}% (${top3[0]?.filename ?? "?"})`,
+      `[${brief.label}] "${brief.text.slice(0, 60)}${brief.text.length > 60 ? "..." : ""}" → meilleur score: ${topN[0]?.score ?? "N/A"}% (${topN[0]?.filename ?? "?"}), chunks retenus : ${keptAt(PREVIOUS_THRESHOLD)} à ${PREVIOUS_THRESHOLD} / ${keptAt(CURRENT_THRESHOLD)} à ${CURRENT_THRESHOLD}`,
     );
   }
 
   // --- Tableau détaillé ---
-  console.log("\n=== Détail par brief ===\n");
+  console.log(
+    `\n=== Détail par brief (fenêtre de production, topK=${PRODUCTION_TOP_K}) ===\n`,
+  );
   console.table(
     results.map((r) => ({
       label: r.label,
       brief: r.brief.slice(0, 50) + (r.brief.length > 50 ? "..." : ""),
       "top1 score": r.topScore,
-      "top1 doc": r.top3[0]?.filename ?? "?",
-      "top2 score": r.top3[1]?.score ?? "-",
-      "top2 doc": r.top3[1]?.filename ?? "-",
-      "top3 score": r.top3[2]?.score ?? "-",
-      "top3 doc": r.top3[2]?.filename ?? "-",
+      "top1 doc": r.topN[0]?.filename ?? "?",
+      "top2 score": r.topN[1]?.score ?? "-",
+      "top3 score": r.topN[2]?.score ?? "-",
+      "top4 score": r.topN[3]?.score ?? "-",
+      "top5 score": r.topN[4]?.score ?? "-",
     })),
   );
+
+  // --- Coût du seuil sur les briefs pertinents ---
+  // La separation des groupes ne montre qu'un cote du compromis : ce qu'un
+  // seuil plus haut ecarte de bruit. Cette section montre l'autre cote, le
+  // contexte legitime perdu, brief par brief.
+  const onTopic = results.filter((r) => r.label === "on-topic");
+
+  console.log(
+    `\n=== Coût du seuil sur les briefs pertinents (${PREVIOUS_THRESHOLD} vs ${CURRENT_THRESHOLD}) ===\n`,
+  );
+  console.table(
+    onTopic.map((r) => ({
+      brief: r.brief.slice(0, 50) + (r.brief.length > 50 ? "..." : ""),
+      [`retenus > ${PREVIOUS_THRESHOLD}`]: r.keptPrevious,
+      [`retenus > ${CURRENT_THRESHOLD}`]: r.keptCurrent,
+      perdus: r.keptPrevious - r.keptCurrent,
+      "scores écartés":
+        r.topN
+          .filter(
+            (c) =>
+              c.score / 100 > PREVIOUS_THRESHOLD &&
+              c.score / 100 <= CURRENT_THRESHOLD,
+          )
+          .map((c) => c.score)
+          .join(", ") || "-",
+    })),
+  );
+
+  const keptBefore = onTopic.reduce((acc, r) => acc + r.keptPrevious, 0);
+  const keptAfter = onTopic.reduce((acc, r) => acc + r.keptCurrent, 0);
+  const lossPct =
+    keptBefore === 0
+      ? 0
+      : Math.round((1000 * (keptBefore - keptAfter)) / keptBefore) / 10;
+
+  console.log(
+    `\nTotal chunks pertinents retenus : ${keptBefore} à ${PREVIOUS_THRESHOLD}, ` +
+      `${keptAfter} à ${CURRENT_THRESHOLD}.\n` +
+      `Perte : ${keptBefore - keptAfter} chunk(s), soit ${lossPct}% du contexte ` +
+      `pertinent disponible dans la fenêtre de production.`,
+  );
+
+  // Un brief pertinent reduit a 0 ou 1 chunk genere sur un contexte quasi
+  // inexistant : le seuil ne l'a pas rejete, mais il l'a affame.
+  const starved = onTopic.filter((r) => r.keptCurrent <= 1);
+  if (starved.length > 0) {
+    console.log(
+      `\nBriefs pertinents réduits à 1 chunk ou moins sous ${CURRENT_THRESHOLD} ` +
+        `(qualité des stories à vérifier en génération réelle) :`,
+    );
+    for (const r of starved) {
+      console.log(
+        `  - "${r.brief.slice(0, 60)}" : ${r.keptCurrent} chunk(s), meilleur score ${r.topScore}%`,
+      );
+    }
+  }
+
+  // Chunks pertinents qui ne tiennent qu'a une fraction de point au-dessus du
+  // seuil : une reindexation de public/docs/ peut les faire basculer.
+  const fragile = [];
+  for (const r of onTopic) {
+    for (const c of r.topN) {
+      const margin = Math.round((c.score - CURRENT_THRESHOLD * 100) * 100) / 100;
+      if (margin > 0 && margin < 1) {
+        fragile.push({ brief: r.brief.slice(0, 50), score: c.score, margin });
+      }
+    }
+  }
+  if (fragile.length > 0) {
+    console.log(
+      `\nChunks pertinents à moins d'1 point au-dessus du seuil (fragiles) :`,
+    );
+    for (const f of fragile) {
+      console.log(`  - "${f.brief}" : ${f.score}% (+${f.margin} pt)`);
+    }
+  }
 
   // --- Statistiques par groupe ---
   const onTopicScores = results.filter((r) => r.label === "on-topic").map((r) => r.topScore);
@@ -154,7 +280,9 @@ async function main() {
     console.log(
       `Séparation nette : max off-topic (${offTopicStats.max}%) < min on-topic (${onTopicStats.min}%).\n` +
         `Seuil médian suggéré : ${suggestedThreshold}% (soit ${(suggestedThreshold / 100).toFixed(4)} sur l'échelle 0-1 utilisée dans le code).\n` +
-        `Seuil actuel en dur : 42% (0.42).`,
+        `Seuil actuel en dur : ${CURRENT_THRESHOLD * 100}% (${CURRENT_THRESHOLD}).\n` +
+        `Exposition réelle du seuil : ${Math.round((CURRENT_THRESHOLD * 100 - offTopicStats.max) * 100) / 100} point au-dessus du pire hors-sujet ` +
+        `(à ne pas confondre avec l'écart de séparation ci-dessus).`,
     );
   } else {
     console.log(
@@ -164,6 +292,99 @@ async function main() {
         `ne pas forcer une conclusion que les données ne permettent pas.`,
     );
   }
+  // --- Verdict, avec code de sortie ---
+  //
+  // Avant le 2026-11-26, ce script annoncait « Pas de separation nette » puis
+  // sortait en code 0. Un outil qui signale la perte du filet tout en
+  // reussissant est un faux vert : c'est la meme famille de bug que les trois
+  // rencontrees les 25 et 26 (detecteur de noms propres trop large, « Sorties
+  // ecrites » apres quatre echecs HTTP, marqueurs passes en ligne de commande).
+  // La propriete de securite est binaire, donc elle s'assertionne.
+  const thresholdPct = Math.round(CURRENT_THRESHOLD * 10000) / 100;
+  const violations = [];
+
+  if (offTopicStats.count === 0 || onTopicStats.count === 0) {
+    violations.push(
+      `Echantillon degenere : ${onTopicStats.count} brief(s) pertinent(s) et ` +
+        `${offTopicStats.count} hors-sujet. Sans les deux groupes, la separation ne veut rien dire.`,
+    );
+  }
+  // Comparaison en >= et <= : le filtre de production est strict (score >
+  // seuil), donc une egalite est techniquement du bon cote. Elle est traitee
+  // comme une violation quand meme, parce qu'une marge nulle face a 0.03 pt de
+  // bruit de mesure est un tirage au sort, pas une protection.
+  if (offTopicStats.max >= thresholdPct) {
+    violations.push(
+      `Pire brief hors-sujet a ${offTopicStats.max}% pour un seuil a ${thresholdPct}% : ` +
+        `marge nulle ou negative, au moins un chunk hors-sujet entre dans le prompt.`,
+    );
+  }
+  if (onTopicStats.min <= thresholdPct) {
+    violations.push(
+      `Brief pertinent le plus faible a ${onTopicStats.min}% pour un seuil a ${thresholdPct}% : ` +
+        `ce brief genere sans aucun contexte documentaire.`,
+    );
+  }
+
+  const marginOff = Math.round((thresholdPct - offTopicStats.max) * 100) / 100;
+  const marginOn = Math.round((onTopicStats.min - thresholdPct) * 100) / 100;
+  const inNoise = (m) => `${Math.round((m / NOISE_FLOOR_PCT) * 10) / 10}x le bruit`;
+
+  console.log("\n=== Marges du seuil, exprimees en plancher de bruit ===\n");
+  console.log(`Plancher de bruit mesure : ${NOISE_FLOOR_PCT} pt (trois sondes du meme brief, 2026-11-25).`);
+  console.log(`Marge cote hors-sujet  : ${marginOff} pt, soit ${inNoise(marginOff)}.`);
+  console.log(`Marge cote pertinent   : ${marginOn} pt, soit ${inNoise(marginOn)}.`);
+  console.log(
+    `Pour memoire, la reindexation du 2026-11-25 a deplace le pire hors-sujet de +0.60 pt\n` +
+      `d'un seul coup, soit 20x le bruit. Le risque sur ces marges n'est pas la derive lente,\n` +
+      `c'est le prochain changement de decoupage ou de corpus.`,
+  );
+
+  if (violations.length > 0) {
+    console.error("\n=== ECHEC : la propriete de separation n'est plus verifiee ===\n");
+    for (const v of violations) console.error(`  - ${v}`);
+    console.error(
+      `\nSnapshot NON ecrit : une calibration cassee ne doit pas devenir la reference.\n` +
+        `Choisir un nouveau seuil (voir le seuil median suggere ci-dessus), le poser dans\n` +
+        `api/_ingest.js, puis relancer ce script.`,
+    );
+    process.exit(1);
+  }
+
+  // --- Snapshot versionne ---
+  //
+  // Le seul test qui parlait du seuil assertait sa VALEUR
+  // (expect(RELEVANCE_THRESHOLD).toBe(0.46)). Il reste vert apres n'importe
+  // quelle reindexation, c'est-a-dire apres exactement l'evenement capable de
+  // faire passer un chunk hors-sujet au-dessus du seuil. Ce snapshot donne a
+  // npm test de quoi asserter la PROPRIETE hors ligne, sans cle API.
+  //
+  // Volontairement sans agregats (ni min, ni max, ni moyenne) : le test
+  // recalcule tout depuis `briefs`. Un verdict doit se deduire de la matiere
+  // brute, jamais d'un resume que quelqu'un peut avoir ecrit a la main.
+  const snapshot = {
+    generatedAt: new Date().toISOString(),
+    threshold: CURRENT_THRESHOLD,
+    embeddingModel: EMBEDDING_MODEL,
+    embeddingDimensions: EMBEDDING_DIMENSIONS,
+    queryTopK: QUERY_TOP_K,
+    productionTopK: PRODUCTION_TOP_K,
+    noiseFloorPct: NOISE_FLOOR_PCT,
+    briefs: results.map((r) => ({
+      label: r.label,
+      brief: r.brief,
+      topScore: r.topScore,
+      topDoc: r.topN[0]?.filename ?? "?",
+      keptCurrent: r.keptCurrent,
+    })),
+  };
+
+  await writeFile(SNAPSHOT_PATH, JSON.stringify(snapshot, null, 2) + "\n", "utf8");
+  console.log(`\nSnapshot ecrit : ${relative(process.cwd(), SNAPSHOT_PATH)}`);
+  console.log(
+    `Verifie par src/test/calibration-separation.test.js a chaque npm test.\n` +
+      `A commiter : c'est la reference hors ligne du filet de securite.`,
+  );
 }
 
 main().catch((error) => {

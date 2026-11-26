@@ -1230,11 +1230,16 @@ export default function Forge({
     setTruncated?.(false);
 
     let contextChunks = [];
+    // Le nom du client vient des metadonnees de l'index, pas des chunks
+    // recuperes : 44% d'entre eux ne le mentionnent pas, ce qui poussait le
+    // modele a en inventer un.
+    let clientName = null;
 
     if (!ragDisabled) {
       try {
         const ragResult = await retrieveContext(brief);
         contextChunks = ragResult.chunks || [];
+        clientName = ragResult.clientName || null;
         setRagChunks(contextChunks);
       } catch (err) {
         // La génération continue sans contexte, mais on le signale : l'utilisateur
@@ -1258,6 +1263,7 @@ export default function Forge({
       },
       contextChunks,
       () => setTruncated?.(true),
+      clientName,
     );
 
     if (!hasError) setStatus("success");

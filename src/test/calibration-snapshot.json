@@ -1,0 +1,158 @@
+{
+  "generatedAt": "2026-11-26T11:29:13.551Z",
+  "threshold": 0.46,
+  "embeddingModel": "text-embedding-3-small",
+  "embeddingDimensions": 512,
+  "queryTopK": 20,
+  "productionTopK": 5,
+  "noiseFloorPct": 0.03,
+  "briefs": [
+    {
+      "label": "on-topic",
+      "brief": "Je veux pouvoir choisir la couleur de ma suspension avant de l'ajouter au panier.",
+      "topScore": 47.07,
+      "topDoc": "06_faq_service_client.pdf",
+      "keptCurrent": 2
+    },
+    {
+      "label": "on-topic",
+      "brief": "Je veux voir le délai de livraison estimé avant de valider ma commande de luminaires.",
+      "topScore": 63.69,
+      "topDoc": "07_guide_complet_long.pdf",
+      "keptCurrent": 5
+    },
+    {
+      "label": "on-topic",
+      "brief": "Je veux pouvoir payer ma commande en plusieurs fois via Alma.",
+      "topScore": 57.22,
+      "topDoc": "06_faq_service_client.pdf",
+      "keptCurrent": 3
+    },
+    {
+      "label": "on-topic",
+      "brief": "Je veux retourner un article dans les 14 jours si je ne suis pas satisfait du produit reçu.",
+      "topScore": 61.16,
+      "topDoc": "02_politique_livraison_retours.pdf",
+      "keptCurrent": 5
+    },
+    {
+      "label": "on-topic",
+      "brief": "Je veux contacter le service client si mon luminaire arrive endommagé à la livraison.",
+      "topScore": 62.77,
+      "topDoc": "06_faq_service_client.pdf",
+      "keptCurrent": 5
+    },
+    {
+      "label": "on-topic",
+      "brief": "Je veux suivre l'avancement d'une livraison de mobilier volumineux prévue sur rendez-vous.",
+      "topScore": 58.21,
+      "topDoc": "04_archive_commandes.pdf",
+      "keptCurrent": 5
+    },
+    {
+      "label": "on-topic",
+      "brief": "Je veux consulter mon solde de cashback dans le programme de fidélité Lumeo+.",
+      "topScore": 68.64,
+      "topDoc": "07_guide_complet_long.pdf",
+      "keptCurrent": 5
+    },
+    {
+      "label": "on-topic",
+      "brief": "Je veux comparer les suspensions et lampes à poser disponibles par fournisseur et par prix.",
+      "topScore": 58.22,
+      "topDoc": "03_catalogue_produits.pdf",
+      "keptCurrent": 5
+    },
+    {
+      "label": "on-topic",
+      "brief": "Je veux recevoir une facture téléchargeable après chaque commande passée sur le site.",
+      "topScore": 46.94,
+      "topDoc": "06_faq_service_client.pdf",
+      "keptCurrent": 2
+    },
+    {
+      "label": "on-topic",
+      "brief": "Je veux vérifier qu'un fournisseur respecte la charte qualité avant d'être référencé au catalogue.",
+      "topScore": 64.12,
+      "topDoc": "08_charte_qualite_fournisseurs.pdf",
+      "keptCurrent": 5
+    },
+    {
+      "label": "off-topic",
+      "brief": "Je veux réserver une table dans un restaurant proche de chez moi pour ce soir.",
+      "topScore": 37.41,
+      "topDoc": "04_archive_commandes.pdf",
+      "keptCurrent": 0
+    },
+    {
+      "label": "off-topic",
+      "brief": "Je veux suivre mes calories quotidiennes dans une application de fitness.",
+      "topScore": 33.33,
+      "topDoc": "07_guide_complet_long.pdf",
+      "keptCurrent": 0
+    },
+    {
+      "label": "off-topic",
+      "brief": "Je veux réserver un vol pour mes prochaines vacances d'été.",
+      "topScore": 31.92,
+      "topDoc": "02_politique_livraison_retours.pdf",
+      "keptCurrent": 0
+    },
+    {
+      "label": "off-topic",
+      "brief": "Je veux consulter le solde de mon compte bancaire et faire un virement.",
+      "topScore": 39.76,
+      "topDoc": "06_faq_service_client.pdf",
+      "keptCurrent": 0
+    },
+    {
+      "label": "off-topic",
+      "brief": "Je veux acheter une nouvelle carte graphique pour mon ordinateur de bureau.",
+      "topScore": 32.91,
+      "topDoc": "04_archive_commandes.pdf",
+      "keptCurrent": 0
+    },
+    {
+      "label": "off-topic",
+      "brief": "Je veux essayer virtuellement des vêtements avant de les commander en ligne.",
+      "topScore": 45.27,
+      "topDoc": "07_guide_complet_long.pdf",
+      "keptCurrent": 0
+    },
+    {
+      "label": "off-topic",
+      "brief": "Je veux planifier l'entretien annuel de ma voiture chez le garagiste.",
+      "topScore": 39.29,
+      "topDoc": "08_charte_qualite_fournisseurs.pdf",
+      "keptCurrent": 0
+    },
+    {
+      "label": "off-topic",
+      "brief": "Je veux suivre l'évolution du prix de l'immobilier dans mon quartier.",
+      "topScore": 33.5,
+      "topDoc": "07_guide_complet_long.pdf",
+      "keptCurrent": 0
+    },
+    {
+      "label": "off-topic",
+      "brief": "Je veux apprendre une nouvelle langue avec des leçons quotidiennes personnalisées.",
+      "topScore": 36.09,
+      "topDoc": "07_guide_complet_long.pdf",
+      "keptCurrent": 0
+    },
+    {
+      "label": "off-topic",
+      "brief": "Je veux sauvegarder ma progression dans un jeu vidéo en ligne.",
+      "topScore": 33.25,
+      "topDoc": "07_guide_complet_long.pdf",
+      "keptCurrent": 0
+    },
+    {
+      "label": "off-topic",
+      "brief": "Je souhaite pouvoir choisir la couleur de mon téléphone",
+      "topScore": 44.35,
+      "topDoc": "06_faq_service_client.pdf",
+      "keptCurrent": 0
+    }
+  ]
+}
