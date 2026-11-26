@@ -1,7 +1,8 @@
 // scripts/calibrate-threshold.mjs
 //
-// Script autonome de calibration du seuil de pertinence RAG (0.45 en dur dans
-// api/retrieve-context.js, filtre sur match.score). N'est jamais appelé par l'app — exécuté
+// Script autonome de calibration du seuil de pertinence RAG (RELEVANCE_THRESHOLD,
+// source unique dans api/_ingest.js, appliqué par le filtre de
+// api/retrieve-context.js). N'est jamais appelé par l'app, exécuté
 // à la main, pour recalibrer si de nouveaux documents sont ajoutés à
 // public/docs/ ou si le seuil actuel est remis en question.
 //
@@ -23,6 +24,9 @@
 
 import { Pinecone } from "@pinecone-database/pinecone";
 import OpenAI from "openai";
+import { writeFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { dirname, join, relative } from "node:path";
 import { RELEVANCE_THRESHOLD } from "../api/_ingest.js";
 
 // Mêmes paramètres que api/retrieve-context.js — garder synchronisé.
@@ -39,6 +43,26 @@ const PREVIOUS_THRESHOLD = 0.45;
 // laquelle le filtre de score s'applique en production. Mesurer le filtre sur
 // une fenetre plus courte sous-estime le contexte perdu.
 const PRODUCTION_TOP_K = 5;
+
+// Plancher de bruit de la chaine embedding + retrieval, mesure le 2026-11-25 :
+// trois sondes du meme brief hors-sujet, texte rigoureusement identique, ont
+// donne 45.24 % (calibration) puis 45.27 % (sonde du soir). Les deux chiffres
+// sont justes, c'est la meme mesure repetee. Un ecart inferieur a ce plancher
+// n'est pas un signal. Sert ici a exprimer les marges en multiples du bruit,
+// parce qu'une marge de 0.03 pt et une marge de 0.73 pt ne se jugent pas de la
+// meme facon meme si les deux sont positives.
+const NOISE_FLOOR_PCT = 0.03;
+
+// Le snapshot vit dans src/test/ parce qu'il est la matiere d'un test Vitest,
+// et parce que notes-techniques/ est gitignore : un fichier de reference qui
+// n'est pas versionne ne protege personne apres un clone.
+const SNAPSHOT_PATH = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "src",
+  "test",
+  "calibration-snapshot.json",
+);
 
 // Étiquettes décidées à l'avance, avant tout appel — pas déduites après coup.
 // On-topic : inspirés du contenu réel des 8 documents indexés dans
@@ -268,6 +292,99 @@ async function main() {
         `ne pas forcer une conclusion que les données ne permettent pas.`,
     );
   }
+  // --- Verdict, avec code de sortie ---
+  //
+  // Avant le 2026-11-26, ce script annoncait « Pas de separation nette » puis
+  // sortait en code 0. Un outil qui signale la perte du filet tout en
+  // reussissant est un faux vert : c'est la meme famille de bug que les trois
+  // rencontrees les 25 et 26 (detecteur de noms propres trop large, « Sorties
+  // ecrites » apres quatre echecs HTTP, marqueurs passes en ligne de commande).
+  // La propriete de securite est binaire, donc elle s'assertionne.
+  const thresholdPct = Math.round(CURRENT_THRESHOLD * 10000) / 100;
+  const violations = [];
+
+  if (offTopicStats.count === 0 || onTopicStats.count === 0) {
+    violations.push(
+      `Echantillon degenere : ${onTopicStats.count} brief(s) pertinent(s) et ` +
+        `${offTopicStats.count} hors-sujet. Sans les deux groupes, la separation ne veut rien dire.`,
+    );
+  }
+  // Comparaison en >= et <= : le filtre de production est strict (score >
+  // seuil), donc une egalite est techniquement du bon cote. Elle est traitee
+  // comme une violation quand meme, parce qu'une marge nulle face a 0.03 pt de
+  // bruit de mesure est un tirage au sort, pas une protection.
+  if (offTopicStats.max >= thresholdPct) {
+    violations.push(
+      `Pire brief hors-sujet a ${offTopicStats.max}% pour un seuil a ${thresholdPct}% : ` +
+        `marge nulle ou negative, au moins un chunk hors-sujet entre dans le prompt.`,
+    );
+  }
+  if (onTopicStats.min <= thresholdPct) {
+    violations.push(
+      `Brief pertinent le plus faible a ${onTopicStats.min}% pour un seuil a ${thresholdPct}% : ` +
+        `ce brief genere sans aucun contexte documentaire.`,
+    );
+  }
+
+  const marginOff = Math.round((thresholdPct - offTopicStats.max) * 100) / 100;
+  const marginOn = Math.round((onTopicStats.min - thresholdPct) * 100) / 100;
+  const inNoise = (m) => `${Math.round((m / NOISE_FLOOR_PCT) * 10) / 10}x le bruit`;
+
+  console.log("\n=== Marges du seuil, exprimees en plancher de bruit ===\n");
+  console.log(`Plancher de bruit mesure : ${NOISE_FLOOR_PCT} pt (trois sondes du meme brief, 2026-11-25).`);
+  console.log(`Marge cote hors-sujet  : ${marginOff} pt, soit ${inNoise(marginOff)}.`);
+  console.log(`Marge cote pertinent   : ${marginOn} pt, soit ${inNoise(marginOn)}.`);
+  console.log(
+    `Pour memoire, la reindexation du 2026-11-25 a deplace le pire hors-sujet de +0.60 pt\n` +
+      `d'un seul coup, soit 20x le bruit. Le risque sur ces marges n'est pas la derive lente,\n` +
+      `c'est le prochain changement de decoupage ou de corpus.`,
+  );
+
+  if (violations.length > 0) {
+    console.error("\n=== ECHEC : la propriete de separation n'est plus verifiee ===\n");
+    for (const v of violations) console.error(`  - ${v}`);
+    console.error(
+      `\nSnapshot NON ecrit : une calibration cassee ne doit pas devenir la reference.\n` +
+        `Choisir un nouveau seuil (voir le seuil median suggere ci-dessus), le poser dans\n` +
+        `api/_ingest.js, puis relancer ce script.`,
+    );
+    process.exit(1);
+  }
+
+  // --- Snapshot versionne ---
+  //
+  // Le seul test qui parlait du seuil assertait sa VALEUR
+  // (expect(RELEVANCE_THRESHOLD).toBe(0.46)). Il reste vert apres n'importe
+  // quelle reindexation, c'est-a-dire apres exactement l'evenement capable de
+  // faire passer un chunk hors-sujet au-dessus du seuil. Ce snapshot donne a
+  // npm test de quoi asserter la PROPRIETE hors ligne, sans cle API.
+  //
+  // Volontairement sans agregats (ni min, ni max, ni moyenne) : le test
+  // recalcule tout depuis `briefs`. Un verdict doit se deduire de la matiere
+  // brute, jamais d'un resume que quelqu'un peut avoir ecrit a la main.
+  const snapshot = {
+    generatedAt: new Date().toISOString(),
+    threshold: CURRENT_THRESHOLD,
+    embeddingModel: EMBEDDING_MODEL,
+    embeddingDimensions: EMBEDDING_DIMENSIONS,
+    queryTopK: QUERY_TOP_K,
+    productionTopK: PRODUCTION_TOP_K,
+    noiseFloorPct: NOISE_FLOOR_PCT,
+    briefs: results.map((r) => ({
+      label: r.label,
+      brief: r.brief,
+      topScore: r.topScore,
+      topDoc: r.topN[0]?.filename ?? "?",
+      keptCurrent: r.keptCurrent,
+    })),
+  };
+
+  await writeFile(SNAPSHOT_PATH, JSON.stringify(snapshot, null, 2) + "\n", "utf8");
+  console.log(`\nSnapshot ecrit : ${relative(process.cwd(), SNAPSHOT_PATH)}`);
+  console.log(
+    `Verifie par src/test/calibration-separation.test.js a chaque npm test.\n` +
+      `A commiter : c'est la reference hors ligne du filet de securite.`,
+  );
 }
 
 main().catch((error) => {
