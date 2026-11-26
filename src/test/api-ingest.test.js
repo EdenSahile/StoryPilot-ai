@@ -33,6 +33,13 @@ describe('api/_ingest — paramètres de la pipeline (verrou)', () => {
   });
 
   // Quatre copies de ce seuil coexistaient dans le dépôt avant centralisation.
+  //
+  // Ce test ne verrouille que la VALEUR : il rend un changement de seuil
+  // délibéré (deux fichiers à éditer) au lieu d'accidentel. Il ne dit rien de
+  // la PROPRIÉTÉ de sécurité, c'est-à-dire du fait que ce seuil sépare encore
+  // les briefs pertinents des hors-sujet sur l'index courant. Cette propriété
+  // se casse sans qu'aucune ligne de code ne change, par simple réindexation.
+  // Elle est vérifiée par src/test/calibration-separation.test.js.
   it('expose le seuil de pertinence appliqué par le retrieval', () => {
     expect(RELEVANCE_THRESHOLD).toBe(0.46);
   });
