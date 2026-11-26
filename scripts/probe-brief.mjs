@@ -8,8 +8,8 @@
 // laquelle il fallait jusqu'ici répondre en lisant la console Pinecone.
 //
 // Usage :
-//   node --env-file=.env scripts/probe-brief.mjs "<brief>" [--threshold 0.45] [--topk 5] [--out chemin.json]
-//   npm run probe -- "<brief>" --threshold 0.45
+//   node --env-file=.env scripts/probe-brief.mjs "<brief>" [--threshold 0.46] [--topk 5] [--out chemin.json]
+//   npm run probe -- "<brief>" --threshold 0.46
 //
 // Le seuil par défaut suit celui de api/retrieve-context.js. Le passer
 // explicitement permet de tester un brief sous un ancien seuil, par exemple

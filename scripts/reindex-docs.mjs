@@ -28,7 +28,7 @@
 // reproduction historique contre l'ancien index.
 //
 // Après application : npm run check-index puis npm run calibrate-threshold.
-// Le seuil de pertinence (0.45 dans api/retrieve-context.js) a été calibré
+// Le seuil de pertinence (RELEVANCE_THRESHOLD dans api/_ingest.js) a été calibré
 // contre l'ancien index : il doit être rediscuté, pas repris tel quel.
 
 import { Pinecone } from "@pinecone-database/pinecone";

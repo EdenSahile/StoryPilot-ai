@@ -7,7 +7,7 @@
 // Usage : node --env-file=.env scripts/check-index-state.mjs
 // (mêmes variables que l'app : PINECONE_API_KEY, PINECONE_INDEX_URL)
 //
-// Pourquoi ce script : le seuil de pertinence RAG (0.45, cf.
+// Pourquoi ce script : le seuil de pertinence RAG (0.46, cf.
 // api/retrieve-context.js) est calibré contre un état donné de l'index. Une
 // réindexation change le découpage et donc les scores : la calibration du
 // 2026-11-25 a mesuré une dérive de 0.11 point depuis août, soit 11 fois le
