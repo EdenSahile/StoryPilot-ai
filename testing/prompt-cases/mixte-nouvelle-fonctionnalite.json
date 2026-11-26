@@ -1,0 +1,68 @@
+{
+  "id": "mixte-nouvelle-fonctionnalite",
+  "description": "Brief mixte : Alma et une nouvelle fonctionnalite (realite augmentee) portant sur des produits documentes. C'est le cas que ff0b3f5 a debloque : le nom du client DOIT y apparaitre. Campagne du 2026-11-26 : 5/5, avec une regle metier inventee au run 5 (48h Lumeo+ appliquee a la RA).",
+  "source": "notes-techniques/probe-2026-11-26T11-41-44-385Z.json",
+  "brief": "Je veux payer en plusieurs fois via Alma et aussi essayer les luminaires en réalité augmentée avant d'acheter.",
+  "clientName": "Luméo Boutique",
+  "threshold": 0.46,
+  "runs": 3,
+  "contextChunks": [
+    {
+      "text": "Environ 40% des clients actifs de Lumeo Boutique sont inscrits au\nprogramme Lumeo+, et les statistiques internes montrent que ces\nclients affichent un taux de réachat 2,3 fois supérieur à la moyenne\ndes clients non-inscrits.\n7. Modalités de paiement\nLumeo Boutique accepte le paiement par carte bancaire via Stripe\n(Visa, Mastercard, American Express), ainsi que le paiement en\nplusieurs fois sans frais via le partenaire Alma, disponible en 3 ou 4",
+      "score": 58,
+      "filename": "07_guide_complet_long.pdf",
+      "chunkIndex": 18
+    },
+    {
+      "text": "FAQ Service Client — Lumeo\nBoutique\nQ : Puis-je modifier ou annuler ma commande après validation\n? R : Une commande peut être modifiée ou annulée gratuitement dans\nles 2 heures suivant la validation, tant qu’elle n’est pas passée au\nstatut “en préparation”. Passé ce délai, contactez le SAV.\nQ : Proposez-vous le paiement en plusieurs fois ? R : Oui, via\nAlma, en 3 ou 4 fois sans frais à partir de 100€ d’achat.\nQ : Livrez-vous en point relais ? R : Oui pour les colis standards",
+      "score": 55,
+      "filename": "06_faq_service_client.pdf",
+      "chunkIndex": 0
+    },
+    {
+      "text": "l’entrepôt. Dans ces deux situations, Lumeo Boutique prend en charge\nl’intégralité des frais de retour et propose, au choix du client, un\néchange ou un remboursement.\nLe remboursement, une fois le retour réceptionné et contrôlé par\nl’équipe entrepôt, est effectué sous 10 jours ouvrés sur le moyen de\npaiement initial. Les produits soldés à plus de 50% de réduction ne\nsont ni repris ni échangés, une politique clairement affichée sur les\nfiches produit concernées lors des périodes de soldes.",
+      "score": 52,
+      "filename": "07_guide_complet_long.pdf",
+      "chunkIndex": 15
+    },
+    {
+      "text": "fois à partir de 100€ d’achat. Le paiement par virement bancaire est\négalement possible pour les commandes professionnelles, sur\ndemande auprès du service client.\nToutes les transactions sont sécurisées par un protocole 3D Secure, et\naucune donnée de carte bancaire n’est stockée sur les serveurs de\nLumeo Boutique, conformément aux exigences PCI-DSS.\n8. Service après-vente et gestion des\nlitiges\nLe service après-vente de Lumeo Boutique vise un délai de première",
+      "score": 51,
+      "filename": "07_guide_complet_long.pdf",
+      "chunkIndex": 19
+    },
+    {
+      "text": "de cumuler 5% de cashback sous forme de bons d’achat sur chaque\ncommande passée. Ces bons d’achat sont valables 1 an à compter de\nleur émission et sont cumulables entre eux.\nL’inscription au programme est automatique dès la création d’un\ncompte client, sans condition d’achat minimum. Les membres\nLumeo+ reçoivent également un accès en avant-première aux\nnouvelles collections, généralement 48h avant le grand public, ainsi\nqu’une invitation aux ventes privées organisées deux fois par an.",
+      "score": 51,
+      "filename": "07_guide_complet_long.pdf",
+      "chunkIndex": 17
+    }
+  ],
+  "assertions": {
+    "requis": [
+      "Luméo Boutique"
+    ],
+    "interdits": [
+      "showroom",
+      "Lyon"
+    ],
+    "graphieExacte": [
+      "Lumeo+"
+    ],
+    "parStory": [
+      {
+        "si": "réalité augmentée",
+        "libelle": "nouvelle fonctionnalite sur produits documentes",
+        "requis": [
+          "Luméo Boutique"
+        ],
+        "surveiller": [
+          "Lumeo+",
+          "cashback",
+          "48h",
+          "ventes privées"
+        ]
+      }
+    ]
+  }
+}

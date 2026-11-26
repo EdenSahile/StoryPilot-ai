@@ -163,7 +163,7 @@ if (!checkRateLimit(clientIp)) {
     // plus aucune raison d'en inventer un. Quand il ne l'est pas, on conserve le
     // repli neutre, vérifié sur 5 générations le 2026-11-25.
     const regleNom = clientNameValide
-      ? `- Le client s'appelle exactement "${clientNameValide}". Tu DOIS employer ce nom et aucun autre, sans variante ni abréviation, ainsi que les spécificités présentes dans le CONTEXTE ci-dessus\n`
+      ? `- Le client s'appelle exactement "${clientNameValide}". Tu DOIS employer ce nom et aucun autre pour désigner l'entreprise, sans variante ni abréviation, ainsi que les spécificités présentes dans le CONTEXTE ci-dessus\n- Cette graphie vaut pour le nom de l'entreprise et pour lui seul. Tout autre terme du CONTEXTE (nom de produit, de programme, de partenaire) se reprend exactement tel qu'il y est écrit, même si son orthographe diffère de celle du nom de l'entreprise\n`
       : `- Tu DOIS mentionner le nom de l'entreprise s'il apparaît explicitement dans le CONTEXTE ci-dessus, ainsi que les spécificités qui s'y trouvent\n- Si le contexte ci-dessus ne nomme pas l'entreprise, n'invente JAMAIS de nom : écris "le client" ou "l'entreprise". Un nom d'entreprise inventé est une erreur grave, même s'il semble plausible\n`;
 
     const contextBlock = contextChunks && contextChunks.length > 0

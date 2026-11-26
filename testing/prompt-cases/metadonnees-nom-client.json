@@ -1,0 +1,29 @@
+{
+  "id": "metadonnees-nom-client",
+  "description": "Chunk unique qui ne nomme pas le client. Le nom ne peut venir que des metadonnees. Temoin de la chaine clientName, valide par A/B le 2026-11-26.",
+  "source": "notes-techniques/ab-metadata-AVEC-nom.json",
+  "brief": "Je veux suivre les etapes de qualification d'un fournisseur et etre alerte si son taux de retour depasse le seuil pendant la periode d'essai.",
+  "clientName": "Luméo Boutique",
+  "threshold": 0.46,
+  "runs": 3,
+  "contextChunks": [
+    {
+      "text": "paiement et les modalités de retour en cas de défaut de fabrication\nconstaté après livraison en entrepôt.\nLa quatrième et dernière étape est une période d’essai de six mois,\ndurant laquelle le fournisseur est intégré au catalogue avec un\nnombre limité de références. Si le taux de retour pour défaut reste\ninférieur à 2% durant cette période, le partenariat est reconduit sur\nune base annuelle.\nCritères de qualité retenus\nLes critères principaux évalués lors de la sélection sont les suivants :",
+      "score": 64,
+      "filename": "08_charte_qualite_fournisseurs.pdf",
+      "chunkIndex": 2
+    }
+  ],
+  "assertions": {
+    "requis": [
+      "Luméo Boutique"
+    ],
+    "interdits": [
+      "showroom",
+      "Lyon"
+    ],
+    "graphieExacte": [
+      "Lumeo+"
+    ]
+  }
+}
