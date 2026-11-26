@@ -45,16 +45,18 @@ function parseArgs(argv) {
 function extraireTexte(morceaux) {
   let texte = "";
   let termine = false;
+  let flux = false;
   for (const bloc of morceaux) {
     for (const ligne of bloc.split("\n")) {
       const t = ligne.trim();
       if (!t.startsWith("data: ")) continue;
+      flux = true;
       const d = t.slice(6);
       if (d === "[DONE]") { termine = true; continue; }
       try { const p = JSON.parse(d); if (p.text) texte += p.text; } catch { /* ligne partielle */ }
     }
   }
-  return { texte, termine };
+  return { texte, termine, flux };
 }
 
 async function appeler({ endpoint, bypass, corps }) {
@@ -82,7 +84,19 @@ async function appeler({ endpoint, bypass, corps }) {
   const morceaux = [];
   const dec = new TextDecoder();
   for await (const m of r.body) morceaux.push(dec.decode(m, { stream: true }));
-  const { texte, termine } = extraireTexte(morceaux);
+  const { texte, termine, flux } = extraireTexte(morceaux);
+  // Une reponse 200 qui ne contient aucune ligne SSE n'est pas une generation
+  // tronquee, c'est une autre ressource : typiquement l'index.html de
+  // l'application, servi quand --endpoint pointe la racine du site au lieu de
+  // la route API. Les deux cas echouent, mais les confondre coute une heure.
+  if (!flux) {
+    return {
+      ok: false,
+      detail:
+        "Réponse sans flux SSE. L'URL ne pointe probablement pas vers /api/generate-stories " +
+        "(une racine de site renvoie l'index.html de l'application).",
+    };
+  }
   if (!termine) return { ok: false, detail: "Flux interrompu avant la fin : sortie tronquée." };
   return { ok: true, texte };
 }
