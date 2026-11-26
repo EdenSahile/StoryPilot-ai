@@ -1,5 +1,5 @@
 // src/screens/Library.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import styled, { keyframes } from "styled-components";
 import { theme } from "../theme";
 import { getGenerations, deleteGeneration, updateGeneration, clearGenerations } from "../utils/libraryStorage";
@@ -500,8 +500,21 @@ export default function Library({ onNavigate, themeMode, onThemeChange }) {
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleteSuccessMessage, setDeleteSuccessMessage] = useState(null);
 
+  const selectedRef = useRef(null);
+  useEffect(() => { selectedRef.current = selected; }, [selected]);
+
   useEffect(() => {
     setGenerations(getGenerations());
+  }, []);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (!e.state?.libraryDetail && selectedRef.current) {
+        setSelected(null);
+      }
+    };
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
   }, []);
 
   const handleDelete = (e, id) => {
@@ -567,7 +580,7 @@ export default function Library({ onNavigate, themeMode, onThemeChange }) {
       <TopBar>
         <TopBarLeft>
           {selected ? (
-            <BackBtn onClick={() => setSelected(null)}>
+            <BackBtn onClick={() => { setSelected(null); window.history.back(); }}>
               <span className="icon" aria-hidden="true">arrow_back</span>
               Retour
             </BackBtn>
@@ -725,7 +738,7 @@ export default function Library({ onNavigate, themeMode, onThemeChange }) {
             ) : (
               <EntryList>
                 {generations.map((gen) => (
-                  <EntryCard key={gen.id} onClick={() => setSelected(gen)}>
+                  <EntryCard key={gen.id} onClick={() => { setSelected(gen); window.history.pushState({ screen: "library", libraryDetail: true }, ""); }}>
                     <div className="info">
                       <div className="entry-title">{gen.title}</div>
                       <div className="entry-meta">

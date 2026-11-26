@@ -1,7 +1,7 @@
 // App.jsx — StoryPilot AI v2
 // Remplace l'App.jsx existant
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { saveGeneration, getGenerations } from "./utils/libraryStorage";
 import { listDocuments } from "./components/services/ragService";
 import { getStoredTheme, saveTheme } from "./logic/themeStorage";
@@ -183,6 +183,35 @@ function App() {
   const [keepBrief, setKeepBrief] = useState(false);
   const [themeMode, setThemeMode] = useState(getStoredTheme);
   const savedFingerprintRef = useRef(null);
+  const skipNextPush = useRef(false);
+  const autoSavedRef = useRef(false);
+
+  useEffect(() => { autoSavedRef.current = autoSaved; }, [autoSaved]);
+
+  useEffect(() => {
+    window.history.replaceState({ screen: currentScreen }, "");
+  }, []);
+
+  useEffect(() => {
+    const handler = (e) => {
+      const screen = e.state?.screen;
+      if (!screen) return;
+      skipNextPush.current = true;
+      if (screen === "forge" && autoSavedRef.current) {
+        setBrief("");
+        setStories("");
+        setRagChunks([]);
+        setTruncated(false);
+        setRagError(false);
+        setAutoSaved(false);
+        setKeepBrief(false);
+        savedFingerprintRef.current = null;
+      }
+      setCurrentScreen(screen);
+    };
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", themeMode);
@@ -222,6 +251,14 @@ function App() {
       });
   }, []);
 
+  const navigateScreen = useCallback((screen) => {
+    setCurrentScreen(screen);
+    if (!skipNextPush.current) {
+      window.history.pushState({ screen }, "");
+    }
+    skipNextPush.current = false;
+  }, []);
+
   const handleNavigate = (screen) => {
     if (screen === "forge" && autoSaved) {
       setBrief("");
@@ -232,7 +269,7 @@ function App() {
       setAutoSaved(false);
       savedFingerprintRef.current = null;
     }
-    setCurrentScreen(screen);
+    navigateScreen(screen);
   };
 
   const renderScreen = () => {
@@ -240,7 +277,7 @@ function App() {
       case "dashboard":
         return <Dashboard onNavigate={handleNavigate} themeMode={themeMode} onThemeChange={setThemeMode} />;
       case "forge":
-        return <Forge onNavigate={setCurrentScreen} brief={brief} setBrief={setBrief} stories={stories} setStories={setStories} ragChunks={ragChunks} setRagChunks={setRagChunks} ragError={ragError} setRagError={setRagError} documents={documents} setDocuments={setDocuments} setTruncated={setTruncated} keepBrief={keepBrief} onClearKeepBrief={() => setKeepBrief(false)} themeMode={themeMode} onThemeChange={setThemeMode} />;
+        return <Forge onNavigate={navigateScreen} brief={brief} setBrief={setBrief} stories={stories} setStories={setStories} ragChunks={ragChunks} setRagChunks={setRagChunks} ragError={ragError} setRagError={setRagError} documents={documents} setDocuments={setDocuments} setTruncated={setTruncated} keepBrief={keepBrief} onClearKeepBrief={() => setKeepBrief(false)} themeMode={themeMode} onThemeChange={setThemeMode} />;
       case "results":
         return (
           <Results
@@ -250,9 +287,9 @@ function App() {
             ragError={ragError}
             truncated={truncated}
             autoSaved={autoSaved}
-            onNewGeneration={() => { setBrief(""); setStories(""); setRagChunks([]); setTruncated(false); setRagError(false); setAutoSaved(false); setKeepBrief(false); savedFingerprintRef.current = null; setCurrentScreen("forge"); }}
-            onRegenerate={() => { setStories(""); setRagChunks([]); setTruncated(false); setRagError(false); setAutoSaved(false); setKeepBrief(true); savedFingerprintRef.current = null; setCurrentScreen("forge"); }}
-            onNavigate={setCurrentScreen}
+            onNewGeneration={() => { setBrief(""); setStories(""); setRagChunks([]); setTruncated(false); setRagError(false); setAutoSaved(false); setKeepBrief(false); savedFingerprintRef.current = null; navigateScreen("forge"); }}
+            onRegenerate={() => { setStories(""); setRagChunks([]); setTruncated(false); setRagError(false); setAutoSaved(false); setKeepBrief(true); savedFingerprintRef.current = null; navigateScreen("forge"); }}
+            onNavigate={navigateScreen}
             themeMode={themeMode}
             onThemeChange={setThemeMode}
           />
@@ -266,7 +303,7 @@ function App() {
       case "confidentialite":
         return <Confidentialite onNavigate={handleNavigate} />;
       default:
-        return <Dashboard onNavigate={setCurrentScreen} themeMode={themeMode} onThemeChange={setThemeMode} />;
+        return <Dashboard onNavigate={navigateScreen} themeMode={themeMode} onThemeChange={setThemeMode} />;
     }
   };
 
