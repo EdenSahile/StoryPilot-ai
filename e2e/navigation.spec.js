@@ -86,6 +86,24 @@ test.describe('Navigation — bouton retour du navigateur', () => {
     await expect(page.getByPlaceholder(/Décris ton besoin métier ici/)).toBeVisible();
   });
 
+  test('navigation après un retour navigateur pousse bien une entrée dans l\'historique', async ({ page }) => {
+    await page.goto('/');
+
+    // Forge → Historique → retour → Forge
+    await page.locator('aside nav button', { hasText: 'Historique' }).click();
+    await expect(page.getByRole('heading', { name: 'Historique' })).toBeVisible();
+    await page.goBack();
+    await expect(page.getByPlaceholder(/Décris ton besoin métier ici/)).toBeVisible();
+
+    // Forge → Réglages (après le retour, cette navigation doit pousser une entrée)
+    await page.locator('aside nav button', { hasText: 'Réglages' }).click();
+    await expect(page.getByRole('heading', { name: 'Réglages' })).toBeVisible();
+
+    // Retour navigateur : Réglages → Forge (et pas un saut d'écran)
+    await page.goBack();
+    await expect(page.getByPlaceholder(/Décris ton besoin métier ici/)).toBeVisible();
+  });
+
   test('retour navigateur depuis le détail historique ramène à la liste', async ({ page }) => {
     await page.goto('/');
 

@@ -196,7 +196,6 @@ function App() {
     const handler = (e) => {
       const screen = e.state?.screen;
       if (!screen) return;
-      skipNextPush.current = true;
       if (screen === "forge" && autoSavedRef.current) {
         setBrief("");
         setStories("");
