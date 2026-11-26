@@ -18,7 +18,8 @@
     "probe": "node --env-file=.env scripts/probe-brief.mjs",
     "probe:generate": "node --env-file=.env scripts/probe-generation.mjs",
     "reindex": "node --env-file=.env scripts/reindex-docs.mjs",
-    "reindex:apply": "node --env-file=.env scripts/reindex-docs.mjs --apply"
+    "reindex:apply": "node --env-file=.env scripts/reindex-docs.mjs --apply",
+    "harness": "node --env-file=.env scripts/prompt-harness.mjs"
   },
   "engines": {
     "node": ">=24.22.1 <25",

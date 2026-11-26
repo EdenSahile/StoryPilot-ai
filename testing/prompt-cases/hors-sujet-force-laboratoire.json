@@ -1,0 +1,25 @@
+{
+  "id": "hors-sujet-force-laboratoire",
+  "description": "LABORATOIRE, non atteignable en production : chunk hors sujet force SANS clientName. A 0,46 ce brief ne recupere aucun chunk, et quand un chunk passe, clientName est toujours pose. Conserve pour eprouver la clause isolement, jamais comme modele de la production.",
+  "source": "notes-techniques/probe-vetements-v2.json",
+  "brief": "Je veux essayer virtuellement des vêtements avant de les commander en ligne.",
+  "clientName": null,
+  "threshold": 0.45,
+  "runs": 5,
+  "contextChunks": [
+    {
+      "text": "litiges SAV et des niveaux de stock par fournisseur. Ce projet inclut\négalement une réflexion sur l’intégration d’outils d’intelligence\nartificielle pour accélérer la rédaction des réponses du service client\nface aux demandes récurrentes.\nEnfin, l’entreprise envisage l’ouverture d’un premier showroom\nphysique à Lyon en complément de l’activité e-commerce, permettant\naux clients de découvrir les produits phares de la collection avant\nachat.",
+      "score": 45,
+      "filename": "07_guide_complet_long.pdf",
+      "chunkIndex": 25
+    }
+  ],
+  "assertions": {
+    "interdits": [
+      "showroom",
+      "Lyon",
+      "Luméo Boutique",
+      "Lumeo+"
+    ]
+  }
+}
