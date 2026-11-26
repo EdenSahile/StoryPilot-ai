@@ -258,6 +258,32 @@ describe('api/generate-stories — erreurs upstream Anthropic (budget vs génér
     expect(JSON.stringify(res.body)).not.toContain('détail sensible');
     expect(JSON.stringify(res.body)).not.toContain('internal-host-42');
   });
+
+  // Specimen releve en production le 2026-11-26 : plafond de depense du
+  // workspace atteint (3,07 $ sur 3,00 $). Anthropic renvoie un 400
+  // invalid_request_error dont le libelle ne contient ni "credit balance"
+  // ni "spend limit/cap". La detection initiale le manquait.
+  it('400 invalid_request_error "workspace API usage limits" → message budget, pas le repli générique', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({
+        type: 'error',
+        error: {
+          type: 'invalid_request_error',
+          message:
+            'You have reached your specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC.',
+        },
+      }),
+    });
+    const handler = await freshHandler();
+    const res = createMockRes();
+
+    await handler(createMockReq({ body: briefValide }), res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.body).toEqual({ error: 'La démo a atteint son budget mensuel, réessaie le mois prochain.' });
+  });
 });
 
 describe('api/generate-stories — timeout 30 s sur l\'appel à Claude (règle CLAUDE.md)', () => {

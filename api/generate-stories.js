@@ -268,11 +268,20 @@ Sépare chaque story par ---${contextBlock}`,
       //   - 400 error.type "invalid_request_error": plafond de dépense org/workspace atteint
       //   - 429 error.type "rate_limit_error"    : plafond de dépense mensuel du palier d'usage
       // Les deux derniers codes HTTP sont partagés avec des erreurs sans rapport,
-      // d'où le test complémentaire sur le libellé du message ("credit balance",
-      // "spend limit/cap") en plus du type "billing_error".
+      // d'où le test complémentaire sur le libellé du message en plus du type
+      // "billing_error".
+      // Libellé observé EN PRODUCTION le 2026-11-26 (plafond du workspace, 400) :
+      //   "You have reached your specified workspace API usage limits.
+      //    You will regain access on 2026-12-01 at 00:00 UTC."
+      // Il ne contient ni "credit balance" ni "spend limit/cap" : la détection
+      // initiale le manquait, et l'utilisateur recevait le repli générique
+      // "Réessaie plus tard" pour une panne qui dure jusqu'au mois suivant.
+      // NE PAS élargir la détection au code HTTP : le repli générique sur les
+      // autres invalid_request_error est volontaire (SEC-001, cf. le test
+      // "erreur upstream inattendue" dans api-generate-stories.test.js).
       const budgetEpuise =
         anthropicType === 'billing_error' ||
-        /credit balance|spend (?:limit|cap)/i.test(anthropicMessage);
+        /credit balance|spend(?:ing)? (?:limit|cap)|usage limits?/i.test(anthropicMessage);
 
       if (budgetEpuise) {
         return res.status(response.status).json({
