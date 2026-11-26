@@ -56,10 +56,11 @@
         "requis": [
           "Luméo Boutique"
         ],
-        "interdits": [
+        "surveiller": [
           "Lumeo+",
           "cashback",
-          "48h"
+          "48h",
+          "ventes privées"
         ]
       }
     ]

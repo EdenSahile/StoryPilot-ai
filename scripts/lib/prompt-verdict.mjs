@@ -186,6 +186,7 @@ export function decouperStories(texte) {
  */
 function evaluerParStory({ texte, regles, numero }) {
   const violations = [];
+  const aLire = [];
   const stories = decouperStories(texte);
 
   for (const regle of regles) {
@@ -215,9 +216,37 @@ function evaluerParStory({ texte, regles, numero }) {
           message: v.message.replace(`Run ${numero} :`, `Run ${numero}, story ${cible.numero} (${libelle}) :`),
         });
       }
+
+      // `surveiller` : termes dont la presence merite une lecture sans etre
+      // decidable par machine.
+      //
+      // Mesure du 2026-11-26 sur 10 runs : interdire toute mention du
+      // programme de fidelite dans la story de nouvelle fonctionnalite donnait
+      // un faux positif sur trois. Deux runs l'inventaient (un acces
+      // privilegie aux nouvelles fonctionnalites, une fonctionnalite reservee
+      // aux membres), un le citait exactement comme justification metier, ce
+      // qui est legitime.
+      //
+      // La distinction entre les deux est semantique, donc hors de portee
+      // d'une assertion. Et elle est fondee dans la clause du prompt
+      // elle-meme : sur une categorie de produits absente, AUCUN fait
+      // documente n'a sa place, donc l'interdiction est decidable ; sur une
+      // nouvelle fonctionnalite portant sur des produits documentes, les faits
+      // documentes sont au contraire attendus, et seule leur extension a ce
+      // qui n'existe pas est fautive.
+      for (const terme of regle.surveiller ?? []) {
+        if (contientTerme(cible.texte, terme)) {
+          aLire.push({
+            type: "terme_a_surveiller", run: numero, story: cible.numero, terme, selecteur: regle.si,
+            message:
+              `Run ${numero}, story ${cible.numero} (${libelle}) : "${terme}" apparait. ` +
+              `Verifier qu'il est cite tel que les documents l'enoncent, et non etendu a cette fonctionnalite.`,
+          });
+        }
+      }
     }
   }
-  return violations;
+  return { violations, aLire };
 }
 
 /**
@@ -282,7 +311,9 @@ export function evaluerRun({ texte, contexte = "", assertions = {}, numero = 1 }
   }
 
   if ((assertions.parStory ?? []).length > 0) {
-    violations.push(...evaluerParStory({ texte, regles: assertions.parStory, numero }));
+    const r = evaluerParStory({ texte, regles: assertions.parStory, numero });
+    violations.push(...r.violations);
+    aLire.push(...r.aLire);
   }
 
   const horsContexte = [...chiffres(texte)].filter((n) => !chiffres(contexte).has(n));

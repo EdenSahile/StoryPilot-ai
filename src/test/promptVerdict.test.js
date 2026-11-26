@@ -349,3 +349,50 @@ describe('prompt-verdict — limite assumée du sélecteur', () => {
     expect(violations.map((v) => v.type)).toEqual(['marqueur_interdit']);
   });
 });
+
+describe('prompt-verdict — surveiller plutôt qu\'interdire', () => {
+  const STORY_RA = [
+    '**User Story 2** En tant que client de Luméo Boutique, je veux visualiser les luminaires en réalité augmentée.',
+    '**Titre :** Prévisualisation AR',
+    '**Description :** Cette fonctionnalité permettra de projeter un luminaire dans son espace, particulièrement pour les membres Lumeo+ qui représentent 40% des clients actifs.',
+  ].join('\n');
+
+  // Mesure du 2026-11-26 sur 10 runs : interdire toute mention du programme de
+  // fidelite dans la story de nouvelle fonctionnalite donnait un faux positif
+  // sur trois. Deux runs l'inventaient, un le citait exactement.
+  it('signale un terme surveillé sans faire échouer', () => {
+    const r = evaluerRun({
+      texte: STORY_RA,
+      assertions: {
+        parStory: [{
+          si: 'réalité augmentée',
+          libelle: 'nouvelle fonctionnalite',
+          requis: ['Luméo Boutique'],
+          surveiller: ['Lumeo+'],
+        }],
+      },
+    });
+    expect(r.violations).toEqual([]);
+    // Filtre par type : sans contexte fourni, les chiffres de la story (40 %,
+    // 2,3) produisent aussi un signalement "chiffres hors contexte", legitime.
+    const surveilles = r.aLire.filter((a) => a.type === 'terme_a_surveiller');
+    expect(surveilles).toHaveLength(1);
+    expect(surveilles[0].terme).toBe('Lumeo+');
+    expect(surveilles[0].story).toBe(1);
+  });
+
+  // L'assertion decidable reste une violation : la clause exige que le nom du
+  // client figure sur une story de nouvelle fonctionnalite, et le run 8 du
+  // 2026-11-26 ne le mettait pas.
+  it('fait toujours échouer sur un marqueur requis absent dans la story visée', () => {
+    const sansNom = STORY_RA.replace('client de Luméo Boutique', 'membre Luméo+');
+    const r = evaluerRun({
+      texte: sansNom,
+      assertions: {
+        parStory: [{ si: 'réalité augmentée', requis: ['Luméo Boutique'], surveiller: ['Lumeo+'] }],
+      },
+    });
+    expect(r.violations.map((v) => v.type)).toEqual(['marqueur_requis_absent']);
+    expect(r.aLire.some((a) => a.type === 'terme_a_surveiller')).toBe(true);
+  });
+});
