@@ -5,7 +5,7 @@
   "brief": "Je veux payer ma commande en plusieurs fois via Alma et aussi pouvoir choisir la couleur de mon téléphone.",
   "clientName": "Luméo Boutique",
   "threshold": 0.46,
-  "runs": 5,
+  "runs": 3,
   "contextChunks": [
     {
       "text": "FAQ Service Client — Lumeo\nBoutique\nQ : Puis-je modifier ou annuler ma commande après validation\n? R : Une commande peut être modifiée ou annulée gratuitement dans\nles 2 heures suivant la validation, tant qu’elle n’est pas passée au\nstatut “en préparation”. Passé ce délai, contactez le SAV.\nQ : Proposez-vous le paiement en plusieurs fois ? R : Oui, via\nAlma, en 3 ou 4 fois sans frais à partir de 100€ d’achat.\nQ : Livrez-vous en point relais ? R : Oui pour les colis standards",

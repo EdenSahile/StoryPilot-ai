@@ -5,7 +5,7 @@
   "brief": "Je veux payer en plusieurs fois via Alma et aussi essayer les luminaires en réalité augmentée avant d'acheter.",
   "clientName": "Luméo Boutique",
   "threshold": 0.46,
-  "runs": 5,
+  "runs": 3,
   "contextChunks": [
     {
       "text": "Environ 40% des clients actifs de Lumeo Boutique sont inscrits au\nprogramme Lumeo+, et les statistiques internes montrent que ces\nclients affichent un taux de réachat 2,3 fois supérieur à la moyenne\ndes clients non-inscrits.\n7. Modalités de paiement\nLumeo Boutique accepte le paiement par carte bancaire via Stripe\n(Visa, Mastercard, American Express), ainsi que le paiement en\nplusieurs fois sans frais via le partenaire Alma, disponible en 3 ou 4",

@@ -38,13 +38,26 @@ function parseArgs(argv) {
   return flags;
 }
 
-// Réassemble le texte depuis le flux SSE, et signale un flux interrompu.
-// Un flux qui s'arrête sans son marqueur de fin a produit une user story
-// tronquée : la juger comme une sortie complète donnerait un verdict sur un
-// texte amputé, donc un faux vert ou un faux rouge au hasard.
+// Réassemble le texte depuis le flux SSE écrit par api/generate-stories.js.
+//
+// Le protocole réellement émis, lu dans le handler et non deviné :
+//   data: {"text":"..."}       un fragment de texte
+//   data: {"stop":true}        fin normale, sur message_stop
+//   data: {"truncated":true}   le modèle a atteint max_tokens
+//
+// Première version fausse : elle exigeait "data: [DONE]". Ce marqueur n'est
+// écrit que si le flux Anthropic amont envoie littéralement [DONE], ce qui est
+// la convention d'OpenAI. Il n'arrive donc jamais, et les 15 runs de la
+// première campagne réelle ont tous échoué sur une exigence inventée.
+//
+// L'erreur de méthode vaut d'être notée : le marqueur avait été déduit en
+// lisant le consommateur (probe-generation ignorait [DONE] s'il le croisait),
+// pas le producteur. Une tolérance côté lecture a été prise pour une garantie
+// côté écriture.
 function extraireTexte(morceaux) {
   let texte = "";
   let termine = false;
+  let tronque = false;
   let flux = false;
   for (const bloc of morceaux) {
     for (const ligne of bloc.split("\n")) {
@@ -53,10 +66,15 @@ function extraireTexte(morceaux) {
       flux = true;
       const d = t.slice(6);
       if (d === "[DONE]") { termine = true; continue; }
-      try { const p = JSON.parse(d); if (p.text) texte += p.text; } catch { /* ligne partielle */ }
+      try {
+        const p = JSON.parse(d);
+        if (p.text) texte += p.text;
+        if (p.stop === true) termine = true;
+        if (p.truncated === true) tronque = true;
+      } catch { /* ligne partielle */ }
     }
   }
-  return { texte, termine, flux };
+  return { texte, termine, tronque, flux };
 }
 
 async function appeler({ endpoint, bypass, corps }) {
@@ -65,9 +83,19 @@ async function appeler({ endpoint, bypass, corps }) {
   // Set-Cookie, que fetch() suit sans conserver le cookie, d'où une boucle.
   if (bypass) headers["x-vercel-protection-bypass"] = bypass;
 
-  const r = await fetch(endpoint, {
-    method: "POST", headers, redirect: "manual", body: JSON.stringify(corps),
-  });
+  // fetch leve sur DNS injoignable, connexion refusee ou coupure reseau. Sans
+  // ce filet, une erreur transitoire au run 2 fait sortir tout le programme et
+  // perd les runs deja effectues, alors qu'elle doit etre un run en echec parmi
+  // d'autres. Une erreur n'est pas un evenement exceptionnel ici, c'est une
+  // donnee de la campagne.
+  let r;
+  try {
+    r = await fetch(endpoint, {
+      method: "POST", headers, redirect: "manual", body: JSON.stringify(corps),
+    });
+  } catch (e) {
+    return { ok: false, detail: `Appel impossible : ${e.cause?.code ?? e.name} ${e.message}` };
+  }
 
   if (r.status >= 300 && r.status < 400) {
     return { ok: false, detail: `Redirection ${r.status} vers ${r.headers.get("location") || "?"}. Vérifier le secret de bypass.` };
@@ -84,20 +112,26 @@ async function appeler({ endpoint, bypass, corps }) {
   const morceaux = [];
   const dec = new TextDecoder();
   for await (const m of r.body) morceaux.push(dec.decode(m, { stream: true }));
-  const { texte, termine, flux } = extraireTexte(morceaux);
+  const { texte, termine, tronque, flux } = extraireTexte(morceaux);
+  const brut = morceaux.join("").slice(0, 2000);
   // Une reponse 200 qui ne contient aucune ligne SSE n'est pas une generation
   // tronquee, c'est une autre ressource : typiquement l'index.html de
   // l'application, servi quand --endpoint pointe la racine du site au lieu de
   // la route API. Les deux cas echouent, mais les confondre coute une heure.
   if (!flux) {
     return {
-      ok: false,
+      ok: false, brut,
       detail:
         "Réponse sans flux SSE. L'URL ne pointe probablement pas vers /api/generate-stories " +
         "(une racine de site renvoie l'index.html de l'application).",
     };
   }
-  if (!termine) return { ok: false, detail: "Flux interrompu avant la fin : sortie tronquée." };
+  if (tronque) {
+    return { ok: false, brut, detail: "Le modèle a atteint max_tokens : user story coupée en cours de rédaction." };
+  }
+  if (!termine) {
+    return { ok: false, brut, detail: "Flux interrompu : ni marqueur de fin, ni signal de troncature." };
+  }
   return { ok: true, texte };
 }
 
@@ -162,6 +196,29 @@ async function main() {
 
   if (!existsSync(DOSSIER_SORTIES)) await mkdir(DOSSIER_SORTIES, { recursive: true });
 
+  // Garde-fou sur le quota de l'API, verifie AVANT de depenser la moindre
+  // generation. api/generate-stories.js limite a 10 requetes par 15 minutes et
+  // par IP. La premiere campagne reelle en a demande 15 : les 10 premieres sont
+  // passees, les 5 dernieres ont recu un 429, et le cas le plus interessant
+  // n'a jamais ete mesure. Echouer tout de suite coute zero appel.
+  const total = (await Promise.all(fichiers.map(async (f) => {
+    const c = JSON.parse(await readFile(f, "utf8"));
+    return Number(flags.runs || c.runs || 5);
+  }))).reduce((a, b) => a + b, 0);
+  const QUOTA = 10;
+  if (total > QUOTA) {
+    console.error(
+      `Campagne refusee : ${total} generations demandees pour un quota de ${QUOTA} par 15 minutes ` +
+      `(api/generate-stories.js, checkRateLimit).\n\n` +
+      `Deux formes utiles :\n` +
+      `  npm run harness -- --endpoint <url>                      serie courte, ${fichiers.length} cas\n` +
+      `  npm run harness -- --case <un cas> --runs 10 --endpoint <url>   mesure profonde d'un seul cas\n\n` +
+      `Le quota est compte par instance serverless et en memoire : il peut se reinitialiser ` +
+      `a la recreation de l'instance, mais rien ne permet d'y compter.`,
+    );
+    process.exit(1);
+  }
+
   let echecs = 0;
   for (const fichier of fichiers) {
     const cas = JSON.parse(await readFile(fichier, "utf8"));
@@ -175,6 +232,7 @@ async function main() {
     console.log(`\n[${cas.id}] ${runs} run(s) contre ${endpoint}`);
     const sorties = [];
     const incidents = [];
+    const diagnostics = [];
     for (let i = 1; i <= runs; i++) {
       const r = await appeler({ endpoint, bypass, corps });
       if (r.ok) {
@@ -185,13 +243,17 @@ async function main() {
         // comme une violation. Jamais un run ignore.
         sorties.push("");
         incidents.push(`run ${i} : ${r.detail}`);
+        // La reponse brute est conservee : sans elle, le fichier de sorties
+        // d'une campagne en echec ne permet pas de diagnostiquer, et il faut
+        // relancer pour comprendre, ce qui redepense le quota.
+        diagnostics.push({ run: i, detail: r.detail, brut: r.brut ?? null });
         process.stdout.write(`  run ${i}/${runs} : ECHEC, ${r.detail}\n`);
       }
     }
 
     const horodatage = new Date().toISOString().replace(/[:.]/g, "-");
     const chemin = join(DOSSIER_SORTIES, `${cas.id}-${horodatage}.json`);
-    await writeFile(chemin, JSON.stringify({ cas, sorties, incidents }, null, 2) + "\n", "utf8");
+    await writeFile(chemin, JSON.stringify({ cas, sorties, incidents, diagnostics }, null, 2) + "\n", "utf8");
 
     const contexte = (cas.contextChunks ?? []).map((c) => c.text).join("\n");
     const resultat = evaluerCampagne({ sorties, runsDemandes: runs, contexte, assertions: cas.assertions ?? {} });

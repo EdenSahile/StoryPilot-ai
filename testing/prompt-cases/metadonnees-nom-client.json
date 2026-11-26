@@ -5,7 +5,7 @@
   "brief": "Je veux suivre les etapes de qualification d'un fournisseur et etre alerte si son taux de retour depasse le seuil pendant la periode d'essai.",
   "clientName": "Luméo Boutique",
   "threshold": 0.46,
-  "runs": 5,
+  "runs": 3,
   "contextChunks": [
     {
       "text": "paiement et les modalités de retour en cas de défaut de fabrication\nconstaté après livraison en entrepôt.\nLa quatrième et dernière étape est une période d’essai de six mois,\ndurant laquelle le fournisseur est intégré au catalogue avec un\nnombre limité de références. Si le taux de retour pour défaut reste\ninférieur à 2% durant cette période, le partenariat est reconduit sur\nune base annuelle.\nCritères de qualité retenus\nLes critères principaux évalués lors de la sélection sont les suivants :",
