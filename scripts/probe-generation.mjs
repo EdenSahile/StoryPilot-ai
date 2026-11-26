@@ -174,13 +174,28 @@ async function main() {
       // Contourne la Deployment Protection de Vercel sur les previews.
       if (bypass) {
         headers["x-vercel-protection-bypass"] = bypass;
-        headers["x-vercel-set-bypass-cookie"] = "true";
+        // Pas de x-vercel-set-bypass-cookie : il fait repondre Vercel par un 307
+        // avec Set-Cookie, et fetch() de Node suit la redirection sans conserver
+        // le cookie, ce qui boucle jusqu'a "redirect count exceeded". Cet en-tete
+        // sert a un navigateur qui enchaine des navigations, pas a un appel API.
       }
+      // redirect: "manual" : une redirection devient un statut lisible plutot
+      // qu'une boucle muette.
       const r = await fetch(endpoint, {
         method: "POST",
         headers,
+        redirect: "manual",
         body: JSON.stringify(body),
       });
+      if (r.status >= 300 && r.status < 400) {
+        return {
+          code: r.status,
+          body:
+            `Redirection vers ${r.headers.get("location") || "(cible inconnue)"}. ` +
+            "Si le secret de bypass est correct, verifier qu'il correspond bien au projet.",
+          written: [],
+        };
+      }
       if (!r.ok || !r.body) {
         let detail = "";
         try { detail = JSON.stringify(await r.json()); } catch { detail = await r.text().catch(() => ""); }
@@ -245,6 +260,18 @@ async function main() {
   const out = flags.out || chemin.replace(/\.json$/, "") + "-generation.json";
   await writeFile(out, JSON.stringify({ brief, threshold, clientName, contextChunks, sorties }, null, 2));
   console.log(`\nSorties completes ecrites dans ${out}`);
+
+  // Un script qui annonce un resultat apres zero generation reussie est un faux
+  // vert : il doit echouer franchement pour qu'un enchainement s'arrete dessus.
+  const reussis = sorties.filter((t) => t && t.length > 0).length;
+  if (reussis === 0) {
+    console.error(`\nAucune generation n'a abouti (${runs} tentative(s)). Rien a juger.`);
+    process.exitCode = 1;
+    return;
+  }
+  if (reussis < runs) {
+    console.log(`Attention : ${runs - reussis} run(s) sur ${runs} ont echoue.`);
+  }
   console.log("A juger a la lecture : le modele rattache-t-il le brief au client, ou reste-t-il generique ?");
 }
 
