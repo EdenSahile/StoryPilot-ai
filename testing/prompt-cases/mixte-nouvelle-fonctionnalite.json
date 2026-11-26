@@ -48,6 +48,20 @@
     ],
     "graphieExacte": [
       "Lumeo+"
+    ],
+    "parStory": [
+      {
+        "si": "réalité augmentée",
+        "libelle": "nouvelle fonctionnalite sur produits documentes",
+        "requis": [
+          "Luméo Boutique"
+        ],
+        "interdits": [
+          "Lumeo+",
+          "cashback",
+          "48h"
+        ]
+      }
     ]
   }
 }

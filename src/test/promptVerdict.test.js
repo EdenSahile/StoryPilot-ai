@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   normaliser,
+  decouperStories,
   contientTerme,
   graphiesRencontrees,
   evaluerRun,
@@ -249,5 +250,102 @@ describe('prompt-verdict — corrections issues des campagnes du 2026-11-26', ()
     const chiffres = r.aLire.filter((a) => a.type === 'chiffres_hors_contexte');
     expect(chiffres).toHaveLength(1);
     expect(chiffres[0].valeurs).toEqual(expect.arrayContaining(['999 (1/5)', '150 (5/5)']));
+  });
+});
+
+describe('prompt-verdict — assertions portées par story', () => {
+  // Fixture realiste : dans les generations reelles une story fait 1 500 a
+  // 2 500 caracteres, et les coordonnees du SAV apparaissent dans les criteres
+  // d'acceptation, bien au-dela de l'en-tete. Une premiere version de cette
+  // fixture faisait 200 caracteres, ce qui placait la mention du SAV dans
+  // l'en-tete et faisait echouer le test. C'est la limite de l'heuristique,
+  // documentee par le dernier test de ce bloc.
+  const STORY_PAIEMENT = [
+    '**User Story 1** En tant que client de Luméo Boutique, je veux payer via Alma.',
+    '**Titre :** Paiement fractionné',
+    '**Description :** Luméo Boutique propose le paiement en plusieurs fois sans frais via le partenaire Alma, disponible en 3 ou 4 fois a partir de 100 euros d achat. Cette fonctionnalite doit etre clairement visible lors du tunnel de commande, et le client doit pouvoir visualiser le montant de chaque echeance avant de valider son panier.',
+    '**Criteres :**',
+    '- Le montant de chaque echeance est affiche avant validation',
+    "- Passé ce délai, contactez le SAV par chat ou téléphone.",
+  ].join('\n');
+  const STORY_TELEPHONE = [
+    '**User Story 2** En tant que client achetant un téléphone, je veux choisir sa couleur.',
+    '**Titre :** Sélectionner la couleur',
+    '**Description :** Le client doit pouvoir choisir parmi les coloris.',
+  ].join('\n');
+
+  it('découpe une génération en user stories', () => {
+    const stories = decouperStories(STORY_PAIEMENT + '\n\n' + STORY_TELEPHONE);
+    expect(stories).toHaveLength(2);
+    expect(stories[1].entete).toContain('téléphone');
+  });
+
+  // Le selecteur s'applique a l'en-tete et non au corps entier. Mesure du
+  // 2026-11-26 : sur le corps entier, une story de paiement qui mentionne
+  // "telephone" comme canal de contact du SAV etait designee a tort.
+  it('ne désigne pas une story qui mentionne le terme hors de son en-tête', () => {
+    const { violations } = evaluerRun({
+      texte: STORY_PAIEMENT + '\n\n' + STORY_TELEPHONE,
+      assertions: {
+        parStory: [{ si: 'téléphone', libelle: 'categorie absente', interdits: ['Luméo Boutique'] }],
+      },
+    });
+    // La story 1 nomme le client mais n'est pas designee ; la story 2 est
+    // designee et ne le nomme pas. Aucune violation.
+    expect(violations).toEqual([]);
+  });
+
+  it('relève un terme interdit dans la story désignée, en la nommant', () => {
+    const fautive = STORY_TELEPHONE + "\nLes membres Lumeo+ y accèdent 48h avant.";
+    const { violations } = evaluerRun({
+      texte: STORY_PAIEMENT + '\n\n' + fautive,
+      assertions: {
+        parStory: [{ si: 'téléphone', libelle: 'categorie absente', interdits: ['Lumeo+', '48h'] }],
+      },
+    });
+    expect(violations).toHaveLength(2);
+    expect(violations[0].story).toBe(2);
+    expect(violations[0].message).toContain('story 2');
+    expect(violations[0].message).toContain('categorie absente');
+  });
+
+  // Le point faible de toute verification sur une sortie stochastique : le
+  // modele reformule et le selecteur cesse de designer quoi que ce soit. Une
+  // regle verifiee sur rien doit echouer, jamais reussir en silence.
+  it('échoue quand le sélecteur ne désigne aucune story', () => {
+    const { violations } = evaluerRun({
+      texte: STORY_PAIEMENT,
+      assertions: { parStory: [{ si: 'réalité augmentée', interdits: ['Lumeo+'] }] },
+    });
+    expect(violations.map((v) => v.type)).toEqual(['selecteur_sans_cible']);
+    expect(violations[0].message).toContain('verifiee sur rien');
+  });
+
+  it('tolère un terme en plusieurs mots coupé par un retour à la ligne', () => {
+    expect(contientTerme('visualiser en réalité\naugmentée dans mon salon', 'réalité augmentée')).toBe(true);
+  });
+});
+
+describe('prompt-verdict — limite assumée du sélecteur', () => {
+  // L'en-tete de 300 caracteres est une heuristique calibree sur des stories
+  // reelles de 1 500 a 2 500 caracteres. Sur une story courte, un terme qui
+  // apparait tardivement tombe quand meme dans l'en-tete et la story est
+  // designee a tort.
+  //
+  // Ce test existe pour que la limite soit ecrite plutot que decouverte. Le
+  // sens de la defaillance est le bon : une story designee a tort produit une
+  // violation visible, jamais un succes silencieux. Un faux rouge se corrige a
+  // la lecture, un faux vert ne se voit pas.
+  it('désigne à tort une story trop courte dont le terme apparaît tardivement', () => {
+    const courte = [
+      '**User Story 1** En tant que client, je veux payer via Alma.',
+      '**Titre :** Paiement',
+      'Contactez le SAV par téléphone.',
+    ].join('\n');
+    const { violations } = evaluerRun({
+      texte: courte,
+      assertions: { parStory: [{ si: 'téléphone', interdits: ['Alma'] }] },
+    });
+    expect(violations.map((v) => v.type)).toEqual(['marqueur_interdit']);
   });
 });

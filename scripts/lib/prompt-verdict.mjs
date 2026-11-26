@@ -66,7 +66,11 @@ function echapper(terme) {
  */
 export function contientTerme(texte, terme) {
   if (!terme) return false;
-  const motif = new RegExp(`(?<![\\p{L}\\p{N}])${echapper(normaliser(terme))}(?![\\p{L}\\p{N}])`, "u");
+  // Les espaces du terme deviennent \s+ : un terme en plusieurs mots peut etre
+  // coupe par un retour a la ligne dans la sortie du modele, et une recherche
+  // litterale le manquerait sans rien signaler.
+  const corps = echapper(normaliser(terme)).replace(/\\?\s+/g, "\\s+");
+  const motif = new RegExp(`(?<![\\p{L}\\p{N}])${corps}(?![\\p{L}\\p{N}])`, "u");
   return motif.test(normaliser(texte));
 }
 
@@ -143,6 +147,79 @@ function chiffres(texte) {
   return new Set(String(texte ?? "").match(/\d+(?:[.,]\d+)?/g) ?? []);
 }
 
+
+// Longueur de l'en-tete d'une user story : ligne "En tant que", titre, et
+// debut de la description.
+//
+// Mesure du 2026-11-26 sur les 5 runs de la campagne "categorie absente" :
+// un selecteur applique a ces 300 caracteres designe exactement une story par
+// run, la bonne, y compris aux runs 2 et 5 ou le titre ne contient pas le mot
+// cherche. Applique au corps entier, le meme selecteur en designe deux au run
+// 3, la seconde etant une story de paiement qui mentionne "telephone" comme
+// canal de contact du SAV. Le choix de 300 n'est donc pas une intuition.
+const ENTETE_CARACTERES = 300;
+
+/**
+ * Decoupe une generation en user stories.
+ *
+ * @param {string} texte
+ * @returns {Array<{numero: number, texte: string, entete: string}>}
+ */
+export function decouperStories(texte) {
+  const morceaux = String(texte ?? "")
+    .split(/(?=\*\*User Story)/)
+    .filter((m) => m.includes("**User Story"));
+  return morceaux.map((m, i) => ({
+    numero: i + 1,
+    texte: m,
+    entete: m.slice(0, ENTETE_CARACTERES),
+  }));
+}
+
+/**
+ * Applique un jeu d'assertions aux stories designees par un selecteur.
+ *
+ * Le selecteur est le point faible de toute verification sur une sortie
+ * stochastique : le modele reformule, et un selecteur qui cesse de designer
+ * quoi que ce soit ferait passer la regle pour satisfaite. C'est pourquoi
+ * "aucune story designee" est une violation et non un succes silencieux.
+ */
+function evaluerParStory({ texte, regles, numero }) {
+  const violations = [];
+  const stories = decouperStories(texte);
+
+  for (const regle of regles) {
+    const cibles = stories.filter((st) => contientTerme(st.entete, regle.si));
+    const libelle = regle.libelle ?? `stories designees par "${regle.si}"`;
+
+    if (cibles.length === 0) {
+      violations.push({
+        type: "selecteur_sans_cible", run: numero, selecteur: regle.si,
+        message:
+          `Run ${numero} : aucune story ne correspond au selecteur "${regle.si}" (${libelle}). ` +
+          `La regle n'a donc ete verifiee sur rien, ce qui est un echec et non un succes.`,
+      });
+      continue;
+    }
+
+    for (const cible of cibles) {
+      const r = evaluerRun({
+        texte: cible.texte, contexte: "", numero,
+        assertions: {
+          requis: regle.requis, interdits: regle.interdits, graphieExacte: regle.graphieExacte,
+        },
+      });
+      for (const v of r.violations) {
+        violations.push({
+          ...v, story: cible.numero, selecteur: regle.si,
+          message: v.message.replace(`Run ${numero} :`, `Run ${numero}, story ${cible.numero} (${libelle}) :`),
+        });
+      }
+    }
+  }
+  return violations;
+}
+
 /**
  * Évalue une génération isolée.
  *
@@ -202,6 +279,10 @@ export function evaluerRun({ texte, contexte = "", assertions = {}, numero = 1 }
           `graphie absente des documents.`,
       });
     }
+  }
+
+  if ((assertions.parStory ?? []).length > 0) {
+    violations.push(...evaluerParStory({ texte, regles: assertions.parStory, numero }));
   }
 
   const horsContexte = [...chiffres(texte)].filter((n) => !chiffres(contexte).has(n));

@@ -48,6 +48,21 @@
     ],
     "graphieExacte": [
       "Lumeo+"
+    ],
+    "parStory": [
+      {
+        "si": "téléphone",
+        "libelle": "categorie de produits absente du corpus",
+        "interdits": [
+          "Luméo Boutique",
+          "Lumeo+",
+          "cashback",
+          "Alma",
+          "RAL",
+          "Pantone",
+          "48h"
+        ]
+      }
     ]
   }
 }
